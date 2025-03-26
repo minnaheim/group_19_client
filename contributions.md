@@ -30,54 +30,106 @@ reason).
 
 ---
 
-## Contributions Week 1 - [Begin Date] to [End Date]
+## Contributions Week 1 - [26.04.2025] to [01.04.2025]
 
-| **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
-| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
-## Contributions Week 2 - [Begin Date] to [End Date]
+## Contributions Week 2 - [02.04.2025] to [08.04.2025]
 
-| **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
-| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
-## Contributions Week 3 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+## Contributions Week 3 - [09.04.2025] to [15.04.2025]
 
+
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
-## Contributions Week 4 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+## Contributions Week 4 - [16.04.2025] to [22.04.2025]
 
+
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
-## Contributions Week 5 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+## Contributions Week 5 - [30.04.2025] to [06.05.2025]
 
+
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
-## Contributions Week 6 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+## Contributions Week 6 - [07.05.2025] to [13.05.2025]
+
+
+| **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
+|------------------| -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+---
