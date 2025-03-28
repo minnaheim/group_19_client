@@ -120,3 +120,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
