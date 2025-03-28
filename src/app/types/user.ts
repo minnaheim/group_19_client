@@ -1,0 +1,14 @@
+import {Movie} from "@/app/types/movie";
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password: string;
+  bio: string;
+  preferences: string[];
+  favoriteGenres: string[];
+  favoriteMovie: Movie;
+  watchlist: Movie[];
+  watchedMovies: Movie[];
+}
