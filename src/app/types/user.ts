@@ -1,4 +1,5 @@
-import {Movie} from "@/app/types/movie";
+import {Movie} from "@/types/movie";
+
 
 export interface User {
   id: number;

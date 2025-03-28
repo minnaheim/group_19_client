@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image"
 import { useState, useEffect } from "react";
 
-import { useParams } from "next/navigation"; // Use useParams to get route parameters
+import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/user";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -12,24 +12,17 @@ import {Movie} from "@/types/movie";
 import {useApi} from "@/hooks/useApi";
 
 const Profile: React.FC = () => {
-    /*
-     * E:
-     * useParams() gives us the id information out of the folder
-     */
+
     const { id } = useParams();
     const apiService = useApi();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
-    const [watchedMovies, setMovies] = useState<Movie[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     console.log(id);
 
-    /*
-     * E:
-     * we need the token and userId, to decide weather the current user is allowed to edit / is registered
-     */
+
     const {
         value: token,
     } = useLocalStorage<string>("token", "");
@@ -38,15 +31,24 @@ const Profile: React.FC = () => {
         value: userId,
     } = useLocalStorage<string>("userId", "");
 
-    const handleEdit = () => {
-        /*
-         * E:
-         * this is the easiest way of making sure that only the currently logged in user can edit, but should probably be done differently
-         */
+    const handleEditProfile = () => {
+
         if (userId.valueOf() == id) {
-            router.push(`/profile/${id}/edit_profile`);
+            router.push(`/users/${id}/edit_profile`);
         } else {
-            router.push(`/profile/${id}/profile_display`);
+            router.push(`/users/${id}/profile`);
+            alert("You can only edit your own profile");
+        }
+
+
+    }
+
+    const handleEditWatched = () => {
+
+        if (userId.valueOf() == id) {
+            router.push(`/users/${id}/edit_watched`);
+        } else {
+            router.push(`/users/${id}/profile`);
             alert("You can only edit your own profile");
         }
 
@@ -58,21 +60,16 @@ const Profile: React.FC = () => {
     }
     const fetchUser = async () => {
         setLoading(true);
-        setError(null); // Reset any previous errors
+        setError(null);
         try {
-            // Fetch the user data from the API based on the dynamic id
             const fetchedUser: User = await apiService.get(`/profile/${id}`);
             setUser(fetchedUser);
         } catch (error: unknown) {
-            /*
-             * E:
-             * handle error if thrown by server. this makes use of the ApplicationError provided
-             */
+
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
 
-                // redirect back to dashboard
                 router.push("/users/dashboard");
             }
         } finally {
@@ -82,21 +79,16 @@ const Profile: React.FC = () => {
 
     const fetchWatchedMovies = async () => {
         setLoading(true);
-        setError(null); // Reset any previous errors
+        setError(null);
         try {
-            // Fetch the user data from the API based on the dynamic id
-            const watchedMovies: Movie[] = await apiService.get(`/watched/${id}`);
-            setMovies(watchedMovies);
+            const fetchedWatchedMovies: Movie[] = await apiService.get(`/watched/${id}`);
+            setUser(prevUser => prevUser ? {...prevUser, watchedMovies: fetchedWatchedMovies} : null);
         } catch (error: unknown) {
-            /*
-             * E:
-             * handle error if thrown by server. this makes use of the ApplicationError provided
-             */
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
 
-                // redirect back to dashboard
+
                 router.push("/users/dashboard");
             }
         } finally {
@@ -214,42 +206,35 @@ const Profile: React.FC = () => {
                         <div className="p-6 space-y-6">
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    username: ivan.movies
+                                    username: {user?.username ? user.username : "Ella"}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    Favourite Genres:
-                                    <span className="ml-2">Time Travel, Sci-Fi, Romance</span>
+                                    e-mail: {user?.password ? user.username : "ella@philippi.com"}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    Age: 27
+                                    password: {user?.password ? user.password : "password1234"}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    Birthday: 24 - 02 - 1993
+                                    bio: {user?.bio ? user.bio : "Hi! I love the app Movie Night."}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    email: ivan@gmail.com
+                                    preferences: {user?.preferences ? user.preferences : "these are my preferences"}
                                 </p>
                             </div>
 
-                            <div>
-                                <p className="font-semibold text-[#3b3e88] text-base">
-                                    password: moviesivan123
-                                </p>
-                            </div>
-
-                            <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full">
+                            <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full" onClick={handleEditProfile}>
                                 edit
                             </button>
                         </div>
@@ -262,40 +247,37 @@ const Profile: React.FC = () => {
                         </h2>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                            <img
-                                className="w-full aspect-[2/3] object-cover rounded"
-                                alt="Movie"
-                                src="/image-6.png"
-                            />
-                            <img
-                                className="w-full aspect-[2/3] object-cover rounded"
-                                alt="Movie"
-                                src="/image-7.png"
-                            />
-                            <img
-                                className="w-full aspect-[2/3] object-cover rounded"
-                                alt="Movie"
-                                src="/image-8.png"
-                            />
-                            <img
-                                className="w-full aspect-[2/3] object-cover rounded"
-                                alt="Movie"
-                                src="/image-15.png"
-                            />
-                            <img
-                                className="w-full aspect-[2/3] object-cover rounded"
-                                alt="Movie"
-                                src="/image-14.png"
-                            />
+                            {user?.watchedMovies && user.watchedMovies.length > 0 ? (
+                                user.watchedMovies.map((movie) => (
+                                    <img
+                                        key={movie.id}
+                                        className="w-full aspect-[2/3] object-cover rounded"
+                                        alt={movie.title}
+                                        src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+                                    />
+                                ))
+                            ) : (
+                                mockMovies.map((movie) => (
+                                    <img
+                                        key={movie.id}
+                                        className="w-full aspect-[2/3] object-cover rounded"
+                                        alt={movie.title}
+                                        src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+                                    />
+                                ))
+                            )}
                         </div>
 
-                        <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full">
+
+                        <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full"
+                                onClick={handleEditWatched}>
                             edit
                         </button>
                     </div>
                 </div>
 
-                <button className="mt-8 bg-[#f44771] opacity-50 text-white font-medium px-6 py-2 rounded-full">
+                <button className="mt-8 bg-[#f44771] opacity-50 text-white font-medium px-6 py-2 rounded-full"
+                        onClick={handleBack}>
                     back
                 </button>
             </div>
@@ -303,14 +285,15 @@ const Profile: React.FC = () => {
     );
 };
 
-// Navigation Item Component
+
+
 interface NavItemProps {
     icon: string;
     text: string;
     active: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon, text, active }) => {
+const NavItem: React.FC<NavItemProps> = ({icon, text, active}) => {
     return (
         <div className="flex items-center gap-2.5 relative">
             <img className="w-5 h-5" alt={text} src={icon} />
