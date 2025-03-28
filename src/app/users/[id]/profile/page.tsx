@@ -11,6 +11,15 @@ import {ApplicationError} from "@/types/error";
 import {Movie} from "@/types/movie";
 import {useApi} from "@/hooks/useApi";
 
+// Modified NavItem component with click functionality
+interface NavItemProps {
+    icon: string;
+    text: string;
+    active: boolean;
+}
+
+
+
 const Profile: React.FC = () => {
 
     const { id } = useParams();
@@ -31,6 +40,59 @@ const Profile: React.FC = () => {
         value: userId,
     } = useLocalStorage<string>("userId", "");
 
+    const NavItem: React.FC<NavItemProps> = ({icon, text, active}) => {
+        const router = useRouter();
+
+        const handleClick = () => {
+            // Convert text to URL format and navigate
+            let path;
+
+            // Map navigation text to appropriate paths
+            switch (text) {
+                case "Dashboard":
+                    path = `/users/${userId}/dashboard`;
+                    break;
+                case "Profile Page":
+                    path = `/users/${userId}/profile`;
+                    break;
+                case "Watch List":
+                    path = `/users/${userId}/watchlist`;
+                    break;
+                case "Movie Groups":
+                    path = `/users/${userId}/movieGroups`;
+                    break;
+                case "Search Movies":
+                    path = `/users/${userId}/search`;
+                    break;
+                case "Your Friends":
+                    path = `/users/${userId}/friends`;
+                    break;
+                default:
+                    path = "/";
+            }
+
+            router.push(path);
+        };
+
+        return (
+            <div
+                className="flex items-center gap-2.5 relative cursor-pointer"
+                onClick={handleClick}
+            >
+                <img className="w-5 h-5" alt={text} src={icon} />
+                <div
+                    className={`font-normal text-[15px] tracking-wide ${
+                        active ? "text-[#1657ff]" : "text-[#b9c0de]"
+                    }`}
+                >
+                    {text}
+                </div>
+                {active && (
+                    <div className="absolute right-0 w-1 h-6 bg-[#1657ff] rounded-full shadow-[-2px_0px_10px_2px_#0038ff26]" />
+                )}
+            </div>
+        );
+    };
     const handleEditProfile = () => {
 
         if (userId.valueOf() == id) {
@@ -101,6 +163,20 @@ const Profile: React.FC = () => {
         fetchUser();
         fetchWatchedMovies();
     }, [id, apiService, token]);
+
+    if (loading) {
+        return (<div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (<div className="text-red-500 text-center py-8">
+                {error}
+            </div>
+        )
+    }
 
 
     const mockMovies: Movie[] = [
@@ -212,7 +288,7 @@ const Profile: React.FC = () => {
 
                             <div>
                                 <p className="font-semibold text-[#3b3e88] text-base">
-                                    e-mail: {user?.password ? user.username : "ella@philippi.com"}
+                                    e-mail: {user?.email ? user.email : "ella@philippi.com"}
                                 </p>
                             </div>
 
@@ -281,32 +357,6 @@ const Profile: React.FC = () => {
                     back
                 </button>
             </div>
-        </div>
-    );
-};
-
-
-
-interface NavItemProps {
-    icon: string;
-    text: string;
-    active: boolean;
-}
-
-const NavItem: React.FC<NavItemProps> = ({icon, text, active}) => {
-    return (
-        <div className="flex items-center gap-2.5 relative">
-            <img className="w-5 h-5" alt={text} src={icon} />
-            <div
-                className={`font-normal text-[15px] tracking-wide ${
-                    active ? "text-[#1657ff]" : "text-[#b9c0de]"
-                }`}
-            >
-                {text}
-            </div>
-            {active && (
-                <div className="absolute right-0 w-1 h-6 bg-[#1657ff] rounded-full shadow-[-2px_0px_10px_2px_#0038ff26]" />
-            )}
         </div>
     );
 };
