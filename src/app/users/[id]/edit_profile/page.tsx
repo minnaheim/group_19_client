@@ -103,15 +103,20 @@ const EditProfile: React.FC = () => {
             return;
         }
 
+        // Check if user is null before updating
+        if (!user) {
+            alert("User data not available");
+            return;
+        }
+
         // Create updated user object
-        const updatedUser = {
+        const updatedUser: User = {
             ...user,
             username,
             email,
             password,
             bio,
             preferences,
-
         };
 
         try {
