@@ -1,5 +1,4 @@
-import {Movie} from "@/types/movie";
-
+import { Movie } from "@/types/movie";
 
 export interface User {
   id: number;
@@ -9,6 +8,7 @@ export interface User {
   bio: string;
   preferences: string[];
   favoriteGenres: string[];
+  token: string | null;
   favoriteMovie: Movie;
   watchlist: Movie[];
   watchedMovies: Movie[];
