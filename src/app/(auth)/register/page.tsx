@@ -23,6 +23,13 @@ const Register: React.FC = () => {
     password: "",
   });
 
+  // set error if fields are empty
+  const [errors, setErrors] = useState({
+    email: "",
+    username: "",
+    password: "",
+  });
+
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -30,9 +37,49 @@ const Register: React.FC = () => {
       ...prev,
       [id]: value,
     }));
+    // clear error message
+    setErrors((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
+  };
+
+  // Validate form inputs
+  const validateForm = () => {
+    const newErrors = {
+      email: "",
+      username: "",
+      password: "",
+    };
+
+    // Check if email is valid
+    if (!formValues.email) {
+      newErrors.email = "Email is required.";
+      // email regex needs to be met
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    // Check if username is empty
+    if (!formValues.username) {
+      newErrors.username = "Username is required.";
+    }
+
+    // Check if password is empty
+    if (!formValues.password) {
+      newErrors.password = "Password is required.";
+    }
+
+    setErrors(newErrors);
+
+    // Return true if there are no errors
+    return !newErrors.email && !newErrors.username && !newErrors.password;
   };
 
   const handleRegister = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       const response = await apiService.post<User>("/register", formValues);
 
@@ -62,6 +109,9 @@ const Register: React.FC = () => {
                 value={formValues.email} // initially empty unless changed
                 onChange={handleInputChange}
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="framework">Username</Label>
@@ -71,6 +121,9 @@ const Register: React.FC = () => {
                 value={formValues.username}
                 onChange={handleInputChange}
               />
+              {errors.username && (
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              )}
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="framework">Password</Label>
@@ -80,6 +133,9 @@ const Register: React.FC = () => {
                 value={formValues.password}
                 onChange={handleInputChange}
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
             </div>
           </div>
         </form>

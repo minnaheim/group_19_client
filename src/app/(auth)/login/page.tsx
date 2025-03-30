@@ -19,6 +19,11 @@ const Login: React.FC = () => {
     password: "",
   });
 
+  const [errors, setErrors] = useState({
+    username: "",
+    password: "",
+  });
+
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -26,9 +31,40 @@ const Login: React.FC = () => {
       ...prev,
       [id]: value,
     }));
+    // clear error message
+    setErrors((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
+  };
+
+  // Validate form inputs
+  const validateForm = () => {
+    const newErrors = {
+      username: "",
+      password: "",
+    };
+
+    // Check if username is empty
+    if (!formValues.username) {
+      newErrors.username = "Username is required.";
+    }
+
+    // Check if password is empty
+    if (!formValues.password) {
+      newErrors.password = "Password is required.";
+    }
+
+    setErrors(newErrors);
+
+    // Return true if there are no errors
+    return !newErrors.username && !newErrors.password;
   };
 
   const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       console.log(formValues);
       const response = await apiService.put<User>("/login", formValues); // changed post to put -> TODO: need to change to ONLINE
@@ -61,6 +97,9 @@ const Login: React.FC = () => {
                 value={formValues.username}
                 onChange={handleInputChange}
               />
+              {errors.username && (
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              )}
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="password">Password</Label>
@@ -70,6 +109,9 @@ const Login: React.FC = () => {
                 value={formValues.password}
                 onChange={handleInputChange}
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
             </div>
           </div>
         </form>
