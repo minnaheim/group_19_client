@@ -80,8 +80,7 @@ const NavItem = ({ id, icon, activeIcon, active, href }: NavItemProps) => {
 
 const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
     // Use pathname from next/navigation instead of router
-    const pathname = usePathname();
-
+    usePathname();
     return (
         <div className="w-full md:w-72 bg-[#ffffffcc] backdrop-blur-2xl [-webkit-backdrop-filter:blur(40px)_brightness(100%)]">
             <div className="p-6">
