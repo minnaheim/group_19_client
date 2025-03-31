@@ -7,7 +7,6 @@ export interface User {
   email: string;
   password: string;
   bio: string;
-  preferences: string[];
   favoriteGenres: string[];
   favoriteMovie: Movie;
   watchlist: Movie[];

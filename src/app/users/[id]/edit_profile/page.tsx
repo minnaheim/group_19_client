@@ -22,7 +22,7 @@ const EditProfile: React.FC = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [bio, setBio] = useState<string>("");
-    const [preferences, setPreferences] = useState<string[]>([]);
+
 
 
     // Auth check
@@ -64,7 +64,6 @@ const EditProfile: React.FC = () => {
             email,
             password,
             bio,
-            preferences,
         };
 
         try {
@@ -106,7 +105,6 @@ const EditProfile: React.FC = () => {
         email: "ella@philippi.com",
         password: "password1234",
         bio: "Hi! I love the app Movie Night.",
-        preferences: ["Action", "Comedy"],
         favoriteGenres: ["Sci-Fi", "Drama", "Thriller"],
         favoriteMovie: mockMovie,
         watchlist: [mockMovie],
@@ -134,7 +132,6 @@ const EditProfile: React.FC = () => {
             setEmail(fetchedUser.email || "");
             setPassword(fetchedUser.password || "");
             setBio(fetchedUser.bio || "");
-            setPreferences(fetchedUser.preferences || []);
         } catch (error: unknown) {
             // Fallback to mock data on any error
             console.log("Using mock user data due to error:", error);
@@ -143,7 +140,6 @@ const EditProfile: React.FC = () => {
             setEmail(mockUser.email);
             setPassword(mockUser.password);
             setBio(mockUser.bio);
-            setPreferences(mockUser.preferences);
         } finally {
             setLoading(false);
         }
@@ -170,13 +166,6 @@ const EditProfile: React.FC = () => {
 
         fetchUser();
     }, [id, apiService, token, userId]);
-
-    // Handle changes to preferences and favorite genres (comma-separated inputs)
-    const handlePreferencesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const preferencesString = e.target.value;
-        const preferencesArray = preferencesString.split(',').map(item => item.trim());
-        setPreferences(preferencesArray);
-    };
 
 
 
@@ -262,15 +251,6 @@ const EditProfile: React.FC = () => {
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-[#3b3e88] text-sm font-medium mb-2">Preferences (comma separated)</label>
-                            <input
-                                type="text"
-                                value={preferences.join(', ')}
-                                onChange={handlePreferencesChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
-                            />
-                        </div>
 
 
 
