@@ -103,8 +103,8 @@ const EditProfile: React.FC = () => {
         bio: "Hi! I love the app Movie Night.",
         favoriteGenres: ["Sci-Fi", "Drama", "Thriller"],
         favoriteMovie: mockMovie,
-        watchlist: [mockMovie],
-        watchedMovies: [mockMovie]
+        watchlist: [],
+        watchedMovies: []
     };
 
     const fetchUser = async () => {
