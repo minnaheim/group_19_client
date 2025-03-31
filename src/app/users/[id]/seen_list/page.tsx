@@ -1,41 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+
 import { useParams, useRouter } from "next/navigation";
 import { User } from "@/types/user";
 import { Movie } from "@/types/movie";
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { Button } from "../../../../components/ui/button";
+import Navigation from "../../../../components/ui/navigation";
+import {ApplicationError} from "@/types/error";
 
 
-interface NavItemProps {
-    icon: string;
-    text: string;
-    active: boolean;
-    onClick?: () => void;
-}
 
-const NavItem: React.FC<NavItemProps> = ({ icon, text, active, onClick }) => {
-    return (
-        <div
-            className={`flex items-center gap-2.5 relative cursor-pointer`}
-            onClick={onClick}
-        >
-            <img className="w-5 h-5" alt={text} src={icon} />
-            <div
-                className={`font-normal text-[15px] tracking-wide ${
-                    active ? "text-[#1657ff]" : "text-[#b9c0de]"
-                }`}
-            >
-                {text}
-            </div>
-            {active && (
-                <div className="absolute right-0 w-1 h-6 bg-[#1657ff] rounded-full shadow-[-2px_0px_10px_2px_#0038ff26]" />
-            )}
-        </div>
-    );
-};
+
 
 const SeenList: React.FC = () => {
     const { id } = useParams();
@@ -78,8 +55,12 @@ const SeenList: React.FC = () => {
                     });
                     setLoading(false);
                 }, 500);
-            } catch (err) {
+            } catch (error) {
                 setError("Failed to load user data");
+                if (error instanceof Error && "status" in error) {
+                    const applicationError = error as ApplicationError;
+                    alert(`Error: ${applicationError.message}`);
+                }
                 setLoading(false);
             }
         };
@@ -87,9 +68,7 @@ const SeenList: React.FC = () => {
         fetchUserData();
     }, [id, token, apiService]);
 
-    const handleNavigate = (path: string) => {
-        router.push(path);
-    };
+
 
     const handleAddMovie = () => {
         if (userId === id) {
@@ -138,8 +117,12 @@ const SeenList: React.FC = () => {
 
             setIsEditing(false);
             setSelectedMoviesToRemove([]);
-        } catch (err) {
-            setError("Failed to update watched movies");
+        } catch (error) {
+            setError("Failed to load user data");
+            if (error instanceof Error && "status" in error) {
+                const applicationError = error as ApplicationError;
+                alert(`Error: ${applicationError.message}`);
+            }
         }
     };
 
@@ -189,59 +172,7 @@ const SeenList: React.FC = () => {
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
             {/* Sidebar */}
-            <div className="w-full md:w-72 bg-[#ffffffcc] backdrop-blur-2xl [-webkit-backdrop-filter:blur(40px)_brightness(100%)]">
-                <div className="p-6">
-                    {/* Logo */}
-                    <div className="flex items-center mb-12">
-                        <div className="absolute top-4 left-4 flex items-center space-x-2">
-                            <Image src="/projector.png" alt="App Icon" width={50} height={50} />
-                            <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-                                Movie Night
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Navigation menu */}
-                    <nav className="flex flex-col space-y-8 mt-16">
-                        <NavItem
-                            icon="/secondary-all-games.svg"
-                            text="Dashboard"
-                            active={false}
-                            onClick={() => handleNavigate(`/dashboard`)}
-                        />
-                        <NavItem
-                            icon="/group-32.png"
-                            text="Profile Page"
-                            active={false}
-                            onClick={() => handleNavigate(`/users/${id}/profile`)}
-                        />
-                        <NavItem
-                            icon="/group-50-1.png"
-                            text="Watch List"
-                            active={true}
-                            onClick={() => handleNavigate(`/users/${id}/watchlist`)}
-                        />
-                        <NavItem
-                            icon="/group-47-1.png"
-                            text="Movie Groups"
-                            active={false}
-                            onClick={() => handleNavigate(`/movie-groups`)}
-                        />
-                        <NavItem
-                            icon="/group-47-1.png"
-                            text="Search Movies"
-                            active={false}
-                            onClick={() => handleNavigate(`/users/${id}/search_movies`)}
-                        />
-                        <NavItem
-                            icon="/group-50-1.png"
-                            text="Your Friends"
-                            active={false}
-                            onClick={() => handleNavigate(`/friends`)}
-                        />
-                    </nav>
-                </div>
-            </div>
+            <Navigation userId={userId} activeItem="Profile Page" />
 
             {/* Main content */}
             <div className="flex-1 p-6 overflow-auto">
