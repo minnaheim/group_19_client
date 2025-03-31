@@ -7,6 +7,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import { ApplicationError } from "@/types/error";
 import { useApi } from "@/hooks/useApi";
 import Navigation from "../../../../components/ui/navigation";
+import { Button } from "../../../../components/ui/button";
 
 const EditProfile: React.FC = () => {
     const { id } = useParams();
@@ -23,8 +24,6 @@ const EditProfile: React.FC = () => {
     const [password, setPassword] = useState<string>("");
     const [bio, setBio] = useState<string>("");
 
-
-
     // Auth check
     const {
         value: token,
@@ -33,9 +32,6 @@ const EditProfile: React.FC = () => {
     const {
         value: userId,
     } = useLocalStorage<string>("userId", "");
-
-
-
 
     const handleCancel = () => {
         router.push(`/users/${id}/profile`);
@@ -107,8 +103,8 @@ const EditProfile: React.FC = () => {
         bio: "Hi! I love the app Movie Night.",
         favoriteGenres: ["Sci-Fi", "Drama", "Thriller"],
         favoriteMovie: mockMovie,
-        watchlist: [mockMovie],
-        watchedMovies: [mockMovie]
+        watchlist: [],
+        watchedMovies: []
     };
 
     const fetchUser = async () => {
@@ -166,8 +162,6 @@ const EditProfile: React.FC = () => {
 
         fetchUser();
     }, [id, apiService, token, userId]);
-
-
 
     if (loading) {
         return (
@@ -251,40 +245,36 @@ const EditProfile: React.FC = () => {
                             />
                         </div>
 
-
-
-
                         <div className="flex space-x-4">
-                            <button
+                            <Button
                                 type="submit"
-                                className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full hover:bg-[#e88b35] transition-colors"
+                                variant="default"
+                                className="bg-[#ff9a3e] hover:bg-[#e88b35]"
                             >
                                 Save Changes
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
+                                variant="outline"
+                                className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
                                 onClick={handleCancel}
-                                className="bg-gray-200 text-[#3b3e88] font-medium px-6 py-3 rounded-full hover:bg-gray-300 transition-colors"
                             >
                                 Cancel
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
 
-                <button
-                    className="mt-8 bg-[#f44771] opacity-50 text-white font-medium px-6 py-2 rounded-full hover:bg-[#e03e65] hover:opacity-60 transition-colors"
+                <Button
+                    variant="destructive"
+                    className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#e03e65] hover:opacity-60"
                     onClick={handleCancel}
                 >
                     back
-                </button>
+                </Button>
             </div>
         </div>
     );
 };
-
-
-
-
 
 export default EditProfile;

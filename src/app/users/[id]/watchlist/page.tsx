@@ -14,7 +14,7 @@ import {ApplicationError} from "@/types/error";
 
 
 
-const SeenList: React.FC = () => {
+const WatchList: React.FC = () => {
     const { id } = useParams();
     const apiService = useApi();
     const router = useRouter();
@@ -49,7 +49,7 @@ const SeenList: React.FC = () => {
                         bio: "I love movies!",
                         favoriteGenres: ["Sci-Fi", "Thriller"],
                         favoriteMovie: mockMovies[0],
-                        watchlist: [],
+                        watchlist: mockMovies,
                         watchedMovies: mockMovies
                     });
                     setLoading(false);
@@ -105,12 +105,12 @@ const SeenList: React.FC = () => {
 
             // For now, just update local state
             if (user) {
-                const updatedMovies = user.watchedMovies.filter(
+                const updatedMovies = user.watchlist.filter(
                     movie => !selectedMoviesToRemove.includes(movie.id)
                 );
                 setUser({
                     ...user,
-                    watchedMovies: updatedMovies
+                    watchlist: updatedMovies
                 });
             }
 
@@ -228,8 +228,8 @@ const SeenList: React.FC = () => {
         }
     ];
 
-    const displayMovies = user?.watchedMovies && user.watchedMovies.length > 0
-        ? user.watchedMovies
+    const displayMovies = user?.watchlist && user.watchlist.length > 0
+        ? user.watchlist
         : mockMovies;
 
     if (loading) {
@@ -251,17 +251,15 @@ const SeenList: React.FC = () => {
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
             {/* Sidebar */}
-            <Navigation userId={userId} activeItem="Profile Page" />
+            <Navigation userId={userId} activeItem="Watch List" />
 
             {/* Main content */}
             <div className="flex-1 p-6 overflow-auto">
                 <div className="mb-8">
                     <h1 className="font-semibold text-[#3b3e88] text-3xl">
-                        Already Seen
+                        Your Watchlist
                     </h1>
-                    <p className="text-[#b9c0de] mt-2">
-                        Movies on this list will not be recommended to you
-                    </p>
+
                 </div>
 
                 <div className="bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto">
@@ -342,13 +340,13 @@ const SeenList: React.FC = () => {
                 <Button
                     variant="destructive"
                     className="mt-4"
-                    onClick={() => router.push(`/users/${id}/profile`)}
+                    onClick={() => router.push(`/users/${id}/dashboard`)}
                 >
-                    Back to Profile
+                    Back to Dashboard
                 </Button>
             </div>
         </div>
     );
 };
 
-export default SeenList;
+export default WatchList;
