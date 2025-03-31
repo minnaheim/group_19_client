@@ -47,7 +47,6 @@ const SeenList: React.FC = () => {
                         email: "user@example.com",
                         password: "******",
                         bio: "I love movies!",
-                        preferences: ["Action", "Comedy"],
                         favoriteGenres: ["Sci-Fi", "Thriller"],
                         favoriteMovie: mockMovies[0],
                         watchlist: [],
