@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/user";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { ApplicationError } from "@/types/error";
 import { useApi } from "@/hooks/useApi";
+import Navigation from "../../../../components/ui/navigation";
 
 const EditProfile: React.FC = () => {
     const { id } = useParams();
@@ -34,59 +34,7 @@ const EditProfile: React.FC = () => {
         value: userId,
     } = useLocalStorage<string>("userId", "");
 
-    const NavItem: React.FC<NavItemProps> = ({icon, text, active}) => {
-        const router = useRouter();
 
-        const handleClick = () => {
-            // Convert text to URL format and navigate
-            let path;
-
-            // Map navigation text to appropriate paths
-            switch (text) {
-                case "Dashboard":
-                    path = `/users/${userId}/dashboard`;
-                    break;
-                case "Profile Page":
-                    path = `/users/${userId}/profile`;
-                    break;
-                case "Watch List":
-                    path = `/users/${userId}/watchlist`;
-                    break;
-                case "Movie Groups":
-                    path = `/users/${userId}/movieGroups`;
-                    break;
-                case "Search Movies":
-                    path = `/users/${userId}/search`;
-                    break;
-                case "Your Friends":
-                    path = `/users/${userId}/friends`;
-                    break;
-                default:
-                    path = "/";
-            }
-
-            router.push(path);
-        };
-
-        return (
-            <div
-                className="flex items-center gap-2.5 relative cursor-pointer"
-                onClick={handleClick}
-            >
-                <img className="w-5 h-5" alt={text} src={icon} />
-                <div
-                    className={`font-normal text-[15px] tracking-wide ${
-                        active ? "text-[#1657ff]" : "text-[#b9c0de]"
-                    }`}
-                >
-                    {text}
-                </div>
-                {active && (
-                    <div className="absolute right-0 w-1 h-6 bg-[#1657ff] rounded-full shadow-[-2px_0px_10px_2px_#0038ff26]" />
-                )}
-            </div>
-        );
-    };
 
 
     const handleCancel = () => {
@@ -251,48 +199,7 @@ const EditProfile: React.FC = () => {
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
             {/* Sidebar */}
-            <div className="w-full md:w-72 bg-[#ffffffcc] backdrop-blur-2xl [-webkit-backdrop-filter:blur(40px)_brightness(100%)]">
-                <div className="p-6">
-                    <div className="flex items-center mb-12">
-                        <div className="absolute top-4 left-4 flex items-center space-x-2">
-                            <Image src="/projector.png" alt="App Icon" width={50} height={50}/>
-                            <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-                                Movie Night
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Navigation menu */}
-                    <nav className="flex flex-col space-y-8">
-                        <NavItem icon="/secondary-all-games.svg" text="Dashboard" active={false}/>
-                        <NavItem
-                            icon="/group-32.png"
-                            text="Profile Page"
-                            active={true}
-                        />
-                        <NavItem
-                            icon="/group-50-1.png"
-                            text="Watch List"
-                            active={false}
-                        />
-                        <NavItem
-                            icon="/group-47-1.png"
-                            text="Movie Groups"
-                            active={false}
-                        />
-                        <NavItem
-                            icon="/group-47-1.png"
-                            text="Search Movies"
-                            active={false}
-                        />
-                        <NavItem
-                            icon="/group-50-1.png"
-                            text="Your Friends"
-                            active={false}
-                        />
-                    </nav>
-                </div>
-            </div>
+            <Navigation userId={userId} activeItem="Profile Page" />
 
             {/* Main content */}
             <div className="flex-1 p-6 md:p-12">
@@ -396,11 +303,7 @@ const EditProfile: React.FC = () => {
     );
 };
 
-interface NavItemProps {
-    icon: string;
-    text: string;
-    active: boolean;
-}
+
 
 
 
