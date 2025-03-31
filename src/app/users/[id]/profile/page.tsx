@@ -10,12 +10,9 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import {ApplicationError} from "@/types/error";
 import {Movie} from "@/types/movie";
 import {useApi} from "@/hooks/useApi";
-
-
-
+import {Button} from "../../../../components/ui/button";
 
 const Profile: React.FC = () => {
-
     const { id } = useParams();
     const apiService = useApi();
     const router = useRouter();
@@ -24,7 +21,6 @@ const Profile: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     console.log(id);
-
 
     const {
         value: token,
@@ -35,27 +31,21 @@ const Profile: React.FC = () => {
     } = useLocalStorage<string>("userId", "");
 
     const handleEditProfile = () => {
-
         if (userId.valueOf() == id) {
             router.push(`/users/${id}/edit_profile`);
         } else {
             router.push(`/users/${id}/profile`);
             alert("You can only edit your own profile");
         }
-
-
     }
 
     const handleEditWatched = () => {
-
         if (userId.valueOf() == id) {
             router.push(`/users/${id}/seen_list`);
         } else {
             router.push(`/users/${id}/profile`);
             alert("You can only edit your own profile");
         }
-
-
     }
 
     const handleBack = () => {
@@ -69,7 +59,6 @@ const Profile: React.FC = () => {
             const fetchedUser: User = await apiService.get(`/profile/${id}`);
             setUser(fetchedUser);
         } catch (error: unknown) {
-
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
@@ -101,26 +90,26 @@ const Profile: React.FC = () => {
         }
     };
 
-
     useEffect(() => {
         fetchUser();
         fetchWatchedMovies();
     }, [id, apiService, token]);
 
     if (loading) {
-        return (<div className="flex justify-center items-center py-12">
+        return (
+            <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
             </div>
         )
     }
 
     if (error) {
-        return (<div className="text-red-500 text-center py-8">
+        return (
+            <div className="text-red-500 text-center py-8">
                 {error}
             </div>
         )
     }
-
 
     const mockMovies: Movie[] = [
         {
@@ -144,14 +133,6 @@ const Profile: React.FC = () => {
             trailerURL: "https://www.example.com/trailer2"
         }
     ];
-
-
-
-
-
-
-
-
 
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
@@ -203,10 +184,13 @@ const Profile: React.FC = () => {
                                 </p>
                             </div>
 
-
-                            <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full" onClick={handleEditProfile}>
+                            <Button
+                                variant="default"
+                                className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                                onClick={handleEditProfile}
+                            >
                                 edit
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
@@ -238,18 +222,23 @@ const Profile: React.FC = () => {
                             )}
                         </div>
 
-
-                        <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full"
-                                onClick={handleEditWatched}>
+                        <Button
+                            variant="default"
+                            className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                            onClick={handleEditWatched}
+                        >
                             edit
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
-                <button className="mt-8 bg-[#f44771] opacity-50 text-white font-medium px-6 py-2 rounded-full"
-                        onClick={handleBack}>
+                <Button
+                    variant="destructive"
+                    className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#f44771]/60 hover:opacity-80"
+                    onClick={handleBack}
+                >
                     back
-                </button>
+                </Button>
             </div>
         </div>
     );

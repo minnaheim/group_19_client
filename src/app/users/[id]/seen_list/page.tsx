@@ -185,8 +185,6 @@ const SeenList: React.FC = () => {
                 </div>
 
                 <div className="bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto">
-                    {/* Removed the hardcoded scrollbar */}
-                    {/* <div className="absolute w-[15px] h-[344px] top-[97px] right-[25px] bg-[#ccd0ff] rounded-[10px]"/> */}
 
                     {/* Movies */}
                     <div className="flex flex-wrap gap-6">
@@ -215,7 +213,7 @@ const SeenList: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Add Movie Button - always shown at the end */}
+                        {/* Add Movie Button*/}
                         {!isEditing && (
                             <div
                                 className="w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] bg-[#ccd1ff] rounded-[10px] flex items-center justify-center cursor-pointer"
@@ -247,7 +245,7 @@ const SeenList: React.FC = () => {
                                     onClick={handleSaveChanges}
                                     disabled={selectedMoviesToRemove.length === 0}
                                 >
-                                    Save Changes ({selectedMoviesToRemove.length})
+                                    Remove {selectedMoviesToRemove.length} movie(s)
                                 </Button>
                             </>
                         ) : (
@@ -262,7 +260,7 @@ const SeenList: React.FC = () => {
 
                     {/* Back button */}
                     <Button
-                        variant="outline"
+                        variant="destructive"
                         className="mt-4"
                         onClick={() => router.push(`/users/${id}/profile`)}
                     >
