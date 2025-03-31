@@ -61,6 +61,7 @@ const Profile: React.FC = () => {
     const handleBack = () => {
         router.push("/users/dashboard");
     }
+
     const fetchUser = async () => {
         setLoading(true);
         setError(null);
@@ -73,7 +74,8 @@ const Profile: React.FC = () => {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
 
-                router.push("/users/dashboard");
+                // TODO: uncomment once api works, this is only so that the empty profile page can be displayed
+                // router.push("/users/dashboard");
             }
         } finally {
             setLoading(false);
@@ -91,8 +93,8 @@ const Profile: React.FC = () => {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
 
-
-                router.push("/users/dashboard");
+                // TODO: uncomment once api works, this is only so that the empty profile page can be displayed
+                // router.push("/users/dashboard");
             }
         } finally {
             setLoading(false);
@@ -201,11 +203,6 @@ const Profile: React.FC = () => {
                                 </p>
                             </div>
 
-                            <div>
-                                <p className="font-semibold text-[#3b3e88] text-base">
-                                    preferences: {user?.preferences ? user.preferences : "these are my preferences"}
-                                </p>
-                            </div>
 
                             <button className="bg-[#ff9a3e] text-white font-medium px-6 py-3 rounded-full" onClick={handleEditProfile}>
                                 edit
