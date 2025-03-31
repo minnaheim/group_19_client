@@ -266,27 +266,27 @@ const EditProfile: React.FC = () => {
                     <nav className="flex flex-col space-y-8">
                         <NavItem icon="/secondary-all-games.svg" text="Dashboard" active={false}/>
                         <NavItem
-                            icon="/group-32.png"
+                            icon="/live_selected.png"
                             text="Profile Page"
                             active={true}
                         />
                         <NavItem
-                            icon="/group-50-1.png"
+                            icon="/squares.png"
                             text="Watch List"
                             active={false}
                         />
                         <NavItem
-                            icon="/group-47-1.png"
+                            icon="/Video.png"
                             text="Movie Groups"
                             active={false}
                         />
                         <NavItem
-                            icon="/group-47-1.png"
+                            icon="/Video.png"
                             text="Search Movies"
                             active={false}
                         />
                         <NavItem
-                            icon="/group-50-1.png"
+                            icon="/squares.png"
                             text="Your Friends"
                             active={false}
                         />

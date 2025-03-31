@@ -108,7 +108,7 @@ const Profile: React.FC = () => {
     const handleEditWatched = () => {
 
         if (userId.valueOf() == id) {
-            router.push(`/users/${id}/edit_watched`);
+            router.push(`/users/${id}/seen_list`);
         } else {
             router.push(`/users/${id}/profile`);
             alert("You can only edit your own profile");
