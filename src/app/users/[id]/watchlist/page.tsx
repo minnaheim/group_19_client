@@ -8,11 +8,9 @@ import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { Button } from "../../../../components/ui/button";
 import Navigation from "../../../../components/ui/navigation";
-import {ApplicationError} from "@/types/error";
-
-
-
-
+import { ApplicationError } from "@/types/error";
+import { Input } from "../../../../components/ui/input";
+import { Search } from "lucide-react";
 
 const WatchList: React.FC = () => {
     const { id } = useParams();
@@ -25,105 +23,14 @@ const WatchList: React.FC = () => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<number[]>([]);
 
+    // Search state
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [searchCategory, setSearchCategory] = useState<string>("all");
+    const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+    const [isSearching, setIsSearching] = useState<boolean>(false);
+
     const { value: token } = useLocalStorage<string>("token", "");
     const { value: userId } = useLocalStorage<string>("userId", "");
-
-    // Fetch user data
-    useEffect(() => {
-        const fetchUserData = async () => {
-            if (!id) return;
-
-            try {
-                setLoading(true);
-                // TODO: Replace with actual API call to get user data
-                // const userData = await apiService.getUser(id as string);
-                // setUser(userData);
-
-                // Mock data for now
-                setTimeout(() => {
-                    setUser({
-                        id: parseInt(id as string),
-                        username: "moviefan",
-                        email: "user@example.com",
-                        password: "******",
-                        bio: "I love movies!",
-                        favoriteGenres: ["Sci-Fi", "Thriller"],
-                        favoriteMovie: mockMovies[0],
-                        watchlist: mockMovies,
-                        watchedMovies: mockMovies
-                    });
-                    setLoading(false);
-                }, 500);
-            } catch (error) {
-                setError("Failed to load user data");
-                if (error instanceof Error && "status" in error) {
-                    const applicationError = error as ApplicationError;
-                    alert(`Error: ${applicationError.message}`);
-                }
-                setLoading(false);
-            }
-        };
-
-        fetchUserData();
-    }, [id, token, apiService]);
-
-
-
-    const handleAddMovie = () => {
-        if (userId === id) {
-            router.push(`/users/${id}/search_movies`);
-        } else {
-            alert("You can only edit your own movie lists!");
-        }
-    };
-
-    const handleEdit = () => {
-        if (userId === id) {
-            setIsEditing(true);
-        } else {
-            alert("You can only edit your own movie lists!");
-        }
-    };
-
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        setSelectedMoviesToRemove([]);
-    };
-
-    const handleMovieSelect = (movieId: number) => {
-        if (selectedMoviesToRemove.includes(movieId)) {
-            setSelectedMoviesToRemove(selectedMoviesToRemove.filter(id => id !== movieId));
-        } else {
-            setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
-        }
-    };
-
-    const handleSaveChanges = async () => {
-        try {
-            // TODO: Implement API call to update user's watched movies
-            // await apiService.updateWatchedMovies(userId, selectedMoviesToRemove);
-
-            // For now, just update local state
-            if (user) {
-                const updatedMovies = user.watchlist.filter(
-                    movie => !selectedMoviesToRemove.includes(movie.id)
-                );
-                setUser({
-                    ...user,
-                    watchlist: updatedMovies
-                });
-            }
-
-            setIsEditing(false);
-            setSelectedMoviesToRemove([]);
-        } catch (error) {
-            setError("Failed to load user data");
-            if (error instanceof Error && "status" in error) {
-                const applicationError = error as ApplicationError;
-                alert(`Error: ${applicationError.message}`);
-            }
-        }
-    };
 
     const mockMovies: Movie[] = [
         {
@@ -187,7 +94,7 @@ const WatchList: React.FC = () => {
             trailerURL: "https://www.example.com/fall-guy"
         },
         {
-            id: 9,
+            id: 7,
             title: "The Batman",
             posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
             details: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
@@ -197,7 +104,7 @@ const WatchList: React.FC = () => {
             trailerURL: "https://www.example.com/the-batman"
         },
         {
-            id: 11,
+            id: 8,
             title: "The Whale",
             posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
             details: "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
@@ -207,7 +114,7 @@ const WatchList: React.FC = () => {
             trailerURL: "https://www.example.com/the-whale"
         },
         {
-            id: 12,
+            id: 9,
             title: "Top Gun: Maverick",
             posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
             details: "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
@@ -217,7 +124,7 @@ const WatchList: React.FC = () => {
             trailerURL: "https://www.example.com/top-gun-maverick"
         },
         {
-            id: 13,
+            id: 10,
             title: "Everything Everywhere All at Once",
             posterUrl: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
             details: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
@@ -228,9 +135,169 @@ const WatchList: React.FC = () => {
         }
     ];
 
-    const displayMovies = user?.watchlist && user.watchlist.length > 0
-        ? user.watchlist
-        : mockMovies;
+    // Fetch user data
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!id) return;
+
+            try {
+                setLoading(true);
+                // TODO: peplace with actual API call to get user data
+                // const userData = await apiService.getUser(id as string);
+                // setUser(userData);
+
+                // mock data for now
+                setTimeout(() => {
+                    setUser({
+                        id: parseInt(id as string),
+                        username: "moviefan",
+                        email: "user@example.com",
+                        password: "******",
+                        bio: "I love movies!",
+                        favoriteGenres: ["Sci-Fi", "Thriller"],
+                        favoriteMovie: mockMovies[0],
+                        watchlist: mockMovies,
+                        watchedMovies: mockMovies
+                    });
+                    setLoading(false);
+                }, 500);
+            } catch (error) {
+                setError("Failed to load user data");
+                if (error instanceof Error && "status" in error) {
+                    const applicationError = error as ApplicationError;
+                    alert(`Error: ${applicationError.message}`);
+                }
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [id, token, apiService]);
+
+    // filter movies based on search query
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setIsSearching(false);
+            return;
+        }
+
+        setIsSearching(true);
+        const movies = user?.watchlist || mockMovies;
+        const query = searchQuery.toLowerCase().trim();
+
+        const filtered = movies.filter(movie => {
+            if (searchCategory === "title" || searchCategory === "all") {
+                if (movie.title.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            if (searchCategory === "genre" || searchCategory === "all") {
+                if (movie.genre.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            if (searchCategory === "director" || searchCategory === "all") {
+                if (movie.director.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            if (searchCategory === "actors" || searchCategory === "all") {
+                if (movie.actors.some(actor => actor.toLowerCase().includes(query))) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        setFilteredMovies(filtered);
+    }, [searchQuery, searchCategory, user?.watchlist]);
+
+    const handleAddMovie = () => {
+        if (userId === id) {
+            router.push(`/users/${id}/search_movies`);
+        } else {
+            alert("You can only edit your own movie lists!");
+        }
+    };
+
+    const handleEdit = () => {
+        if (userId === id) {
+            setIsEditing(true);
+            setSearchQuery("");
+            setIsSearching(false);
+        } else {
+            alert("You can only edit your own movie lists!");
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setSelectedMoviesToRemove([]);
+    };
+
+    const handleMovieSelect = (movieId: number) => {
+        if (selectedMoviesToRemove.includes(movieId)) {
+            setSelectedMoviesToRemove(selectedMoviesToRemove.filter(id => id !== movieId));
+        } else {
+            setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
+        }
+    };
+
+    const handleSaveChanges = async () => {
+        try {
+            // TODO: implement API call to update user's watched movies
+            // await apiService.updateWatchedMovies(userId, selectedMoviesToRemove);
+
+            // for now just update local state
+            if (user) {
+                const updatedMovies = user.watchlist.filter(
+                    movie => !selectedMoviesToRemove.includes(movie.id)
+                );
+                setUser({
+                    ...user,
+                    watchlist: updatedMovies
+                });
+            }
+
+            setIsEditing(false);
+            setSelectedMoviesToRemove([]);
+        } catch (error) {
+            setError("Failed to update watchlist");
+            if (error instanceof Error && "status" in error) {
+                const applicationError = error as ApplicationError;
+                alert(`Error: ${applicationError.message}`);
+            }
+        }
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSearchCategory(e.target.value);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSearchCategory("all");
+        setIsSearching(false);
+    };
+
+    // determine which movies to display
+    const getDisplayMovies = () => {
+        if (isSearching) {
+            return filteredMovies;
+        } else {
+            return user?.watchlist || mockMovies;
+        }
+    };
+
+    const displayMovies = getDisplayMovies();
 
     if (loading) {
         return (
@@ -259,10 +326,56 @@ const WatchList: React.FC = () => {
                     <h1 className="font-semibold text-[#3b3e88] text-3xl">
                         Your Watchlist
                     </h1>
-
                 </div>
 
+                {/* Search bar */}
+                {!isEditing && (
+                    <div className="mb-6 flex flex-col md:flex-row gap-3">
+                        <div className="relative flex-grow">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <Input
+                                type="text"
+                                placeholder="Search movies..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                className="pl-10 py-2 w-full rounded-md bg-white"
+                            />
+                        </div>
+                        <select
+                            value={searchCategory}
+                            onChange={handleCategoryChange}
+                            className="p-2 rounded-[30px] border-none bg-[#3b3e88] text-white min-w-[120px] focus:ring-2 focus:ring-[#6266b6] focus:outline-none"
+                        >
+                            <option value="all">All</option>
+                            <option value="title">Title</option>
+                            <option value="genre">Genre</option>
+                            <option value="director">Director</option>
+                            <option value="actors">Actors</option>
+                        </select>
+                        {searchQuery && (
+                            <Button
+                                variant="destructive"
+                                onClick={clearSearch}
+                                className="px-4"
+                            >
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                )}
+
                 <div className="bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto">
+                    {/* No results message */}
+                    {isSearching && displayMovies.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <p className="text-gray-500 text-lg mb-4">none of the movies on your watchlist match your search</p>
+                            <Button variant="destructive" onClick={clearSearch}>
+                                Clear Search
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Movies */}
                     <div className="flex flex-wrap gap-6">
@@ -291,7 +404,7 @@ const WatchList: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Add Movie Button*/}
+                        {/* Add Movie Button */}
                         {!isEditing && (
                             <div
                                 className="w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] bg-[#ccd1ff] rounded-[10px] flex items-center justify-center cursor-pointer"
@@ -308,6 +421,16 @@ const WatchList: React.FC = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Search Results Summary */}
+                {searchQuery && !isEditing && (
+                    <div className="mt-4 text-[#3b3e88]">
+                        Found {displayMovies.length} movies matching &#34;{searchQuery}&#34; in {
+                        searchCategory === "all" ? "all categories" : searchCategory
+                    }
+                    </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="mt-8 flex justify-between">
                     {isEditing ? (

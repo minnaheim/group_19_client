@@ -8,11 +8,9 @@ import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { Button } from "../../../../components/ui/button";
 import Navigation from "../../../../components/ui/navigation";
-import {ApplicationError} from "@/types/error";
-
-
-
-
+import { ApplicationError } from "@/types/error";
+import { Input } from "../../../../components/ui/input";
+import { Search } from "lucide-react";
 
 const SeenList: React.FC = () => {
     const { id } = useParams();
@@ -24,6 +22,12 @@ const SeenList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<number[]>([]);
+
+    // Search state
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [searchCategory, setSearchCategory] = useState<string>("all");
+    const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+    const [isSearching, setIsSearching] = useState<boolean>(false);
 
     const { value: token } = useLocalStorage<string>("token", "");
     const { value: userId } = useLocalStorage<string>("userId", "");
@@ -67,7 +71,52 @@ const SeenList: React.FC = () => {
         fetchUserData();
     }, [id, token, apiService]);
 
+    // Filter movies based on search query
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setIsSearching(false);
+            return;
+        }
 
+        setIsSearching(true);
+        const movies = user?.watchedMovies || mockMovies;
+        const query = searchQuery.toLowerCase().trim();
+
+        const filtered = movies.filter(movie => {
+            // Check title if category is "title" or "all"
+            if (searchCategory === "title" || searchCategory === "all") {
+                if (movie.title.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            // Check genre if category is "genre" or "all"
+            if (searchCategory === "genre" || searchCategory === "all") {
+                if (movie.genre.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            // Check director if category is "director" or "all"
+            if (searchCategory === "director" || searchCategory === "all") {
+                if (movie.director.toLowerCase().includes(query)) {
+                    return true;
+                }
+            }
+
+            // Check actors if category is "actors" or "all"
+            if (searchCategory === "actors" || searchCategory === "all") {
+                if (movie.actors.some(actor => actor.toLowerCase().includes(query))) {
+                    return true;
+                }
+            }
+
+            // If none of the above conditions matched, exclude this movie
+            return false;
+        });
+
+        setFilteredMovies(filtered);
+    }, [searchQuery, searchCategory, user?.watchedMovies]);
 
     const handleAddMovie = () => {
         if (userId === id) {
@@ -80,6 +129,9 @@ const SeenList: React.FC = () => {
     const handleEdit = () => {
         if (userId === id) {
             setIsEditing(true);
+            // Clear search when entering edit mode
+            setSearchQuery("");
+            setIsSearching(false);
         } else {
             alert("You can only edit your own movie lists!");
         }
@@ -117,11 +169,34 @@ const SeenList: React.FC = () => {
             setIsEditing(false);
             setSelectedMoviesToRemove([]);
         } catch (error) {
-            setError("Failed to load user data");
+            setError("Failed to update movie list");
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
                 alert(`Error: ${applicationError.message}`);
             }
+        }
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSearchCategory(e.target.value);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSearchCategory("all");
+        setIsSearching(false);
+    };
+
+    // Determine which movies to display
+    const getDisplayMovies = () => {
+        if (isSearching) {
+            return filteredMovies;
+        } else {
+            return user?.watchedMovies || mockMovies;
         }
     };
 
@@ -228,9 +303,7 @@ const SeenList: React.FC = () => {
         }
     ];
 
-    const displayMovies = user?.watchedMovies && user.watchedMovies.length > 0
-        ? user.watchedMovies
-        : mockMovies;
+    const displayMovies = getDisplayMovies();
 
     if (loading) {
         return (
@@ -264,7 +337,54 @@ const SeenList: React.FC = () => {
                     </p>
                 </div>
 
+                {/* Search bar */}
+                {!isEditing && (
+                    <div className="mb-6 flex flex-col md:flex-row gap-3">
+                        <div className="relative flex-grow">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <Input
+                                type="text"
+                                placeholder="Search movies..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                className="pl-10 py-2 w-full rounded-md bg-white"
+                            />
+                        </div>
+                        <select
+                            value={searchCategory}
+                            onChange={handleCategoryChange}
+                            className="p-2 rounded-[30px] border-none bg-[#3b3e88] text-white min-w-[120px] focus:ring-2 focus:ring-[#6266b6] focus:outline-none"
+                        >
+                            <option value="all">All</option>
+                            <option value="title">Title</option>
+                            <option value="genre">Genre</option>
+                            <option value="director">Director</option>
+                            <option value="actors">Actors</option>
+                        </select>
+                        {searchQuery && (
+                            <Button
+                                variant="destructive"
+                                onClick={clearSearch}
+                                className="px-4"
+                            >
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                )}
+
                 <div className="bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto">
+                    {/* No results message */}
+                    {isSearching && displayMovies.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <p className="text-gray-500 text-lg mb-4">No movies found matching your search.</p>
+                            <Button variant="destructive" onClick={clearSearch}>
+                                Clear Search
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Movies */}
                     <div className="flex flex-wrap gap-6">
@@ -310,6 +430,16 @@ const SeenList: React.FC = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Search Results Summary */}
+                {searchQuery && !isEditing && (
+                    <div className="mt-4 text-[#3b3e88]">
+                        Found {displayMovies.length} movies matching &#34;{searchQuery}&#34; in {
+                        searchCategory === "all" ? "all categories" : searchCategory
+                    }
+                    </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="mt-8 flex justify-between">
                     {isEditing ? (
