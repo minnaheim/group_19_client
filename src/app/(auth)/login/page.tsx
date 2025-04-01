@@ -12,7 +12,7 @@ import { useState } from "react";
 const Login: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
-  const { set: setToken } = useLocalStorage<string>("token", "");
+  // const { set: setToken } = useLocalStorage<string>("token", "");
 
   const [formValues, setFormValues] = useState({
     username: "",
@@ -70,7 +70,8 @@ const Login: React.FC = () => {
       const response = await apiService.put<User>("/login", formValues); // changed post to put -> TODO: need to change to ONLINE
       if (response.token) {
         console.log(response.token);
-        setToken(response.token);
+        localStorage.setItem("token", response.token);
+        // setToken(response.token);
       }
 
       // Navigate to the user overview
@@ -127,39 +128,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-
-// from https://nextjs.org/docs/pages/building-your-application/authentication
-// import { FormEvent } from 'react'
-// import { useRouter } from 'next/router'
-
-// export default function LoginPage() {
-//   const router = useRouter()
-
-//   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-//     event.preventDefault()
-
-//     const formData = new FormData(event.currentTarget)
-//     const email = formData.get('email')
-//     const password = formData.get('password')
-
-//     const response = await fetch('/api/auth/login', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ email, password }),
-//     })
-
-//     if (response.ok) {
-//       router.push('/profile')
-//     } else {
-//       // Handle errors
-//     }
-//   }
-
-//   return (
-//     <form onSubmit={handleSubmit}>
-//       <input type="email" name="email" placeholder="Email" required />
-//       <input type="password" name="password" placeholder="Password" required />
-//       <button type="submit">Login</button>
-//     </form>
-//   )
-// }
