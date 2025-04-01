@@ -5,13 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation"; // use NextJS router for navigation
 import { useApi } from "@/app/hooks/useApi";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { User } from "@/app/types/user";
 import { useState } from "react";
 
 const Login: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
-  // const { set: setToken } = useLocalStorage<string>("token", "");
+  const { set: setToken } = useLocalStorage<string>("token", "");
 
   const [formValues, setFormValues] = useState({
     username: "",
@@ -69,8 +70,8 @@ const Login: React.FC = () => {
       const response = await apiService.put<User>("/login", formValues); // changed post to put -> TODO: need to change to ONLINE
       if (response.token) {
         console.log(response.token);
-        localStorage.setItem("token", response.token);
-        // setToken(response.token);
+        // localStorage.setItem("token", response.token);
+        setToken(response.token);
       }
 
       // Navigate to the user overview
