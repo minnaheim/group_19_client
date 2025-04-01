@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation"; // use NextJS router for navigation
 import { useApi } from "@/app/hooks/useApi";
-import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { User } from "@/app/types/user";
 import { useState } from "react";
 
