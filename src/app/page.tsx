@@ -26,6 +26,11 @@ export default function Home() {
           </Link>
         </p>
         <p>
+          <Link href="/preferences">
+            <Button variant={"secondary"}>Users Preference Setting!</Button>
+          </Link>
+        </p>
+        <p>
           {/* change opacity for the default and secondary button and */}
           <Button variant={"destructive"}>back</Button>
         </p>

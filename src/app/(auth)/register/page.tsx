@@ -86,7 +86,7 @@ const Register: React.FC = () => {
       if (response.token) {
         setToken(response.token);
       }
-      router.push("/users/[id]/profile");
+      router.push("/preferences");
     } catch (error) {
       if (error instanceof Error) {
         alert(`Something went wrong during the registration:\n ${error}`);
