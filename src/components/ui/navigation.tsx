@@ -8,11 +8,9 @@ import {
     Home,
     Search,
     ListChecks,
-    CheckSquare,
     User,
     Film,
-    Users,
-    Settings
+    Users
 } from "lucide-react";
 
 // Define all navigation item configurations with Lucide icons
