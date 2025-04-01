@@ -3,10 +3,10 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/hooks/useApi";
+import { useApi } from "@/app/hooks/useApi";
 import { useRouter } from "next/navigation";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { User } from "@/types/user";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
+import { User } from "@/app/types/user";
 import { useState } from "react";
 // import { Form } from "antd"; // npm install antd
 
