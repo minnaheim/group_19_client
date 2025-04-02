@@ -84,7 +84,7 @@ reason).
 ---
 
 
-## Contributions Week 4 - [16.04.2025] to [22.04.2025]
+## Contributions Week 4 - [16.04.2025] to [29.04.2025] ONLY 3.5 WORKDAYS
 
 
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
