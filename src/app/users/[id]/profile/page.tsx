@@ -56,27 +56,8 @@ const Profile: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const fetchedUser: User = await apiService.get(`/profile/${id}`);
+            const fetchedUser: User = await apiService.get(`/users/${id}/profile`);
             setUser(fetchedUser);
-        } catch (error: unknown) {
-            if (error instanceof Error && "status" in error) {
-                const applicationError = error as ApplicationError;
-                alert(`Error: ${applicationError.message}`);
-
-                // TODO: uncomment once api works, this is only so that the empty profile page can be displayed
-                // router.push("/users/dashboard");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchWatchedMovies = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const fetchedWatchedMovies: Movie[] = await apiService.get(`/watched/${id}`);
-            setUser(prevUser => prevUser ? {...prevUser, watchedMovies: fetchedWatchedMovies} : null);
         } catch (error: unknown) {
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
@@ -92,7 +73,6 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         fetchUser();
-        fetchWatchedMovies();
     }, [id, apiService, token]);
 
     if (loading) {

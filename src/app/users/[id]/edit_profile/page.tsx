@@ -64,7 +64,7 @@ const EditProfile: React.FC = () => {
 
         try {
             try {
-                await apiService.put(`/profile/${id}`, updatedUser);
+                await apiService.put(`/users/${id}/profile?token=${token}`, updatedUser);
             } catch (apiError) {
                 console.log("Mock update - no API available:", apiError);
                 // For testing - simulate successful update
@@ -114,7 +114,7 @@ const EditProfile: React.FC = () => {
             // Try to fetch from API
             let fetchedUser: User;
             try {
-                fetchedUser = await apiService.get(`/profile/${id}`);
+                fetchedUser = await apiService.get(`/users/${id}/profile`);
             } catch (apiError) {
                 console.log("Using mock user data instead of API:", apiError);
                 // Use mock data if API fails

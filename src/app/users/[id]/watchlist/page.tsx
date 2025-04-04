@@ -142,12 +142,13 @@ const WatchList: React.FC = () => {
 
             try {
                 setLoading(true);
-                // TODO: peplace with actual API call to get user data
-                // const userData = await apiService.getUser(id as string);
-                // setUser(userData);
-
-                // mock data for now
-                setTimeout(() => {
+                // Try to get the user data from the profile endpoint
+                try {
+                    const userData = await apiService.get(`/users/${id}/profile`);
+                    setUser(userData);
+                } catch (apiError) {
+                    console.log("API error, using mock data:", apiError);
+                    // Fall back to mock data if the API call fails
                     setUser({
                         id: parseInt(id as string),
                         username: "moviefan",
@@ -159,8 +160,8 @@ const WatchList: React.FC = () => {
                         watchlist: mockMovies,
                         watchedMovies: mockMovies
                     });
-                    setLoading(false);
-                }, 500);
+                }
+                setLoading(false);
             } catch (error) {
                 setError("Failed to load user data");
                 if (error instanceof Error && "status" in error) {
@@ -249,10 +250,17 @@ const WatchList: React.FC = () => {
 
     const handleSaveChanges = async () => {
         try {
-            // TODO: implement API call to update user's watched movies
-            // await apiService.updateWatchedMovies(userId, selectedMoviesToRemove);
+            // Process each movie removal separately
+            for (const movieId of selectedMoviesToRemove) {
+                try {
+                    // Call the server API to remove the movie
+                    await apiService.delete(`/users/${id}/watchlist/${movieId}?token=${token}`);
+                } catch (apiError) {
+                    console.error("Error removing movie from watchlist:", apiError);
+                }
+            }
 
-            // for now just update local state
+            // After all removals, update local state
             if (user) {
                 const updatedMovies = user.watchlist.filter(
                     movie => !selectedMoviesToRemove.includes(movie.id)
