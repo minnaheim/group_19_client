@@ -1,10 +1,12 @@
 export interface Movie {
     id: number; // maps to movieId on server
     title: string;
-    posterURL: string; // Changed to match server naming
-    description: string; // Changed from details to match server
+    posterURL: string;
+    description: string; 
     genre: string;
-    director: string; // This will map to crew on server
-    actors: string[]; // This will be parsed from actor string on server
+    director: string;
+    actors: string[];
     trailerURL: string;
+    year?: number; // Optional, not used in all components
+    originallanguage?: string; // Optional, not used in all components
 }

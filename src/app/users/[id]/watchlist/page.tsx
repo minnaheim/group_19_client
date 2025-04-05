@@ -36,8 +36,8 @@ const WatchList: React.FC = () => {
         {
             id: 1,
             title: "Sample Movie 1",
-            posterUrl: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-            details: "A thrilling adventure about a group of friends who embark on a journey.",
+            posterURL: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
+            description: "A thrilling adventure about a group of friends who embark on a journey.",
             genre: "Adventure",
             director: "John Doe",
             actors: ["Actor 1", "Actor 2", "Actor 3"],
@@ -402,7 +402,7 @@ const WatchList: React.FC = () => {
                                             : ''
                                     }`}
                                     alt={movie.title}
-                                    src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+                                    src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
                                 />
                                 {isEditing && selectedMoviesToRemove.includes(movie.id) && (
                                     <div className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 text-xs sm:p-1.5 md:p-2 md:text-sm">

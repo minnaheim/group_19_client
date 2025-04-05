@@ -86,8 +86,8 @@ const EditProfile: React.FC = () => {
     const mockMovie = {
         id: 1,
         title: "Sample Movie",
-        posterUrl: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-        details: "A thrilling adventure about a group of friends who embark on a journey.",
+        posterURL: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
+        description: "A thrilling adventure about a group of friends who embark on a journey.",
         genre: "Adventure",
         director: "John Doe",
         actors: ["Actor 1", "Actor 2", "Actor 3"],

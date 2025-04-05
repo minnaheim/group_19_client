@@ -411,7 +411,7 @@ const SeenList: React.FC = () => {
                                             : ''
                                     }`}
                                     alt={movie.title}
-                                    src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+                                    src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
                                 />
                                 {isEditing && selectedMoviesToRemove.includes(movie.id) && (
                                     <div className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 text-xs sm:p-1.5 md:p-2 md:text-sm">
