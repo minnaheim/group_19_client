@@ -18,7 +18,7 @@ const Register: React.FC = () => {
 
   // State to manage form inputs
   const [formValues, setFormValues] = useState({
-    email: "", //TODO: requirements for email & co.
+    email: "",
     username: "",
     password: "",
   });
@@ -81,10 +81,16 @@ const Register: React.FC = () => {
       return;
     }
     try {
-      const response = await apiService.post<User>("/register", formValues);
-
-      if (response.token) {
-        setToken(response.token);
+      console.log(formValues);
+      const [response, headers] = await apiService.post<User>(
+        "/register",
+        formValues
+      );
+      console.log(response);
+      const token =
+        headers.get("Authorization") || headers.get("authorization");
+      if (token) {
+        setToken(token.replace("Bearer", "")); // if it has bearer prefix, remove it
       }
       router.push("/preferences");
     } catch (error) {

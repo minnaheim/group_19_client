@@ -76,17 +76,25 @@ export class ApiService {
    * @param data - The payload to post.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown): Promise<T> {
+  public async post<T>(endpoint: string, data: unknown): Promise<[T, Headers]> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
-      method: "POST",
       headers: this.getHeaders(),
+      method: "POST",
       body: JSON.stringify(data),
     });
-    return this.processResponse<T>(
+    // process response body
+    const responseBody = await this.processResponse<T>(
       res,
       "An error occurred while posting the data.\n"
     );
+    // return both the response body and headers
+    return [responseBody, res.headers];
+    // // identify how processResponse looks like to see where to get token out of header
+    // return this.processResponse<T>(
+    //   res,
+    //   "An error occurred while posting the data.\n"
+    // );
   }
 
   /**

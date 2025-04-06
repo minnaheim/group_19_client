@@ -67,11 +67,17 @@ const Login: React.FC = () => {
     }
     try {
       console.log(formValues);
-      const response = await apiService.put<User>("/login", formValues); // changed post to put -> TODO: need to change to ONLINE
-      if (response.token) {
-        console.log(response.token);
-        // localStorage.setItem("token", response.token);
-        setToken(response.token);
+      // TODO: post
+      const [response, headers] = await apiService.post<User>(
+        "/login",
+        formValues
+      );
+      const token =
+        headers.get("Authorization") || headers.get("authorization"); // dep on what it's called
+
+      if (token) {
+        console.log(token);
+        setToken(token.replace("Bearer ", "")); // remove Bearer prefix
       }
 
       // Navigate to the user overview
