@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 const Preferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
