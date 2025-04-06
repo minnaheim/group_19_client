@@ -8,31 +8,25 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import { Button } from "../../../../components/ui/button";
 import Navigation from "../../../../components/ui/navigation";
 import { ApplicationError } from "@/types/error";
-import SearchBar from "../../../../components/ui/search_bar";
-import MovieList from "../../../../components/ui/movie_list";
-import MovieDetailsModal from "../../../../components/ui/movie_details";
 import ActionMessage from "../../../../components/ui/action_message";
+import MovieDetailsModal from "../../../../components/ui/movie_details";
+import MovieList from "../../../../components/ui/movie_list";
+import SearchBar from "../../../../components/ui/search_bar";
 
 
+const SearchMovies: React.FC = () => {
+    const { id } = useParams();
+    const apiService = useApi();
+    const router = useRouter();
 
-
-const WatchList: React.FC = () => {
-  const { id } = useParams();
-  const apiService = useApi();
-  const router = useRouter();
-
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<
-    number[]
-  >([]);
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     // search state
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchCategory, setSearchCategory] = useState<string>("all");
-    const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+    const [searchResults, setSearchResults] = useState<Movie[]>([]);
     const [isSearching, setIsSearching] = useState<boolean>(false);
 
     // movie inspection
@@ -43,9 +37,10 @@ const WatchList: React.FC = () => {
     const [actionMessage, setActionMessage] = useState<string>("");
     const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
 
-  const { value: token } = useLocalStorage<string>("token", "");
-  const { value: userId } = useLocalStorage<string>("userId", "");
+    const { value: token } = useLocalStorage<string>("token", "");
+    const { value: userId } = useLocalStorage<string>("userId", "");
 
+    // mock data for testing
     const mockMovies: Movie[] = [
         {
             id: 1,
@@ -69,7 +64,7 @@ const WatchList: React.FC = () => {
         },
 
         {
-            id: 301,
+            id: 35,
             title: "Dune: Part Two",
             posterUrl: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
             details: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
@@ -79,7 +74,7 @@ const WatchList: React.FC = () => {
             trailerURL: "https://www.example.com/dune-part-two"
         },
         {
-            id: 300,
+            id: 40,
             title: "Oppenheimer",
             posterUrl: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
             details: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
@@ -205,30 +200,31 @@ const WatchList: React.FC = () => {
         }
     ];
 
-  // Fetch user data
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!id) return;
+    // fetch user data
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!id) return;
 
             try {
                 setLoading(true);
-                // TODO: Replace with actual API call to get user data
+
+                // TODO: Replace with actual API call when ready
                 // const userData = await apiService.get(`/profile/${id}`);
                 // const watchlist = await apiService.get(`/watchlist/${id}`);
-                // const seenList = await apiService.get(`/watched/${id}`);
+                // const watchedMovies = await apiService.get(`/watched/${id}`);
 
-                // Mock data for now
+                // mock data for testing
                 setTimeout(() => {
                     setUser({
                         id: parseInt(id as string),
-                        username: "moviefan",
-                        email: "user@example.com",
+                        username: "ella",
+                        email: "ella@philippi.com",
                         password: "******",
                         bio: "I love movies!",
-                        favoriteGenres: ["Sci-Fi", "Thriller"],
+                        favoriteGenres: ["Science Fiction", "Action", "Drama"],
                         favoriteMovie: mockMovies[0],
-                        watchlist: mockMovies,
-                        watchedMovies: mockMovies
+                        watchlist: [mockMovies[0], mockMovies[2]],
+                        watchedMovies: [mockMovies[1], mockMovies[3]]
                     });
                     setLoading(false);
                 }, 500);
@@ -242,184 +238,228 @@ const WatchList: React.FC = () => {
             }
         };
 
-    fetchUserData();
-  }, [id, token, apiService]);
+        fetchUserData();
+    }, [id, token, apiService]);
 
-    // Filter movies based on search query
+    // search movies
     useEffect(() => {
         if (!searchQuery.trim()) {
             setIsSearching(false);
+            setSearchResults([]);
             return;
         }
 
         setIsSearching(true);
-        const movies = user?.watchlist || [];
+
+        // TODO: Replace with actual API call
+        // const searchMovies = async () => {
+        //     try {
+        //         // build query parameters based on selected category
+        //         const queryParams: Record<string, string> = {};
+        //
+        //         if (searchCategory === "title" || searchCategory === "all") {
+        //             queryParams.title = searchQuery;
+        //         }
+        //
+        //         if (searchCategory === "genre" || searchCategory === "all") {
+        //             queryParams.genre = searchQuery;
+        //         }
+        //
+        //         if (searchCategory === "director" || searchCategory === "all") {
+        //             queryParams.director = searchQuery;
+        //         }
+        //
+        //         if (searchCategory === "actors" || searchCategory === "all") {
+        //             queryParams.actor = searchQuery;
+        //         }
+        //
+        //         // construct query string
+        //         const queryString = Object.entries(queryParams)
+        //             .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        //             .join('&');
+        //
+        //         // make API call with query parameters
+        //         const results = await apiService.get(`/movies?${queryString}`);
+        //         if (Array.isArray(results)) {
+        //             setSearchResults(results as Movie[]);
+        //         } else {
+        //             setSearchResults([]);
+        //         }
+        //     } catch (error) {
+        //         if (error instanceof Error && "status" in error) {
+        //             const applicationError = error as ApplicationError;
+        //             if (applicationError.status === 400) {
+        //                 setError(`Search failed: ${applicationError.message}`);
+        //             } else {
+        //                 setError("Failed to search movies");
+        //             }
+        //         }
+        //         setSearchResults([]);
+        //     }
+        // };
+
+        // mock search for now
         const query = searchQuery.toLowerCase().trim();
+        const filtered = mockMovies.filter(movie => {
+            if (searchCategory === "title" || searchCategory === "all") {
+                if (movie.title.toLowerCase().includes(query)) return true;
+            }
 
-    const filtered = movies.filter((movie) => {
-      if (searchCategory === "title" || searchCategory === "all") {
-        if (movie.title.toLowerCase().includes(query)) {
-          return true;
+            if (searchCategory === "genre" || searchCategory === "all") {
+                if (movie.genre.toLowerCase().includes(query)) return true;
+            }
+
+            if (searchCategory === "director" || searchCategory === "all") {
+                if (movie.director.toLowerCase().includes(query)) return true;
+            }
+
+            if (searchCategory === "actors" || searchCategory === "all") {
+                if (movie.actors.some(actor => actor.toLowerCase().includes(query))) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        // simulate API delay
+        setTimeout(() => {
+            setSearchResults(filtered);
+        }, 300);
+
+        // TODO: uncomment this when switching to real API
+        // // bebounce search to avoid too many API calls
+        // const debounceTimer = setTimeout(() => {
+        //     searchMovies();
+        // }, 300);
+        //
+        // return () => clearTimeout(debounceTimer);
+
+    }, [searchQuery, searchCategory]);
+
+    // get recommended movies based on user preferences
+    const getRecommendedMovies = () => {
+        if (!user || !user.favoriteGenres) {
+            return [];
         }
-      }
 
-      if (searchCategory === "genre" || searchCategory === "all") {
-        if (movie.genre.toLowerCase().includes(query)) {
-          return true;
-        }
-      }
-
-      if (searchCategory === "director" || searchCategory === "all") {
-        if (movie.director.toLowerCase().includes(query)) {
-          return true;
-        }
-      }
-
-      if (searchCategory === "actors" || searchCategory === "all") {
-        if (movie.actors.some((actor) => actor.toLowerCase().includes(query))) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-
-    setFilteredMovies(filtered);
-  }, [searchQuery, searchCategory, user?.watchlist]);
-
-    const handleAddMovie = () => {
-        if (userId === id) {
-            router.push(`/users/${id}/movie_search`);
-        } else {
-            showMessage("You can only edit your own movie lists!");
-        }
+        // TODO: Replace with API call to /movies/suggestions/{userId} when ready
+        // filter movies based on user's favorite genres
+        return mockMovies.filter(movie =>
+            user.favoriteGenres.some(genre =>
+                movie.genre.toLowerCase().includes(genre.toLowerCase())
+            )
+        );
     };
 
-    const handleEdit = () => {
-        if (userId === id) {
-            setIsEditing(true);
-            setSearchQuery("");
-            setIsSearching(false);
-        } else {
-            showMessage("You can only edit your own movie lists!");
-        }
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
     };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setSelectedMoviesToRemove([]);
-  };
-
-    const handleMovieSelect = (movieId: number) => {
-        if (selectedMoviesToRemove.includes(movieId)) {
-            setSelectedMoviesToRemove(selectedMoviesToRemove.filter(id => id !== movieId));
-        } else {
-            setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
-        }
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSearchCategory(e.target.value);
     };
 
-    const handleMovieClick = (movie: Movie) => {
-        // If in editing mode, select/deselect the movie
-        if (isEditing) {
-            handleMovieSelect(movie.id);
-            return;
-        }
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSearchCategory("all");
+        setIsSearching(false);
+        setSearchResults([]);
+    };
 
-        // Otherwise open the details modal
+    const handleMovieClick = async (movie: Movie) => {
+        // TODO: Replace with actual API call when ready
+        // try {
+        //     const detailedMovie = await apiService.get(`/movies/${movie.id}`);
+        //     if (detailedMovie && typeof detailedMovie === 'object') {
+        //         setSelectedMovie(detailedMovie as Movie);
+        //     } else {
+        //         setSelectedMovie(movie);
+        //     }
+        //     setIsModalOpen(true);
+        // } catch (error) {
+        //     if (error instanceof Error && "status" in error) {
+        //         const applicationError = error as ApplicationError;
+        //         if (applicationError.status === 404) {
+        //             showMessage("Movie details not found");
+        //         } else {
+        //             showMessage("Error loading movie details");
+        //         }
+        //     }
+        // }
+
+        // for testing, just use the movie data we already have
         setSelectedMovie(movie);
         setIsModalOpen(true);
     };
 
-    const handleSaveChanges = async () => {
-        try {
-            // Delete each movie from watchlist using REST API
-            //for (const movieId of selectedMoviesToRemove) {
-            //    await apiService.delete(`/watchlist/${id}`, { movieId });
-            //}
-
-            // Refetch the user's watchlist after deletion
-            //const updatedWatchlist = await apiService.get(`/watchlist/${id}`);
-
-
-            if (user) {
-                const updatedMovies = user.watchlist.filter(
-                    movie => !selectedMoviesToRemove.includes(movie.id)
-                );
-
-                setUser({
-                    ...user,
-                    watchlist: updatedMovies
-                });
-            }
-
-            showMessage(`Removed ${selectedMoviesToRemove.length} movie(s) from your watchlist`);
-            setIsEditing(false);
-            setSelectedMoviesToRemove([]);
-        } catch (error) {
-            setError("Failed to update movie list");
-            if (error instanceof Error && "status" in error) {
-                const applicationError = error as ApplicationError;
-                showMessage(`Error: ${applicationError.message}`);
-            }
-        }
-    };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchCategory(e.target.value);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery("");
-    setSearchCategory("all");
-    setIsSearching(false);
-  };
-
     const closeModal = () => {
         setIsModalOpen(false);
-        setTimeout(() => setSelectedMovie(null), 300);
+        setTimeout(() => setSelectedMovie(null), 300); // Delay to allow animation
+    };
+
+    const isInWatchlist = (movie: Movie) => {
+        return user?.watchlist.some(m => m.id === movie.id) || false;
     };
 
     const isInSeenList = (movie: Movie) => {
         return user?.watchedMovies.some(m => m.id === movie.id) || false;
     };
 
-    const handleMarkAsSeen = async (movie: Movie) => {
+    const handleAddToWatchlist = async (movie: Movie) => {
+        if (isInWatchlist(movie)) {
+            showMessage("Movie already in your watchlist");
+            return;
+        }
+
+        try {
+            // TODO: Replace with actual API call when ready
+            // await apiService.post(`/watchlist/${id}`, { movieId: movie.id });
+
+            // update local state for now
+            if (user) {
+                setUser({
+                    ...user,
+                    watchlist: [...user.watchlist, movie]
+                });
+            }
+
+            showMessage("Added to your watchlist");
+        } catch (error) {
+            setError("Failed to add movie to watchlist");
+            if (error instanceof Error && "status" in error) {
+                const applicationError = error as ApplicationError;
+                alert(`Error: ${applicationError.message}`);
+            }
+        }
+    };
+
+    const handleAddToSeenList = async (movie: Movie) => {
         if (isInSeenList(movie)) {
             showMessage("Movie already in your seen list");
             return;
         }
 
         try {
-            // TODO: Replace with actual API call
+            // TODO: Replace with actual API call when ready
             // await apiService.post(`/watched/${id}`, { movieId: movie.id });
 
-            // Update local state for now
+            // update local state for now
             if (user) {
                 setUser({
                     ...user,
-                    watchedMovies: [...user.watchedMovies, movie],
-                    watchlist: user.watchlist.filter(m => m.id !== movie.id)
+                    watchedMovies: [...user.watchedMovies, movie]
                 });
             }
 
-            showMessage("Moved to your seen list");
+            showMessage("Added to your seen list");
         } catch (error) {
-            setError("Failed to mark movie as seen");
+            setError("Failed to add movie to seen list");
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
-                showMessage(`Error: ${applicationError.message}`);
+                alert(`Error: ${applicationError.message}`);
             }
         }
-    };
-
-    const handleRemoveFromWatchlist = (movie: Movie) => {
-        setIsEditing(true);
-        setSelectedMoviesToRemove([movie.id]);
-        closeModal();
     };
 
     const showMessage = (message: string) => {
@@ -430,120 +470,97 @@ const WatchList: React.FC = () => {
         }, 3000);
     };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
-      </div>
-    );
-  }
+    // display recommendations if not searching, otherwise show search results
+    const displayMovies = isSearching ? searchResults : getRecommendedMovies();
 
-  if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
-  }
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+            </div>
+        );
+    }
 
-
-    // Determine which movies to display
-    const displayMovies = isSearching ? filteredMovies : (user?.watchlist || []);
+    if (error) {
+        return (
+            <div className="text-red-500 text-center py-8">
+                {error}
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
             {/* Sidebar */}
-            <Navigation userId={userId} activeItem="Watch List" />
+            <Navigation userId={userId} activeItem="Search Movies" />
 
             {/* Main content */}
             <div className="flex-1 p-6 overflow-auto">
                 <div className="mb-8">
                     <h1 className="font-semibold text-[#3b3e88] text-3xl">
-                        Your Watchlist
+                        Search Movies
                     </h1>
                     <p className="text-[#b9c0de] mt-2">
-                        Movies you want to watch in the future
+                        Find movies to add to your watchlist!
                     </p>
                 </div>
 
                 {/* Search bar component */}
-                {!isEditing && (
-                    <SearchBar
-                        searchQuery={searchQuery}
-                        searchCategory={searchCategory}
-                        onSearchChange={handleSearchChange}
-                        onCategoryChange={handleCategoryChange}
-                        onClearSearch={clearSearch}
-                        className="mb-6"
-                    />
-                )}
+                <SearchBar
+                    searchQuery={searchQuery}
+                    searchCategory={searchCategory}
+                    onSearchChange={handleSearchChange}
+                    onCategoryChange={handleCategoryChange}
+                    onClearSearch={clearSearch}
+                    placeholder="Search for movies..."
+                    className="mb-6"
+                />
+
+                {/* Content heading */}
+                <div className="mb-4">
+                    <h2 className="text-xl font-medium text-[#3b3e88]">
+                        {isSearching
+                            ? `Search Results (${searchResults.length})`
+                            : "Browse movies based on your preferences"}
+                    </h2>
+                </div>
 
                 {/* Movie list component */}
                 <MovieList
                     movies={displayMovies}
-                    isLoading={loading}
-                    isEditing={isEditing}
+                    isLoading={false}
                     isSearching={isSearching}
-                    selectedMovieIds={selectedMoviesToRemove}
                     onMovieClick={handleMovieClick}
-                    onMovieSelect={handleMovieSelect}
-                    onAddMovieClick={handleAddMovie}
                     onClearSearch={clearSearch}
-                    emptyMessage="Your watchlist is empty"
-                    noResultsMessage="None of the movies on your watchlist match your search"
+                    emptyMessage="No recommended movies available"
+                    noResultsMessage="There are no movies that match your search"
+                    isInWatchlistFn={isInWatchlist}
                     isInSeenListFn={isInSeenList}
                 />
-
-                {/* Search Results Summary */}
-                {searchQuery && !isEditing && displayMovies.length > 0 && (
-                    <div className="mt-4 text-[#3b3e88]">
-                        Found {displayMovies.length} movies matching &#34;{searchQuery}&#34; in {
-                        searchCategory === "all" ? "all categories" : searchCategory
-                    }
-                    </div>
-                )}
-
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-between">
-          {isEditing ? (
-            <>
-              <Button variant="destructive" onClick={handleCancelEdit}>
-                Cancel
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleSaveChanges}
-                disabled={selectedMoviesToRemove.length === 0}
-              >
-                Remove {selectedMoviesToRemove.length} movie(s)
-              </Button>
-            </>
-          ) : (
-            <Button variant="secondary" onClick={handleEdit}>
-              Edit
-            </Button>
-          )}
-        </div>
 
                 {/* Back button */}
                 <Button
                     variant="destructive"
-                    className="mt-4"
+                    className="mt-6"
                     onClick={() => router.push(`/users/${id}/dashboard`)}
                 >
-                    Back to Dashboard
+                    back to dashboard
                 </Button>
 
-                {/* Movie Details Modal */}
+                {/* Movie Details Modal Component */}
                 {selectedMovie && (
                     <MovieDetailsModal
                         movie={selectedMovie}
                         isOpen={isModalOpen}
                         onClose={closeModal}
-                        isInWatchlist={true}
+                        isInWatchlist={isInWatchlist(selectedMovie)}
                         isInSeenList={isInSeenList(selectedMovie)}
-                        onMarkAsSeen={handleMarkAsSeen}
-                        onRemoveFromWatchlist={handleRemoveFromWatchlist}
+                        onAddToWatchlist={handleAddToWatchlist}
+                        onMarkAsSeen={handleAddToSeenList}
                     />
                 )}
 
-                {/* Action Message */}
+                {/* Action Message Component */}
                 <ActionMessage
                     message={actionMessage}
                     isVisible={showActionMessage}
@@ -554,4 +571,4 @@ const WatchList: React.FC = () => {
     );
 };
 
-export default WatchList;
+export default SearchMovies;
