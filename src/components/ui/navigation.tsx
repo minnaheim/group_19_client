@@ -38,7 +38,7 @@ const NAV_ITEMS = [
     {
         id: "Search Movies",
         icon: Search,
-        path: (userId: string) => `/users/${userId}/search_movies`
+        path: (userId: string) => `/users/${userId}/movie_search`
     },
     {
         id: "Your Friends",
