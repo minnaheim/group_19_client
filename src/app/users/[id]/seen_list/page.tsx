@@ -1,17 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { User } from "@/types/user";
-import { Movie } from "@/types/movie";
-import { useApi } from "@/hooks/useApi";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { Button } from "../../../../components/ui/button";
-import Navigation from "../../../../components/ui/navigation";
-import { ApplicationError } from "@/types/error";
-import SearchBar from "../../../../components/ui/search_bar";
-import MovieList from "../../../../components/ui/movie_list";
-import MovieDetailsModal from "../../../../components/ui/movie_details";
-import ActionMessage from "../../../../components/ui/action_message";
+import { User } from "@/app/types/user";
+import { Movie } from "@/app/types/movie";
+import { useApi } from "@/app/hooks/useApi";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
+import { Button } from "@/components/ui/button";
+import Navigation from "@/components/ui/navigation";
+import { ApplicationError } from "@/app/types/error";
+import SearchBar from "@/components/ui/search_bar";
+import MovieList from "@/components/ui/movie_list";
+import MovieDetailsModal from "@/components/ui/movie_details";
+import ActionMessage from "@/components/ui/action_message";
 
 
 
