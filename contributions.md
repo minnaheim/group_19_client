@@ -62,7 +62,7 @@ reason).
 |                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **minnaheim**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| **minnaheim**    | [06.04.2025]   | https://github.com/minnaheim/group_19_client/commit/852f70caddaed9420bf81c434e92c222dfd95a84 | Changed handling of token in frontend from User to getting it from response header | this way, both back and frontend are on the same page, and both Ella and I have the same handling of the token. Only once this was done could i merge my branch into main |
 |                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **ivis-ii**      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
