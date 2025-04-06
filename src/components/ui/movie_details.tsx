@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Movie } from "@/types/movie";
+import { Movie } from "@/app/types/movie";
 import { X, Play, Eye, Plus } from "lucide-react";
 import {Button} from "./button";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Movie } from "@/types/movie";
+import { Movie } from "@/app/types/movie";
 import {Button} from "./button";
 import MovieCard from "./Movie_card";
 
