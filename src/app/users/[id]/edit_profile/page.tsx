@@ -18,13 +18,13 @@ const EditProfile: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Form state for editable fields
+    // state for editable fields
     const [username, setUsername] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [bio, setBio] = useState<string>("");
 
-    // Auth check
+    // authentication
     const {
         value: token,
     } = useLocalStorage<string>("token", "");
@@ -40,20 +40,20 @@ const EditProfile: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate if the user is authorized to edit this profile
+        // validate if the user is authorised to edit this profile
         if (userId && userId.valueOf() !== id) {
             alert("You can only edit your own profile");
             router.push(`/users/${id}/profile`);
             return;
         }
 
-        // Check if user is null before updating
+        // check if user is null before updating
         if (!user) {
             alert("User data not available");
             return;
         }
 
-        // Create updated user object
+        // create updated user object
         const updatedUser: User = {
             ...user,
             username,
@@ -67,7 +67,7 @@ const EditProfile: React.FC = () => {
                 await apiService.put(`/profile/${id}`, updatedUser);
             } catch (apiError) {
                 console.log("Mock update - no API available:", apiError);
-                // For testing - simulate successful update
+                // for testing to simulate successful update
                 setUser(updatedUser);
             }
             alert("Profile updated successfully!");
@@ -82,7 +82,7 @@ const EditProfile: React.FC = () => {
         }
     };
 
-    // Mock movie for testing
+    // mock movie for testing
     const mockMovie = {
         id: 1,
         title: "Sample Movie",
@@ -94,7 +94,7 @@ const EditProfile: React.FC = () => {
         trailerURL: "https://www.example.com/trailer"
     };
 
-    // Mock user for testing
+    // mock user for testing
     const mockUser: User = {
         id: Number(id),
         username: "Ella",
@@ -111,25 +111,25 @@ const EditProfile: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            // Try to fetch from API
+            // try to fetch from API
             let fetchedUser: User;
             try {
                 fetchedUser = await apiService.get(`/profile/${id}`);
             } catch (apiError) {
                 console.log("Using mock user data instead of API:", apiError);
-                // Use mock data if API fails
+                // use mock data if API fails
                 fetchedUser = mockUser;
             }
 
             setUser(fetchedUser);
 
-            // Initialize form state with user data
+            // init state with user data
             setUsername(fetchedUser.username || "");
             setEmail(fetchedUser.email || "");
             setPassword(fetchedUser.password || "");
             setBio(fetchedUser.bio || "");
         } catch (error: unknown) {
-            // Fallback to mock data on any error
+            // back to mock data on any error
             console.log("Using mock user data due to error:", error);
             setUser(mockUser);
             setUsername(mockUser.username);
@@ -142,17 +142,17 @@ const EditProfile: React.FC = () => {
     };
 
     useEffect(() => {
-        // For testing purposes, skip auth checks if needed
-        const isTestMode = true; // Set to false to enable auth checks
+        // for testing purposes, skip auth checks if needed
+        const isTestMode = true; // set to false to enable auth checks
 
         if (!isTestMode) {
-            // Check auth
+            // check auth
             if (!token) {
                 router.push("/login");
                 return;
             }
 
-            // Check if user is editing their own profile
+            // check if user is editing their own profile
             if (userId && userId.valueOf() !== id) {
                 alert("You can only edit your own profile");
                 router.push(`/users/${id}/profile`);
@@ -187,7 +187,7 @@ const EditProfile: React.FC = () => {
             {/* Main content */}
             <div className="flex-1 p-6 md:p-12">
                 <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
-                    Edit Profile
+                    edit profile
                 </h1>
 
                 <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
@@ -199,7 +199,7 @@ const EditProfile: React.FC = () => {
                             src="/rectangle-45.svg"
                         />
                         <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
-                            Edit Your Profile
+                            edit your profile
                         </h2>
                     </div>
 
@@ -251,7 +251,7 @@ const EditProfile: React.FC = () => {
                                 variant="default"
                                 className="bg-[#ff9a3e] hover:bg-[#e88b35]"
                             >
-                                Save Changes
+                                save changes
                             </Button>
                             <Button
                                 type="button"
@@ -259,7 +259,7 @@ const EditProfile: React.FC = () => {
                                 className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
                                 onClick={handleCancel}
                             >
-                                Cancel
+                                cancel
                             </Button>
                         </div>
                     </form>
