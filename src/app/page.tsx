@@ -31,6 +31,11 @@ export default function Home() {
           </Link>
         </p>
         <p>
+          <Link href="/users/no_token/friends">
+            <Button variant={"secondary"}>Your Friends!</Button>
+          </Link>
+        </p>
+        <p>
           {/* change opacity for the default and secondary button and */}
           <Button variant={"destructive"}>back</Button>
         </p>
