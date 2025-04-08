@@ -26,7 +26,7 @@ export default function Home() {
           </Link>
         </p>
         <p>
-          <Link href="/preferences">
+          <Link href="/genre_preferences">
             <Button variant={"secondary"}>Users Preference Setting!</Button>
           </Link>
         </p>
