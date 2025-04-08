@@ -21,7 +21,7 @@ const Friends: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState("");
   // const friendList = await apiService.get(`/friends/${id}`);
-  const [friendList, setFriendList] = useState<User[]>([
+  const [friendList] = useState<User[]>([
     {
       id: 3,
       username: "Alice",
