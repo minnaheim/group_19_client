@@ -1,12 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/ui/navigation";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import { User } from "@/app/types/user";
-import UserDetailsModal from "@/components/ui/movie_details";
+import UserDetailsModal from "@/components/ui/user_details";
 import { useApi } from "@/app/hooks/useApi";
 // TODO: create User Detail Modal -> add remove from UserList to ind. Modal
 
@@ -29,9 +29,56 @@ const Friends: React.FC = () => {
       password: "mypassword",
       bio: "Drama and biopic lover.",
       favoriteGenres: ["Drama", "Biography", "Action"],
-      favoriteMovie: [],
-      watchlist: [],
-      watchedMovies: [],
+      favoriteMovie: [
+        {
+          id: 5,
+          title: "The Batman",
+          posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+          details:
+            "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
+          genre: "Action",
+          director: "Matt Reeves",
+          actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
+          trailerURL: "https://www.example.com/the-batman",
+        },
+      ],
+      watchlist: [
+        {
+          id: 6,
+          title: "The Whale",
+          posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+          details:
+            "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
+          genre: "Drama",
+          director: "Darren Aronofsky",
+          actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
+          trailerURL: "https://www.example.com/the-whale",
+        },
+        {
+          id: 7,
+          title: "Top Gun: Maverick",
+          posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+          details:
+            "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
+          genre: "Action",
+          director: "Joseph Kosinski",
+          actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
+          trailerURL: "https://www.example.com/top-gun-maverick",
+        },
+      ],
+      watchedMovies: [
+        {
+          id: 5,
+          title: "The Batman",
+          posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+          details:
+            "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
+          genre: "Action",
+          director: "Matt Reeves",
+          actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
+          trailerURL: "https://www.example.com/the-batman",
+        },
+      ],
     },
     {
       id: 4,
@@ -57,21 +104,27 @@ const Friends: React.FC = () => {
     },
   ]);
 
+  useEffect(() => {
+    console.log("Modal state changed:", isModalOpen);
+  }, [isModalOpen]);
+
   const closeModal = () => {
     setIsModalOpen(false);
+    setTimeout(() => setSelectedUser(null), 300); // Delay to allow animation
   };
+
   const handleUserClick = async (user: User) => {
     console.log("User clicked:", user);
     setSelectedUser(user);
     setIsModalOpen(true);
   };
 
-  const handleInputChange = (event) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
   };
 
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault;
+    event.preventDefault();
 
     // check for username
     if (!inputValue.trim()) {
@@ -182,7 +235,30 @@ const Friends: React.FC = () => {
       bio: "Drama and biopic lover.",
       favoriteGenres: ["Drama", "Biography", "Action"],
       favoriteMovie: [],
-      watchlist: [],
+      watchlist: [
+        {
+          id: 1,
+          title: "To All the Boys I've Loved Before",
+          posterUrl: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
+          details:
+            "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
+          genre: "Teen Romance",
+          director: "Susan Johnson",
+          actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
+          trailerURL: "https://www.example.com/to-all-the-boys",
+        },
+        {
+          id: 2,
+          title: "The Kissing Booth",
+          posterUrl: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
+          details:
+            "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
+          genre: "Teen Romance",
+          director: "Vince Marcello",
+          actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
+          trailerURL: "https://www.example.com/kissing-booth",
+        },
+      ],
       watchedMovies: [],
     },
     {
@@ -234,10 +310,10 @@ const Friends: React.FC = () => {
         {/* Search bar Start */}
         <div className="flex w-full max-w-sm items-center space-x-2">
           <Input
-            type="usernameInput"
+            type="text"
             value={inputValue}
             onChange={handleInputChange}
-            className="bg-white font-bold text-[#3b3e88] rounded-3xl"
+            className="bg-white font-bold rounded-3xl"
             placeholder="Find by Username"
           />
           <Button onClick={handleSubmit}>Add</Button>
@@ -272,6 +348,7 @@ const Friends: React.FC = () => {
             <button
               key={friend.username}
               className={`px-4 py-2 rounded-full border ${"bg-[#CCD0FF]  text-white"}`}
+              onClick={() => handleUserClick(friend)}
             >
               {friend.username}
             </button>
@@ -297,16 +374,13 @@ const Friends: React.FC = () => {
 
           {/* User Details Modal Component */}
           {selectedUser && isModalOpen && (
-            <>
-              {console.log("Modal is rendering for:", selectedUser)}
-              <UserDetailsModal
-                user={selectedUser}
-                isOpen={isModalOpen}
-                onClose={closeModal}
-                isInFriendslist={isInFriendslist(selectedUser)}
-                // onAddToFriendslist={handleAddFriend()}
-              />
-            </>
+            <UserDetailsModal
+              user={selectedUser}
+              isOpen={isModalOpen}
+              onClose={closeModal}
+              isInFriendslist={isInFriendslist(selectedUser)} // TODO: check if pending or not
+              // onAddToFriendslist={handleAddFriend()}
+            />
           )}
         </div>
       </div>
