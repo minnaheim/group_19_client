@@ -158,7 +158,7 @@ const Friends: React.FC = () => {
         console.log("User found:", response);
 
         // Add the user to the friend list
-        handleAddFriend(response);
+        // handleAddFriend(response);
       } else {
         console.log("User not found");
       }
