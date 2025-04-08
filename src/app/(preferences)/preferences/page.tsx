@@ -46,15 +46,15 @@ const Preferences: React.FC = () => {
             onClick={() => toggleGenre(genre)}
             className={`px-4 py-2 rounded-full border ${
               selectedGenres.includes(genre)
-                ? "bg-[#AFB3FF] text-black" // TODO: change background colors
-                : "bg-[#CCD0FF]  text-black"
+                ? "bg-[#AFB3FF] text-white" 
+                : "bg-[#CDD1FF]  text-white"
             }`}
           >
             {genre}
           </button>
         ))}
       </div>
-      <p className="text-center mt-4 text-sm text-green-500">
+      <p className="text-center mt-4 text-sm text-[#3C3F88]">
         {selectedGenres.length} genres selected
       </p>
     </div>

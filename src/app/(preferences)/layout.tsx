@@ -36,12 +36,13 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
 
       <div className="col-span-6 flex items-center justify-center bg-[#e8f0fe] max-md: h-screen">
         <Card className="w-[600px] p-6 m-6">
-          <h2 className="text-xl font-bold text-center mb-4">
-            Set up Preferences
+          <br></br>
+          <h2 className="text-xl font-bold text-center text-[#3C3F88] mb-4">
+          Let’s get to know you!
           </h2>
-          <p className="text-center text-gray-600 mb-6">
-            Let’s get to know you! Please select your preferences.
-          </p>
+          <h3 className="text-center text-[#3C3F88] mb-6">
+          Please select your preferences.
+          </h3>
           {/* layout static, here specific preference choices are being shown */}
           {children}
           <CardFooter className="flex justify-between">
