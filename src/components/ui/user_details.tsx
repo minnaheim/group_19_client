@@ -78,7 +78,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </div>
               <div>
                 <span className="font-bold">Favorite Movie:</span>{" "}
-                {user.favoriteMovie.map((movie) => movie.title).join(", ")}
+                {user.favoriteMovie.title}
               </div>
               <div className="col-span-2">
                 <span className="font-bold">Watch List:</span>{" "}

@@ -7,7 +7,7 @@ export interface User {
   password: string;
   bio: string;
   favoriteGenres: string[];
-  favoriteMovie: Movie[];
+  favoriteMovie: Movie;
   watchlist: Movie[];
   watchedMovies: Movie[];
 }
