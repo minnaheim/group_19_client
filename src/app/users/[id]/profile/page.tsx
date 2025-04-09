@@ -94,158 +94,205 @@ const Profile: React.FC = () => {
       await fetchUser();
       await fetchWatchedMovies();
     };
-    
+
     loadData();
   }, [id, apiService, token]);
 
   const mockMovies: Movie[] = [
     {
-      id: 1,
+      movieId: 1,
+      title: "To All the Boys I've Loved Before",
+      posterURL: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
+      description:
+        "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
+      genres: ["Teen Romance", "Comedy", "Drama"],
+      directors: ["Susan Johnson"],
+      actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
+      trailerURL: "https://www.example.com/to-all-the-boys",
+      year: 2018,
+      originallanguage: "English",
+    },
+    {
+      movieId: 2,
+      title: "The Kissing Booth",
+      posterURL: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
+      description:
+        "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
+      genres: ["Teen Romance", "Comedy"],
+      directors: ["Vince Marcello"],
+      actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
+      trailerURL: "https://www.example.com/kissing-booth",
+      year: 2018,
+      originallanguage: "English",
+    },
+    {
+      movieId: 35,
       title: "Dune: Part Two",
       posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
       description:
         "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-      genre: "Science Fiction",
-      director: "Denis Villeneuve",
+      genres: ["Science Fiction", "Adventure", "Action"],
+      directors: ["Denis Villeneuve"],
       actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
       trailerURL: "https://www.example.com/dune-part-two",
+      year: 2024,
+      originallanguage: "English",
     },
     {
-      id: 2,
+      movieId: 40,
       title: "Oppenheimer",
       posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
       description:
         "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-      genre: "Drama",
-      director: "Christopher Nolan",
+      genres: ["Drama", "Biography", "History"],
+      directors: ["Christopher Nolan"],
       actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
       trailerURL: "https://www.example.com/oppenheimer",
+      year: 2023,
+      originallanguage: "English",
     },
     {
-      id: 3,
+      movieId: 3,
       title: "Poor Things",
       posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
       description:
         "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-      genre: "Science Fiction",
-      director: "Yorgos Lanthimos",
+      genres: ["Science Fiction", "Comedy", "Drama"],
+      directors: ["Yorgos Lanthimos"],
       actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
       trailerURL: "https://www.example.com/poor-things",
+      year: 2023,
+      originallanguage: "English",
     },
     {
-      id: 4,
+      movieId: 4,
       title: "The Fall Guy",
       posterURL: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
       description:
         "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
-      genre: "Action",
-      director: "David Leitch",
+      genres: ["Action", "Comedy"],
+      directors: ["David Leitch"],
       actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
       trailerURL: "https://www.example.com/fall-guy",
+      year: 2024,
+      originallanguage: "English",
     },
     {
-      id: 5,
+      movieId: 5,
       title: "The Batman",
       posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
       description:
         "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-      genre: "Action",
-      director: "Matt Reeves",
+      genres: ["Action", "Crime", "Drama"],
+      directors: ["Matt Reeves"],
       actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
       trailerURL: "https://www.example.com/the-batman",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 6,
+      movieId: 6,
       title: "The Whale",
       posterURL: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
       description:
         "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
-      genre: "Drama",
-      director: "Darren Aronofsky",
+      genres: ["Drama"],
+      directors: ["Darren Aronofsky"],
       actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
       trailerURL: "https://www.example.com/the-whale",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 7,
+      movieId: 7,
       title: "Top Gun: Maverick",
       posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
       description:
         "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-      genre: "Action",
-      director: "Joseph Kosinski",
+      genres: ["Action", "Drama"],
+      directors: ["Joseph Kosinski"],
       actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
       trailerURL: "https://www.example.com/top-gun-maverick",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 8,
+      movieId: 8,
       title: "Everything Everywhere All at Once",
       posterURL: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
       description:
         "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-      genre: "Science Fiction",
-      director: "Daniel Kwan, Daniel Scheinert",
+      genres: ["Science Fiction", "Comedy", "Action"],
+      directors: ["Daniel Kwan", "Daniel Scheinert"],
       actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
       trailerURL: "https://www.example.com/everything-everywhere",
+      year: 2022,
+      originallanguage: "English",
     },
-
     {
-      id: 10,
+      movieId: 10,
       title: "Killers of the Flower Moon",
-      posterUrl: "/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
-      details:
+      posterURL: "/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+      description:
         "When oil is discovered in 1920s Oklahoma under Osage Nation land, the Osage people are murdered one by one—until the FBI steps in to unravel the mystery.",
-      genre: "Crime",
-      director: "Martin Scorsese",
+      genres: ["Crime", "Drama", "Western"],
+      directors: ["Martin Scorsese"],
       actors: ["Leonardo DiCaprio", "Robert De Niro", "Lily Gladstone"],
       trailerURL: "https://www.example.com/killers-flower-moon",
+      year: 2023,
+      originallanguage: "English",
     },
-
     {
-      id: 13,
+      movieId: 13,
       title: "Anatomy of a Fall",
-      posterUrl: "/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
-      details:
+      posterURL: "/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
+      description:
         "A woman is suspected of her husband's murder, and their blind son faces a moral dilemma as the sole witness.",
-      genre: "Legal Drama",
-      director: "Justine Triet",
+      genres: ["Legal Drama", "Mystery", "Thriller"],
+      directors: ["Justine Triet"],
       actors: ["Sandra Hüller", "Swann Arlaud", "Milo Machado Graner"],
       trailerURL: "https://www.example.com/anatomy-of-a-fall",
+      year: 2023,
+      originallanguage: "French",
     },
-
     {
-      id: 15,
+      movieId: 15,
       title: "Mission: Impossible - Dead Reckoning Part One",
-      posterUrl: "/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
-      details:
+      posterURL: "/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
+      description:
         "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that threatens all of humanity before it falls into the wrong hands.",
-      genre: "Action",
-      director: "Christopher McQuarrie",
+      genres: ["Action", "Adventure", "Thriller"],
+      directors: ["Christopher McQuarrie"],
       actors: ["Tom Cruise", "Hayley Atwell", "Simon Pegg"],
       trailerURL: "https://www.example.com/mission-impossible",
+      year: 2023,
+      originallanguage: "English",
     },
-
     {
-      id: 22,
+      movieId: 22,
       title: "Civil War",
-      posterUrl: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
-      details:
+      posterURL: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+      description:
         "In a near-future America ravaged by political divisions, a team of journalists traverses the war-torn landscape to report on the conflict as rebel factions fight against the government.",
-      genre: "Drama",
-      director: "Alex Garland",
+      genres: ["Drama", "Action", "Thriller"],
+      directors: ["Alex Garland"],
       actors: ["Kirsten Dunst", "Wagner Moura", "Cailee Spaeny"],
       trailerURL: "https://www.example.com/civil-war",
+      year: 2024,
+      originallanguage: "English",
     },
-
     {
-      id: 25,
+      movieId: 25,
       title: "John Wick: Chapter 4",
-      posterUrl: "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
-      details:
+      posterURL: "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+      description:
         "John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances across the globe.",
-      genre: "Action",
-      director: "Chad Stahelski",
+      genres: ["Action", "Thriller", "Crime"],
+      directors: ["Chad Stahelski"],
       actors: ["Keanu Reeves", "Donnie Yen", "Bill Skarsgård"],
       trailerURL: "https://www.example.com/john-wick-4",
+      year: 2023,
+      originallanguage: "English",
     },
   ];
 
@@ -340,7 +387,7 @@ const Profile: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {watchedMoviesToDisplay.map((movie) => (
                   <img
-                    key={movie.id}
+                    key={movie.movieId}
                     className="w-full aspect-[2/3] object-cover rounded"
                     alt={movie.title}
                     src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}

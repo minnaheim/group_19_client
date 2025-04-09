@@ -8,6 +8,7 @@ import { ApplicationError } from "@/app/types/error";
 import { useApi } from "@/app/hooks/useApi";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
+import { Movie } from "@/app/types/movie";
 
 const EditProfile: React.FC = () => {
   const { id } = useParams();

@@ -5,5 +5,5 @@
  * Returns true if the application is running in production.
  */
 export function isProduction(): boolean {
-  return Deno.env.get("NODE_ENV") === "production";
+  return process.env.NODE_ENV === "production";
 }

@@ -75,11 +75,11 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
               <div>
                 <span className="font-bold">Favorite Genres:</span>{" "}
-                {user.favoriteGenres.join(", ")}
+                {(user.favoriteGenres ?? []).join(", ")}
               </div>
               <div>
                 <span className="font-bold">Favorite Movie:</span>{" "}
-                {user.favoriteMovie.title}
+                {user.favoriteMovie?.title || "No favorite movie specified"}
               </div>
               <div className="col-span-2">
                 <span className="font-bold">Watch List:</span>{" "}
