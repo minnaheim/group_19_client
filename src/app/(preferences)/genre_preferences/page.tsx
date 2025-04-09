@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-// TODO: change this so that there can only be 1 favorite genre per person
+// import { useApi } from "@/app/hooks/useApi";
+
+// interface GenrePreferencesProps {
+//   setSelectedGenre: (genre: string) => void;
+// }
 
 const genrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  // const apiService = useApi();
 
   // simulate genre which we would get from backend
-  const genres = [
+  const mockGenres = [
     "Crime",
     "Mystery",
     "Rom-Com",
@@ -31,7 +36,9 @@ const genrePreferences: React.FC = () => {
     "Psychological Thriller",
     "Supernatural",
   ];
-  // TODO: make sure that exactly 1 genre is chosen before going to next
+  // const genres = await apiService.get("/movies/genres");
+  // from here, get the genre.title to map
+
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
       console.log(prev);
@@ -40,9 +47,11 @@ const genrePreferences: React.FC = () => {
       } else {
         if (prev.length >= 1) {
           // TODO: find better way to handle error
-          throw new Error("You can only select one favorite genre");
+          alert("You can only select one favorite genre");
+          return prev;
         }
         console.log([...prev, genre]);
+        // setSelectedGenre(genre); // update selected genre to layout
         return [...prev, genre];
       }
     });
@@ -54,7 +63,7 @@ const genrePreferences: React.FC = () => {
         Please select one genre as your favorite genre.
       </h3>
       <div className="flex flex-wrap gap-2 justify-center">
-        {genres.map((genre) => (
+        {mockGenres.map((genre) => (
           <button
             key={genre}
             onClick={() => toggleGenre(genre)}
