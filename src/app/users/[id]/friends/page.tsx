@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/ui/navigation";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
@@ -23,99 +23,111 @@ const Friends: React.FC = () => {
   // const friendList = await apiService.get(`/friends/${id}`);
   const [friendList] = useState<User[]>([
     {
-      id: 3,
+      userId: 3,
       username: "Alice",
       email: "Alice@example.com",
       password: "mypassword",
       bio: "Drama and biopic lover.",
       favoriteGenres: ["Drama", "Biography", "Action"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [
         {
-          id: 6,
+          movieId: 6,
           title: "The Whale",
-          posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
-          details:
+          posterURL: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+          description:
             "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
-          genre: "Drama",
-          director: "Darren Aronofsky",
+          genres: ["Drama"],
+          directors: ["Darren Aronofsky"],
           actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
           trailerURL: "https://www.example.com/the-whale",
+          year: 2022,
+          originallanguage: "English",
         },
         {
-          id: 7,
+          movieId: 7,
           title: "Top Gun: Maverick",
-          posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-          details:
+          posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+          description:
             "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-          genre: "Action",
-          director: "Joseph Kosinski",
+          genres: ["Action", "Drama"],
+          directors: ["Joseph Kosinski"],
           actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
           trailerURL: "https://www.example.com/top-gun-maverick",
+          year: 2022,
+          originallanguage: "English",
         },
       ],
       watchedMovies: [
         {
-          id: 5,
+          movieId: 5,
           title: "The Batman",
-          posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-          details:
+          posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+          description:
             "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-          genre: "Action",
-          director: "Matt Reeves",
+          genres: ["Action", "Crime", "Drama"],
+          directors: ["Matt Reeves"],
           actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
           trailerURL: "https://www.example.com/the-batman",
+          year: 2022,
+          originallanguage: "English",
         },
       ],
     },
     {
-      id: 4,
+      userId: 4,
       username: "bobbb",
       email: "bobert@example.com",
       password: "mypassword",
       bio: "Hey there!",
       favoriteGenres: ["Whodunit", "Action"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [],
       watchedMovies: [],
     },
     {
-      id: 5,
+      userId: 5,
       username: "momo",
       email: "mohammed@example.com",
       password: "mypassword",
       bio: "I <3 romance!",
       favoriteGenres: ["Romance"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [],
       watchedMovies: [],
@@ -131,7 +143,7 @@ const Friends: React.FC = () => {
     setTimeout(() => setSelectedUser(null), 300); // Delay to allow animation
   };
 
-  const handleUserClick = async (user: User) => {
+  const handleUserClick = (user: User) => {
     console.log("User clicked:", user);
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -152,7 +164,7 @@ const Friends: React.FC = () => {
     try {
       console.log("Form submitted with input:", inputValue);
       const response = await apiService.get<User>(
-        `/friends?username=${inputValue.trim()}`
+        `/friends?username=${inputValue.trim()}`,
       );
       if (response) {
         console.log("User found:", response);
@@ -169,70 +181,76 @@ const Friends: React.FC = () => {
 
   const isInFriendslist = (user: User): boolean => {
     if (!user) return false; // Handle null or undefined user
-    return friendList.some((friend) => friend.id === user.id);
+    return friendList.some((friend) => friend.userId === user.userId);
   };
 
   const pendingList: User[] = [
     {
-      id: 3,
+      userId: 3,
       username: "ana",
       email: "ana@example.com",
       password: "mypassword",
       bio: "heyyy",
       favoriteGenres: ["Action"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [],
       watchedMovies: [],
     },
 
     {
-      id: 3,
+      userId: 3,
       username: "robert",
       email: "robert@example.com",
       password: "mypassword",
       bio: "I love movies",
       favoriteGenres: ["Whodunit", "Action"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [],
       watchedMovies: [],
     },
     {
-      id: 3,
+      userId: 3,
       username: "hamed",
       email: "mohammed123@example.com",
       password: "mypassword",
       bio: "I <3 romance!",
       favoriteGenres: ["Romance"],
       favoriteMovie: {
-        id: 5,
+        movieId: 5,
         title: "The Batman",
-        posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        details:
+        posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        description:
           "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-        genre: "Action",
-        director: "Matt Reeves",
+        genres: ["Action", "Crime", "Drama"],
+        directors: ["Matt Reeves"],
         actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
         trailerURL: "https://www.example.com/the-batman",
+        year: 2022,
+        originallanguage: "English",
       },
       watchlist: [],
       watchedMovies: [],

@@ -69,11 +69,11 @@ const Login: React.FC = () => {
       console.log(formValues);
       const [response, headers] = await apiService.post<User>(
         "/login",
-        formValues
+        formValues,
       );
       console.log(response);
-      const token =
-        headers.get("Authorization") || headers.get("authorization"); // dep on what it's called
+      const token = headers.get("Authorization") ||
+        headers.get("authorization"); // dep on what it's called
 
       if (token) {
         console.log(token);

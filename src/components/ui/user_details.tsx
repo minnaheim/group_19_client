@@ -29,11 +29,11 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleEsc);
+      globalThis.addEventListener("keydown", handleEsc);
     }
 
     return () => {
-      window.removeEventListener("keydown", handleEsc);
+      globalThis.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen, onClose]);
 
@@ -46,7 +46,8 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         className="fixed inset-0 z-40"
         style={{ backgroundColor: "rgba(200, 200, 200, 0.8)" }}
         onClick={onClose}
-      ></div>
+      >
+      </div>
 
       {/* Modal Content */}
       <div className="fixed inset-0 flex items-center justify-center z-40 p-4">
@@ -74,11 +75,11 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
               <div>
                 <span className="font-bold">Favorite Genres:</span>{" "}
-                {user.favoriteGenres.join(", ")}
+                {(user.favoriteGenres ?? []).join(", ")}
               </div>
               <div>
                 <span className="font-bold">Favorite Movie:</span>{" "}
-                {user.favoriteMovie.title}
+                {user.favoriteMovie?.title || "No favorite movie specified"}
               </div>
               <div className="col-span-2">
                 <span className="font-bold">Watch List:</span>{" "}

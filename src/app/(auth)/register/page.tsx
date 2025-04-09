@@ -84,11 +84,11 @@ const Register: React.FC = () => {
       console.log(formValues);
       const [response, headers] = await apiService.post<User>(
         "/register",
-        formValues
+        formValues,
       );
       console.log(response);
-      const token =
-        headers.get("Authorization") || headers.get("authorization");
+      const token = headers.get("Authorization") ||
+        headers.get("authorization");
       if (token) {
         setToken(token.replace("Bearer", "")); // if it has bearer prefix, remove it
       }

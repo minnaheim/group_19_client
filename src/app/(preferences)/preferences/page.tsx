@@ -46,7 +46,7 @@ const Preferences: React.FC = () => {
             onClick={() => toggleGenre(genre)}
             className={`px-4 py-2 rounded-full border ${
               selectedGenres.includes(genre)
-                ? "bg-[#AFB3FF] text-white" 
+                ? "bg-[#AFB3FF] text-white"
                 : "bg-[#CDD1FF]  text-white"
             }`}
           >

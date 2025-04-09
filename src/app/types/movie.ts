@@ -1,10 +1,12 @@
 export interface Movie {
-    id: number;
-    title: string;
-    posterUrl: string;
-    details: string;
-    genre: string;
-    director: string;
-    actors: string[];
-    trailerURL: string;
+  movieId: number;
+  title: string;
+  posterURL: string;
+  description: string;
+  genres: string[];
+  directors: string[];
+  actors: string[];
+  trailerURL: string;
+  year: number;
+  originallanguage: string;
 }
