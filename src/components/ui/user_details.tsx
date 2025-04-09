@@ -29,11 +29,11 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleEsc);
+      globalThis.addEventListener("keydown", handleEsc);
     }
 
     return () => {
-      window.removeEventListener("keydown", handleEsc);
+      globalThis.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen, onClose]);
 
@@ -46,7 +46,8 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         className="fixed inset-0 z-40"
         style={{ backgroundColor: "rgba(200, 200, 200, 0.8)" }}
         onClick={onClose}
-      ></div>
+      >
+      </div>
 
       {/* Modal Content */}
       <div className="fixed inset-0 flex items-center justify-center z-40 p-4">

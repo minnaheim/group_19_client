@@ -24,7 +24,7 @@ export class ApiService {
    */
   private async processResponse<T>(
     res: Response,
-    errorMessage: string
+    errorMessage: string,
   ): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
@@ -40,12 +40,12 @@ export class ApiService {
       }
       const detailedMessage = `${errorMessage} (${res.status}: ${errorDetail})`;
       const error: ApplicationError = new Error(
-        detailedMessage
+        detailedMessage,
       ) as ApplicationError;
       error.info = JSON.stringify(
         { status: res.status, statusText: res.statusText },
         null,
-        2
+        2,
       );
       error.status = res.status;
       throw error;
@@ -66,7 +66,7 @@ export class ApiService {
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while fetching the data.\n"
+      "An error occurred while fetching the data.\n",
     );
   }
 
@@ -86,7 +86,7 @@ export class ApiService {
     // process response body
     const responseBody = await this.processResponse<T>(
       res,
-      "An error occurred while posting the data.\n"
+      "An error occurred while posting the data.\n",
     );
     // return both the response body and headers
     return [responseBody, res.headers];
@@ -112,7 +112,7 @@ export class ApiService {
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while updating the data.\n"
+      "An error occurred while updating the data.\n",
     );
   }
 
@@ -126,11 +126,11 @@ export class ApiService {
     const res = await fetch(url, {
       method: "DELETE",
       headers: this.getHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while deleting the data.\n"
+      "An error occurred while deleting the data.\n",
     );
   }
 
