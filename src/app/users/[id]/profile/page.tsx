@@ -62,7 +62,7 @@ const Profile: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const fetchedUser: User = await apiService.get(`/profile/${id}`);
+            const fetchedUser: User = await apiService.get(`/users/${id}/profile`);
             setUser(fetchedUser);
         } catch (error: unknown) {
             if (error instanceof Error && "status" in error) {
@@ -89,15 +89,14 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         fetchUser();
-        fetchWatchedMovies();
     }, [id, apiService, token]);
 
     const mockMovies: Movie[] = [
         {
             id: 1,
             title: "Dune: Part Two",
-            posterUrl: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-            details: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+            posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+            description: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
             genre: "Science Fiction",
             director: "Denis Villeneuve",
             actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
@@ -106,8 +105,8 @@ const Profile: React.FC = () => {
         {
             id: 2,
             title: "Oppenheimer",
-            posterUrl: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-            details: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+            posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+            description: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
             genre: "Drama",
             director: "Christopher Nolan",
             actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
@@ -116,8 +115,8 @@ const Profile: React.FC = () => {
         {
             id: 3,
             title: "Poor Things",
-            posterUrl: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-            details: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
+            posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+            description: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
             genre: "Science Fiction",
             director: "Yorgos Lanthimos",
             actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
@@ -126,8 +125,8 @@ const Profile: React.FC = () => {
         {
             id: 4,
             title: "The Fall Guy",
-            posterUrl: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
-            details: "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
+            posterURL: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
+            description: "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
             genre: "Action",
             director: "David Leitch",
             actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
@@ -136,8 +135,8 @@ const Profile: React.FC = () => {
         {
             id: 5,
             title: "The Batman",
-            posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-            details: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
+            posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+            description: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
             genre: "Action",
             director: "Matt Reeves",
             actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
@@ -146,8 +145,8 @@ const Profile: React.FC = () => {
         {
             id: 6,
             title: "The Whale",
-            posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
-            details: "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
+            posterURL: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+            description: "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
             genre: "Drama",
             director: "Darren Aronofsky",
             actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
@@ -156,8 +155,8 @@ const Profile: React.FC = () => {
         {
             id: 7,
             title: "Top Gun: Maverick",
-            posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-            details: "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
+            posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+            description: "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
             genre: "Action",
             director: "Joseph Kosinski",
             actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
@@ -166,8 +165,8 @@ const Profile: React.FC = () => {
         {
             id: 8,
             title: "Everything Everywhere All at Once",
-            posterUrl: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-            details: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
+            posterURL: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+            description: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
             genre: "Science Fiction",
             director: "Daniel Kwan, Daniel Scheinert",
             actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
@@ -323,7 +322,7 @@ const Profile: React.FC = () => {
                                         key={movie.id}
                                         className="w-full aspect-[2/3] object-cover rounded"
                                         alt={movie.title}
-                                        src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+                                        src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
                                     />
                                 ))}
                             </div>
