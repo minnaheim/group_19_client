@@ -1,8 +1,7 @@
 import { Movie } from "@/app/types/movie";
 
 export interface User {
-  id: number; // Maps to userId in backend
-  userId?: number; // Optional for compatibility with backend
+  userId: number;
   username: string;
   email: string;
   password: string;
@@ -12,8 +11,7 @@ export interface User {
   favoriteGenres?: string[];
   favoriteActors?: string[];
   favoriteDirectors?: string[];
-  favoriteMovies?: string[]; // IDs of favorite movies
-  favoriteMovie?: Movie; // Single favorite movie object (client-side)
+  favoriteMovie?: Movie; // Single favorite movie object
   watchlist: Movie[];
   watchedMovies: Movie[];
   // Not using friends and friend requests for now

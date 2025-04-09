@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/ui/navigation";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
@@ -131,7 +131,7 @@ const Friends: React.FC = () => {
     setTimeout(() => setSelectedUser(null), 300); // Delay to allow animation
   };
 
-  const handleUserClick = async (user: User) => {
+  const handleUserClick = (user: User) => {
     console.log("User clicked:", user);
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -152,7 +152,7 @@ const Friends: React.FC = () => {
     try {
       console.log("Form submitted with input:", inputValue);
       const response = await apiService.get<User>(
-        `/friends?username=${inputValue.trim()}`
+        `/friends?username=${inputValue.trim()}`,
       );
       if (response) {
         console.log("User found:", response);
@@ -169,7 +169,7 @@ const Friends: React.FC = () => {
 
   const isInFriendslist = (user: User): boolean => {
     if (!user) return false; // Handle null or undefined user
-    return friendList.some((friend) => friend.id === user.id);
+    return friendList.some((friend) => friend.userId === user.userId);
   };
 
   const pendingList: User[] = [

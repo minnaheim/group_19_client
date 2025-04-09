@@ -51,10 +51,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #F44771;
+  --primary: #f44771;
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: #FF9A3E;
-  --secondary-foreground: #FFFFFF;
+  --secondary: #ff9a3e;
+  --secondary-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -130,8 +130,12 @@
   }
 }
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in-out;
