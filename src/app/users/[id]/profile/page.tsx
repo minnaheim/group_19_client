@@ -70,7 +70,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  const _fetchWatchedMovies = async () => {
+  const fetchWatchedMovies = async () => {
     try {
       const fetchedWatchedMovies: Movie[] = await apiService.get(
         `/watched/${id}`,
@@ -90,7 +90,12 @@ const Profile: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUser();
+    const loadData = async () => {
+      await fetchUser();
+      await fetchWatchedMovies();
+    };
+    
+    loadData();
   }, [id, apiService, token]);
 
   const mockMovies: Movie[] = [
