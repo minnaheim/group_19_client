@@ -1,5 +1,4 @@
-import {Movie} from "@/types/movie";
-
+import { Movie } from "@/app/types/movie";
 
 export interface User {
   id: number; // Maps to userId in backend

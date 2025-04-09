@@ -1,44 +1,197 @@
 "use client";
 import React, { useState, useEffect } from "react";
-
 import { useParams, useRouter } from "next/navigation";
-import { User } from "@/types/user";
-import { Movie } from "@/types/movie";
-import { useApi } from "@/hooks/useApi";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { Button } from "../../../../components/ui/button";
-import Navigation from "../../../../components/ui/navigation";
-import { ApplicationError } from "@/types/error";
-import { Input } from "../../../../components/ui/input";
-import { Search } from "lucide-react";
+import { User } from "@/app/types/user";
+import { Movie } from "@/app/types/movie";
+import { useApi } from "@/app/hooks/useApi";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
+import { Button } from "@/components/ui/button";
+import Navigation from "@/components/ui/navigation";
+import { ApplicationError } from "@/app/types/error";
+import SearchBar from "@/components/ui/search_bar";
+import MovieList from "@/components/ui/movie_list";
+import MovieDetailsModal from "@/components/ui/movie_details";
+import ActionMessage from "@/components/ui/action_message";
+
+
+
 
 const SeenList: React.FC = () => {
-    const { id } = useParams();
-    const apiService = useApi();
-    const router = useRouter();
+  const { id } = useParams();
+  const apiService = useApi();
+  const router = useRouter();
 
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isEditing, setIsEditing] = useState<boolean>(false);
-    const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<number[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<
+    number[]
+  >([]);
 
-    // Search state
+    // search state
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchCategory, setSearchCategory] = useState<string>("all");
     const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
     const [isSearching, setIsSearching] = useState<boolean>(false);
 
-    const { value: token } = useLocalStorage<string>("token", "");
-    const { value: userId } = useLocalStorage<string>("userId", "");
+    // movie inspection
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-    // Fetch user data
+    // action feedback
+    const [actionMessage, setActionMessage] = useState<string>("");
+    const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+
+  const { value: token } = useLocalStorage<string>("token", "");
+  const { value: userId } = useLocalStorage<string>("userId", "");
+
+    const mockMovies: Movie[] = [
+        {
+            id: 1,
+            title: "Dune: Part Two",
+            posterUrl: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+            details: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+            genre: "Science Fiction",
+            director: "Denis Villeneuve",
+            actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
+            trailerURL: "https://www.example.com/dune-part-two"
+        },
+        {
+            id: 2,
+            title: "Oppenheimer",
+            posterUrl: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+            details: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+            genre: "Drama",
+            director: "Christopher Nolan",
+            actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
+            trailerURL: "https://www.example.com/oppenheimer"
+        },
+        {
+            id: 3,
+            title: "Poor Things",
+            posterUrl: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+            details: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
+            genre: "Science Fiction",
+            director: "Yorgos Lanthimos",
+            actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
+            trailerURL: "https://www.example.com/poor-things"
+        },
+        {
+            id: 4,
+            title: "The Fall Guy",
+            posterUrl: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
+            details: "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
+            genre: "Action",
+            director: "David Leitch",
+            actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
+            trailerURL: "https://www.example.com/fall-guy"
+        },
+        {
+            id: 5,
+            title: "The Batman",
+            posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+            details: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
+            genre: "Action",
+            director: "Matt Reeves",
+            actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
+            trailerURL: "https://www.example.com/the-batman"
+        },
+        {
+            id: 6,
+            title: "The Whale",
+            posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+            details: "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
+            genre: "Drama",
+            director: "Darren Aronofsky",
+            actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
+            trailerURL: "https://www.example.com/the-whale"
+        },
+        {
+            id: 7,
+            title: "Top Gun: Maverick",
+            posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+            details: "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
+            genre: "Action",
+            director: "Joseph Kosinski",
+            actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
+            trailerURL: "https://www.example.com/top-gun-maverick"
+        },
+        {
+            id: 8,
+            title: "Everything Everywhere All at Once",
+            posterUrl: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+            details: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
+            genre: "Science Fiction",
+            director: "Daniel Kwan, Daniel Scheinert",
+            actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
+            trailerURL: "https://www.example.com/everything-everywhere"
+        },
+
+        {
+            id: 10,
+            title: "Killers of the Flower Moon",
+            posterUrl: "/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+            details: "When oil is discovered in 1920s Oklahoma under Osage Nation land, the Osage people are murdered one by one—until the FBI steps in to unravel the mystery.",
+            genre: "Crime",
+            director: "Martin Scorsese",
+            actors: ["Leonardo DiCaprio", "Robert De Niro", "Lily Gladstone"],
+            trailerURL: "https://www.example.com/killers-flower-moon"
+        },
+
+        {
+            id: 13,
+            title: "Anatomy of a Fall",
+            posterUrl: "/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
+            details: "A woman is suspected of her husband's murder, and their blind son faces a moral dilemma as the sole witness.",
+            genre: "Legal Drama",
+            director: "Justine Triet",
+            actors: ["Sandra Hüller", "Swann Arlaud", "Milo Machado Graner"],
+            trailerURL: "https://www.example.com/anatomy-of-a-fall"
+        },
+
+        {
+            id: 15,
+            title: "Mission: Impossible - Dead Reckoning Part One",
+            posterUrl: "/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
+            details: "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that threatens all of humanity before it falls into the wrong hands.",
+            genre: "Action",
+            director: "Christopher McQuarrie",
+            actors: ["Tom Cruise", "Hayley Atwell", "Simon Pegg"],
+            trailerURL: "https://www.example.com/mission-impossible"
+        },
+
+        {
+            id: 22,
+            title: "Civil War",
+            posterUrl: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+            details: "In a near-future America ravaged by political divisions, a team of journalists traverses the war-torn landscape to report on the conflict as rebel factions fight against the government.",
+            genre: "Drama",
+            director: "Alex Garland",
+            actors: ["Kirsten Dunst", "Wagner Moura", "Cailee Spaeny"],
+            trailerURL: "https://www.example.com/civil-war"
+        },
+
+        {
+            id: 25,
+            title: "John Wick: Chapter 4",
+            posterUrl: "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+            details: "John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances across the globe.",
+            genre: "Action",
+            director: "Chad Stahelski",
+            actors: ["Keanu Reeves", "Donnie Yen", "Bill Skarsgård"],
+            trailerURL: "https://www.example.com/john-wick-4"
+        }
+    ];
+
+    // fetch user
     useEffect(() => {
         const fetchUserData = async () => {
             if (!id) return;
 
             try {
                 setLoading(true);
+
                 // Try to get the user data from the profile endpoint
                 try {
                     const userData = await apiService.get(`/users/${id}/profile`);
@@ -48,13 +201,13 @@ const SeenList: React.FC = () => {
                     // Fall back to mock data if the API call fails
                     setUser({
                         id: parseInt(id as string),
-                        username: "moviefan",
-                        email: "user@example.com",
+                        username: "ella",
+                        email: "ella@philippi.com",
                         password: "******",
                         bio: "I love movies!",
                         favoriteGenres: ["Sci-Fi", "Thriller"],
                         favoriteMovie: mockMovies[0],
-                        watchlist: [],
+                        watchlist: mockMovies,
                         watchedMovies: mockMovies
                     });
                 }
@@ -69,10 +222,10 @@ const SeenList: React.FC = () => {
             }
         };
 
-        fetchUserData();
-    }, [id, token, apiService]);
+    fetchUserData();
+  }, [id, token, apiService]);
 
-    // Filter movies based on search query
+    // filter movies based on search query
     useEffect(() => {
         if (!searchQuery.trim()) {
             setIsSearching(false);
@@ -80,68 +233,62 @@ const SeenList: React.FC = () => {
         }
 
         setIsSearching(true);
-        const movies = user?.watchedMovies || mockMovies;
+        const movies = user?.watchedMovies || []; // Changed from watchlist to watchedMovies
         const query = searchQuery.toLowerCase().trim();
 
         const filtered = movies.filter(movie => {
-            // Check title if category is "title" or "all"
             if (searchCategory === "title" || searchCategory === "all") {
                 if (movie.title.toLowerCase().includes(query)) {
                     return true;
                 }
             }
 
-            // Check genre if category is "genre" or "all"
             if (searchCategory === "genre" || searchCategory === "all") {
                 if (movie.genre.toLowerCase().includes(query)) {
                     return true;
                 }
             }
 
-            // Check director if category is "director" or "all"
             if (searchCategory === "director" || searchCategory === "all") {
                 if (movie.director.toLowerCase().includes(query)) {
                     return true;
                 }
             }
 
-            // Check actors if category is "actors" or "all"
             if (searchCategory === "actors" || searchCategory === "all") {
                 if (movie.actors.some(actor => actor.toLowerCase().includes(query))) {
                     return true;
                 }
             }
 
-            // If none of the above conditions matched, exclude this movie
             return false;
         });
 
-        setFilteredMovies(filtered);
-    }, [searchQuery, searchCategory, user?.watchedMovies]);
+    setFilteredMovies(filtered);
+  }, [searchQuery, searchCategory, user?.watchedMovies]);
 
     const handleAddMovie = () => {
         if (userId === id) {
-            router.push(`/users/${id}/search_movies`);
+            router.push(`/users/${id}/movie_search`);
         } else {
-            alert("You can only edit your own movie lists!");
+            showMessage("You can only edit your own movie lists!");
         }
     };
 
     const handleEdit = () => {
         if (userId === id) {
             setIsEditing(true);
-            // Clear search when entering edit mode
             setSearchQuery("");
             setIsSearching(false);
         } else {
-            alert("You can only edit your own movie lists!");
+            showMessage("You can only edit your own movie lists!");
         }
     };
 
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        setSelectedMoviesToRemove([]);
-    };
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedMoviesToRemove([]);
+  };
 
     const handleMovieSelect = (movieId: number) => {
         if (selectedMoviesToRemove.includes(movieId)) {
@@ -151,8 +298,21 @@ const SeenList: React.FC = () => {
         }
     };
 
+    const handleMovieClick = (movie: Movie) => {
+        // if in editing mode, select/deselect the movie
+        if (isEditing) {
+            handleMovieSelect(movie.id);
+            return;
+        }
+
+        // else open the details modal
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+    };
+
     const handleSaveChanges = async () => {
         try {
+
             // Process each movie removal separately
             for (const movieId of selectedMoviesToRemove) {
                 try {
@@ -168,166 +328,74 @@ const SeenList: React.FC = () => {
                 const updatedMovies = user.watchedMovies.filter(
                     movie => !selectedMoviesToRemove.includes(movie.id)
                 );
+
                 setUser({
                     ...user,
                     watchedMovies: updatedMovies
                 });
             }
 
+            showMessage(`Removed ${selectedMoviesToRemove.length} movie(s) from your seen list`);
             setIsEditing(false);
             setSelectedMoviesToRemove([]);
         } catch (error) {
             setError("Failed to update movie list");
             if (error instanceof Error && "status" in error) {
                 const applicationError = error as ApplicationError;
-                alert(`Error: ${applicationError.message}`);
+                showMessage(`Error: ${applicationError.message}`);
             }
         }
     };
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchCategory(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchCategory("all");
+    setIsSearching(false);
+  };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setTimeout(() => setSelectedMovie(null), 300);
     };
 
-    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSearchCategory(e.target.value);
+
+    const handleRemoveFromSeenlist = (movie: Movie) => {
+        setIsEditing(true);
+        setSelectedMoviesToRemove([movie.id]);
+        closeModal();
     };
 
-    const clearSearch = () => {
-        setSearchQuery("");
-        setSearchCategory("all");
-        setIsSearching(false);
+    const showMessage = (message: string) => {
+        setActionMessage(message);
+        setShowActionMessage(true);
+        setTimeout(() => {
+            setShowActionMessage(false);
+        }, 3000);
     };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center py-8">{error}</div>;
+  }
+
 
     // Determine which movies to display
-    const getDisplayMovies = () => {
-        if (isSearching) {
-            return filteredMovies;
-        } else {
-            return user?.watchedMovies || mockMovies;
-        }
-    };
-
-    const mockMovies: Movie[] = [
-        {
-            id: 1,
-            title: "Sample Movie 1",
-            posterUrl: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-            details: "A thrilling adventure about a group of friends who embark on a journey.",
-            genre: "Adventure",
-            director: "John Doe",
-            actors: ["Actor 1", "Actor 2", "Actor 3"],
-            trailerURL: "https://www.example.com/trailer"
-        },
-        {
-            id: 2,
-            title: "Sample Movie 2",
-            posterUrl: "/kzgPu2CMxBr4YZZxC1Off4cUfR9.jpg",
-            details: "An epic tale of survival in a dystopian world.",
-            genre: "Sci-Fi",
-            director: "Jane Smith",
-            actors: ["Actor 4", "Actor 5", "Actor 6"],
-            trailerURL: "https://www.example.com/trailer2"
-        },
-        {
-            id: 3,
-            title: "Dune: Part Two",
-            posterUrl: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-            details: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-            genre: "Science Fiction",
-            director: "Denis Villeneuve",
-            actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-            trailerURL: "https://www.example.com/dune-part-two"
-        },
-        {
-            id: 4,
-            title: "Oppenheimer",
-            posterUrl: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-            details: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-            genre: "Drama",
-            director: "Christopher Nolan",
-            actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-            trailerURL: "https://www.example.com/oppenheimer"
-        },
-        {
-            id: 5,
-            title: "Poor Things",
-            posterUrl: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-            details: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-            genre: "Science Fiction",
-            director: "Yorgos Lanthimos",
-            actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
-            trailerURL: "https://www.example.com/poor-things"
-        },
-        {
-            id: 6,
-            title: "The Fall Guy",
-            posterUrl: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
-            details: "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
-            genre: "Action",
-            director: "David Leitch",
-            actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
-            trailerURL: "https://www.example.com/fall-guy"
-        },
-        {
-            id: 9,
-            title: "The Batman",
-            posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-            details: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-            genre: "Action",
-            director: "Matt Reeves",
-            actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
-            trailerURL: "https://www.example.com/the-batman"
-        },
-        {
-            id: 11,
-            title: "The Whale",
-            posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
-            details: "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
-            genre: "Drama",
-            director: "Darren Aronofsky",
-            actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
-            trailerURL: "https://www.example.com/the-whale"
-        },
-        {
-            id: 12,
-            title: "Top Gun: Maverick",
-            posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-            details: "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-            genre: "Action",
-            director: "Joseph Kosinski",
-            actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
-            trailerURL: "https://www.example.com/top-gun-maverick"
-        },
-        {
-            id: 13,
-            title: "Everything Everywhere All at Once",
-            posterUrl: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-            details: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-            genre: "Science Fiction",
-            director: "Daniel Kwan, Daniel Scheinert",
-            actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
-            trailerURL: "https://www.example.com/everything-everywhere"
-        }
-    ];
-
-    const displayMovies = getDisplayMovies();
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="text-red-500 text-center py-8">
-                {error}
-            </div>
-        );
-    }
+    const displayMovies = isSearching ? filteredMovies : (user?.watchedMovies || []);
 
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
@@ -341,106 +409,40 @@ const SeenList: React.FC = () => {
                         Already Seen
                     </h1>
                     <p className="text-[#b9c0de] mt-2">
-                        Movies on this list will not be recommended to you
+                        these movies will not be recommended to you
                     </p>
                 </div>
 
-                {/* Search bar */}
+                {/* Search bar component */}
                 {!isEditing && (
-                    <div className="mb-6 flex flex-col md:flex-row gap-3">
-                        <div className="relative flex-grow">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <Search className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <Input
-                                type="text"
-                                placeholder="Search movies..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                className="pl-10 py-2 w-full rounded-md bg-white"
-                            />
-                        </div>
-                        <select
-                            value={searchCategory}
-                            onChange={handleCategoryChange}
-                            className="p-2 rounded-[30px] border-none bg-[#3b3e88] text-white min-w-[120px] focus:ring-2 focus:ring-[#6266b6] focus:outline-none"
-                        >
-                            <option value="all">All</option>
-                            <option value="title">Title</option>
-                            <option value="genre">Genre</option>
-                            <option value="director">Director</option>
-                            <option value="actors">Actors</option>
-                        </select>
-                        {searchQuery && (
-                            <Button
-                                variant="destructive"
-                                onClick={clearSearch}
-                                className="px-4"
-                            >
-                                Clear
-                            </Button>
-                        )}
-                    </div>
+                    <SearchBar
+                        searchQuery={searchQuery}
+                        searchCategory={searchCategory}
+                        onSearchChange={handleSearchChange}
+                        onCategoryChange={handleCategoryChange}
+                        onClearSearch={clearSearch}
+                        className="mb-6"
+                    />
                 )}
 
-                <div className="bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto">
-                    {/* No results message */}
-                    {isSearching && displayMovies.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full">
-                            <p className="text-gray-500 text-lg mb-4">No movies found matching your search.</p>
-                            <Button variant="destructive" onClick={clearSearch}>
-                                Clear Search
-                            </Button>
-                        </div>
-                    )}
+                {/* Movie list component */}
+                <MovieList
+                    movies={displayMovies}
+                    isLoading={loading}
+                    isEditing={isEditing}
+                    isSearching={isSearching}
+                    selectedMovieIds={selectedMoviesToRemove}
+                    onMovieClick={handleMovieClick}
+                    onMovieSelect={handleMovieSelect}
+                    onAddMovieClick={handleAddMovie}
+                    onClearSearch={clearSearch}
+                    emptyMessage="Your seen list is empty"
+                    noResultsMessage="None of the movies on your seen list match your search"
+                />
 
-                    {/* Movies */}
-                    <div className="flex flex-wrap gap-6">
-                        {displayMovies.map((movie) => (
-                            <div
-                                key={movie.id}
-                                className={`relative ${isEditing ? 'cursor-pointer' : ''}`}
-                                onClick={isEditing ? () => handleMovieSelect(movie.id) : undefined}
-                            >
-                                <img
-                                    className={`w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md ${
-                                        isEditing ? 'opacity-50 hover:opacity-80' : ''
-                                    } ${
-                                        isEditing && selectedMoviesToRemove.includes(movie.id)
-                                            ? 'border-2 border-destructive'
-                                            : ''
-                                    }`}
-                                    alt={movie.title}
-                                    src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
-                                />
-                                {isEditing && selectedMoviesToRemove.includes(movie.id) && (
-                                    <div className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 text-xs sm:p-1.5 md:p-2 md:text-sm">
-                                        ✕
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {/* Add Movie Button*/}
-                        {!isEditing && (
-                            <div
-                                className="w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] bg-[#ccd1ff] rounded-[10px] flex items-center justify-center cursor-pointer"
-                                onClick={handleAddMovie}
-                            >
-                                <div className="relative w-[52px] h-[52px]">
-                                    <img
-                                        className="w-[50px] h-[50px] sm:w-[55px] sm:h-[55px] md:w-[60px] md:h-[60px] object-cover"
-                                        alt="Plus"
-                                        src="/plus.png"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
 
                 {/* Search Results Summary */}
-                {searchQuery && !isEditing && (
+                {searchQuery && !isEditing && displayMovies.length > 0 && (
                     <div className="mt-4 text-[#3b3e88]">
                         Found {displayMovies.length} movies matching &#34;{searchQuery}&#34; in {
                         searchCategory === "all" ? "all categories" : searchCategory
@@ -456,14 +458,14 @@ const SeenList: React.FC = () => {
                                 variant="destructive"
                                 onClick={handleCancelEdit}
                             >
-                                Cancel
+                                cancel
                             </Button>
                             <Button
                                 variant="secondary"
                                 onClick={handleSaveChanges}
                                 disabled={selectedMoviesToRemove.length === 0}
                             >
-                                Remove {selectedMoviesToRemove.length} movie(s)
+                                remove {selectedMoviesToRemove.length} movie(s)
                             </Button>
                         </>
                     ) : (
@@ -471,7 +473,7 @@ const SeenList: React.FC = () => {
                             variant="secondary"
                             onClick={handleEdit}
                         >
-                            Edit
+                            edit
                         </Button>
                     )}
                 </div>
@@ -482,8 +484,26 @@ const SeenList: React.FC = () => {
                     className="mt-4"
                     onClick={() => router.push(`/users/${id}/profile`)}
                 >
-                    Back to Profile
+                    back to profile page
                 </Button>
+
+                {/* Movie Details Modal */}
+                {selectedMovie && (
+                    <MovieDetailsModal
+                        movie={selectedMovie}
+                        isOpen={isModalOpen}
+                        onClose={closeModal}
+                        isInSeenList={true}
+                        onRemoveFromSeenList={handleRemoveFromSeenlist}
+                    />
+                )}
+
+                {/* Action Message */}
+                <ActionMessage
+                    message={actionMessage}
+                    isVisible={showActionMessage}
+                    onHide={() => setShowActionMessage(false)}
+                />
             </div>
         </div>
     );

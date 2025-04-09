@@ -1,5 +1,5 @@
-import { getApiDomain } from "@/utils/domain";
-import { ApplicationError } from "@/types/error";
+import { getApiDomain } from "@/app/utils/domain";
+import { ApplicationError } from "@/app/types/error";
 
 export class ApiService {
   private baseURL: string;
@@ -24,7 +24,7 @@ export class ApiService {
    */
   private async processResponse<T>(
     res: Response,
-    errorMessage: string,
+    errorMessage: string
   ): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
@@ -40,12 +40,12 @@ export class ApiService {
       }
       const detailedMessage = `${errorMessage} (${res.status}: ${errorDetail})`;
       const error: ApplicationError = new Error(
-        detailedMessage,
+        detailedMessage
       ) as ApplicationError;
       error.info = JSON.stringify(
         { status: res.status, statusText: res.statusText },
         null,
-        2,
+        2
       );
       error.status = res.status;
       throw error;
@@ -66,7 +66,7 @@ export class ApiService {
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while fetching the data.\n",
+      "An error occurred while fetching the data.\n"
     );
   }
 
@@ -76,17 +76,25 @@ export class ApiService {
    * @param data - The payload to post.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown): Promise<T> {
+  public async post<T>(endpoint: string, data: unknown): Promise<[T, Headers]> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
-      method: "POST",
       headers: this.getHeaders(),
+      method: "POST",
       body: JSON.stringify(data),
     });
-    return this.processResponse<T>(
+    // process response body
+    const responseBody = await this.processResponse<T>(
       res,
-      "An error occurred while posting the data.\n",
+      "An error occurred while posting the data.\n"
     );
+    // return both the response body and headers
+    return [responseBody, res.headers];
+    // // identify how processResponse looks like to see where to get token out of header
+    // return this.processResponse<T>(
+    //   res,
+    //   "An error occurred while posting the data.\n"
+    // );
   }
 
   /**
@@ -104,7 +112,7 @@ export class ApiService {
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while updating the data.\n",
+      "An error occurred while updating the data.\n"
     );
   }
 
@@ -113,15 +121,16 @@ export class ApiService {
    * @param endpoint - The API endpoint (e.g. "/users/123").
    * @returns JSON data of type T.
    */
-  public async delete<T>(endpoint: string): Promise<T> {
+  public async delete<T>(endpoint: string, data: unknown): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "DELETE",
       headers: this.getHeaders(),
+      body: JSON.stringify(data)
     });
     return this.processResponse<T>(
       res,
-      "An error occurred while deleting the data.\n",
+      "An error occurred while deleting the data.\n"
     );
   }
 

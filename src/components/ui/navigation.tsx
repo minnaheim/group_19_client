@@ -38,7 +38,7 @@ const NAV_ITEMS = [
     {
         id: "Search Movies",
         icon: Search,
-        path: (userId: string) => `/users/${userId}/search_movies`
+        path: (userId: string) => `/users/${userId}/movie_search`
     },
     {
         id: "Your Friends",
@@ -97,8 +97,8 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                         </div>
                     </div>
                 </div>
-
                 {/* Navigation menu */}
+                <div className='pt-5'>
                 <nav className="flex flex-col space-y-8">
                     {NAV_ITEMS.map((item) => (
                         <NavItem
@@ -110,6 +110,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                         />
                     ))}
                 </nav>
+                </div>
             </div>
         </div>
     );

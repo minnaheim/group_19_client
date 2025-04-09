@@ -1,8 +1,7 @@
-
 import Link from "next/link";
 
 import { Button } from "../components/ui/button";
-import {Card} from "../components/ui/card";
+import { Card } from "../components/ui/card";
 
 export default function Home() {
   return (
@@ -19,6 +18,21 @@ export default function Home() {
         <p>
           <Link href="/login">
             <Button variant={"secondary"}>Go to Login!</Button>
+          </Link>
+        </p>
+        <p>
+          <Link href="/users/no_token/profile">
+            <Button variant={"secondary"}>Go to [id] users Profile!</Button>
+          </Link>
+        </p>
+        <p>
+          <Link href="/preferences">
+            <Button variant={"secondary"}>Users Preference Setting!</Button>
+          </Link>
+        </p>
+        <p>
+          <Link href="/users/no_token/friends">
+            <Button variant={"secondary"}>Your Friends!</Button>
           </Link>
         </p>
         <p>
