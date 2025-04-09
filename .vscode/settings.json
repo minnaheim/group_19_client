@@ -1,0 +1,6 @@
+{
+  "sonarlint.connectedMode.project": {
+    "connectionId": "minnaheim",
+    "projectKey": "minnaheim_group_19_client"
+  }
+}
