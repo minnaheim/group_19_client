@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-// import { useApi } from "@/app/hooks/useApi";
-
-// interface GenrePreferencesProps {
-//   setSelectedGenre: (genre: string) => void;
-// }
+import { Button } from "@/components/ui/button";
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
 
 const genrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  // const apiService = useApi();
+  const apiService = useApi();
+  const router = useRouter();
+  const { id } = useParams();
 
   // simulate genre which we would get from backend
   const mockGenres = [
@@ -37,7 +37,6 @@ const genrePreferences: React.FC = () => {
     "Supernatural",
   ];
   // const genres = await apiService.get("/movies/genres");
-  // from here, get the genre.title to map
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
@@ -57,12 +56,34 @@ const genrePreferences: React.FC = () => {
     });
   };
 
+  const handleGenre = async () => {
+    if (selectedGenres.length === 0) {
+      alert("Please select a genre before proceeding.");
+      return;
+    }
+
+    try {
+      await apiService.post(`/preferences/${id}`, {
+        userId: id,
+        favoriteGenres: selectedGenres,
+      });
+
+      router.push("/movie_preferences");
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert(
+        "An error occurred while saving your preferences. Please try again."
+      );
+    }
+  };
+
   return (
     <div>
       <h3 className="text-center text-[#3C3F88] mb-6">
         Please select one genre as your favorite genre.
       </h3>
       <div className="flex flex-wrap gap-2 justify-center">
+        {/* TODO: map not mockGenres but genres.title */}
         {mockGenres.map((genre) => (
           <button
             key={genre}
@@ -80,6 +101,15 @@ const genrePreferences: React.FC = () => {
       <p className="text-center mt-4 text-sm text-[#3C3F88]">
         {selectedGenres.length} genres selected
       </p>
+      <br></br>
+      <div className="flex justify-between">
+        <Button variant="destructive" onClick={() => router.push("/")}>
+          Back
+        </Button>
+        {/* TODO: figure out how to do next, dep on page currently on */}
+        {/* onClick={handleGenre} */}
+        <Button onClick={() => router.push("/movie_preferences")}>Next</Button>
+      </div>
     </div>
   );
 };

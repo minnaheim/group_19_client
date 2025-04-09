@@ -40,17 +40,16 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
           <h2 className="text-xl font-bold text-center text-[#3C3F88] mb-4">
             Let’s get to know you!
           </h2>
-          {/* layout static, here specific preference choices are being shown */}
           {children}
-          <CardFooter className="flex justify-between">
+          {/* commented out, because for simplicity sake, this should be within pages, so that I can better construct endpoints */}
+          {/* <CardFooter className="flex justify-between">
             <Button variant="destructive" onClick={() => router.push("/")}>
               Back
             </Button>
-            {/* TODO: figure out how to do next, dep on page currently on */}
             <Button onClick={() => router.push("/movie_preferences")}>
               Next
             </Button>
-          </CardFooter>
+          </CardFooter> */}
         </Card>
       </div>
     </div>

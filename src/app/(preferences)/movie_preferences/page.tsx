@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
-// import { useApi } from "@/app/hooks/useApi";
+import { Button } from "@/components/ui/button";
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
 
 interface MoviePreferencesProps {
   setSelectedMovie: (movieId: number | null) => void;
@@ -11,7 +13,9 @@ interface MoviePreferencesProps {
 
 const moviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
-  // const apiService = useApi();
+  const apiService = useApi();
+  const router = useRouter();
+  const { id } = useParams();
 
   // simulate movies which we would get from backend
   const mockMovies: Movie[] = [
@@ -163,23 +167,27 @@ const moviePreferences: React.FC = () => {
     },
   ];
 
-  const handleMovieClick = (movie: Movie) => {
-    setSelectedMovies((prev) => {
-      const isSelected = prev.some((m) => m.id === movie.id);
+  const handleMovieClick = async () => {
+    if (selectedMovies.length === 0) {
+      alert("Please select a movie before proceeding.");
+      return;
+    }
 
-      if (isSelected) {
-        // setSelectedMovie(null);
-        return prev.filter((m) => m.id !== movie.id);
-      } else {
-        if (prev.length >= 1) {
-          alert("You can only select one favorite movie");
-          return prev;
-        }
-        return [...prev, movie];
-      }
-    });
+    try {
+      await apiService.post(`/preferences/${id}`, {
+        userId: id,
+        favoriteMovies: selectedMovies,
+      });
+
+      router.push("/users/no_token/profile");
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert(
+        "An error occurred while saving your preferences. Please try again."
+      );
+    }
   };
-
+  // TODO: wait for backend to finish this endpoint
   // const movies = await apiService.get(`/movies?GenreList=${}`);
 
   return (
@@ -194,11 +202,10 @@ const moviePreferences: React.FC = () => {
         <MovieListHorizontal
           movies={mockMovies}
           isLoading={false}
-          onMovieClick={handleMovieClick}
+          onMovieClick={handleMovieClick} // TODO: decide where endpoint call happens
           emptyMessage="No movies match your genre"
           noResultsMessage="No movies match your search"
           hasOuterContainer={false}
-          // selectedMovieIds={selectedMovies.map((movie) => movie.id)} // Highlight selected movie
         />
       </div>
       {/* Selected Movie Info */}
@@ -207,6 +214,17 @@ const moviePreferences: React.FC = () => {
           ? `You selected: ${selectedMovies[0].title}`
           : "No movie selected"}
       </p>
+      {/* TODO: make padding work, not br */}
+      <br></br>
+      <div className="flex justify-between">
+        <Button variant="destructive" onClick={() => router.push("/")}>
+          Back
+        </Button>
+        {/* onClick={handleMovieClick} */}
+        <Button onClick={() => router.push("/users/no_token/profile")}>
+          Next
+        </Button>
+      </div>
     </div>
   );
 };
