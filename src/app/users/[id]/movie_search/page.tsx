@@ -348,7 +348,7 @@ const SearchMovies: React.FC = () => {
           return true;
         }
       }
-
+/*
       if (searchCategory === "director" || searchCategory === "all") {
         if (
           movie.directors.some((director) =>
@@ -362,6 +362,8 @@ const SearchMovies: React.FC = () => {
           return true;
         }
       }
+
+ */
 
       return false;
     });
