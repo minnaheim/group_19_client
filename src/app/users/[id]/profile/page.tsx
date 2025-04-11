@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import { ApplicationError } from "@/app/types/error";
 import ActionMessage from "@/components/ui/action_message";
+import MovieCard from "@/components/ui/Movie_card";
+import MovieDetailsModal from "@/components/ui/movie_details";
 
 const Profile: React.FC = () => {
   const { id } = useParams();
@@ -18,6 +20,9 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
@@ -40,6 +45,16 @@ const Profile: React.FC = () => {
     } else {
       showMessage("You can only edit your own profile");
     }
+  };
+
+  const handleMovieClick = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedMovie(null), 300); // Delay to allow animation
   };
 
   const handleBack = () => {
@@ -366,10 +381,48 @@ const Profile: React.FC = () => {
                 </p>
               </div>
 
+              <div className="mt-6">
+                <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                  favorite movie:
+                </p>
+                {user?.favoriteMovie ? (
+                    <div className="flex justify-center">
+                      <MovieCard
+                          movie={user.favoriteMovie}
+                          isInWatchlist={false}
+                          isInSeenList={false}
+                          onClick={handleMovieClick}
+                      />
+                    </div>
+                ) : (
+                    <div className="flex justify-center">
+                      <MovieCard
+                          movie={mockMovies[0]} /* Use the first mock movie as default */
+                          isInWatchlist={false}
+                          isInSeenList={false}
+                          onClick={handleMovieClick}
+                      />
+                    </div>
+                )}
+                {/* Movie Details Modal */}
+                {selectedMovie && (
+                    <MovieDetailsModal
+                        movie={selectedMovie}
+                        isOpen={isModalOpen}
+                        onClose={closeModal}
+                        isInWatchlist={user?.favoriteMovie?.movieId !== selectedMovie.movieId ?
+                            (user?.watchlist?.some(m => m.movieId === selectedMovie.movieId) || false) : false}
+                        isInSeenList={user?.favoriteMovie?.movieId !== selectedMovie.movieId ?
+                            (user?.watchedMovies?.some(m => m.movieId === selectedMovie.movieId) || false) : false}
+                    />
+                )}
+              </div>
+
+
               <Button
-                variant="default"
-                className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
-                onClick={handleEditProfile}
+                  variant="default"
+                  className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                  onClick={handleEditProfile}
               >
                 edit profile
               </Button>
@@ -386,9 +439,9 @@ const Profile: React.FC = () => {
               {/* Movie Grid using custom component approach */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {watchedMoviesToDisplay.map((movie) => (
-                  <img
-                    key={movie.movieId}
-                    className="w-full aspect-[2/3] object-cover rounded"
+                    <img
+                        key={movie.movieId}
+                        className="w-full aspect-[2/3] object-cover rounded"
                     alt={movie.title}
                     src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
                   />
