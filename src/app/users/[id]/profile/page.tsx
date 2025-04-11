@@ -391,6 +391,7 @@ const Profile: React.FC = () => {
                           movie={user.favoriteMovie}
                           isInWatchlist={false}
                           isInSeenList={false}
+                          isFavorite={true}
                           onClick={handleMovieClick}
                       />
                     </div>

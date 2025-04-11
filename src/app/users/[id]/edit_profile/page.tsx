@@ -293,6 +293,7 @@ const EditProfile: React.FC = () => {
                             movie={favoriteMovie}
                             isInWatchlist={false}
                             isInSeenList={false}
+                            isFavorite={true}
                             onClick={() => {}} // Empty handler since we don't need modal here
                         />
                         <span className="text-sm text-gray-600">{favoriteMovie.title}</span>
@@ -303,6 +304,7 @@ const EditProfile: React.FC = () => {
                             movie={mockMovie} // Use mock movie as default
                             isInWatchlist={false}
                             isInSeenList={false}
+                            isFavorite={true}
                             onClick={() => {}} // Empty handler since we don't need modal here
                         />
                         <span className="text-sm text-gray-600">{mockMovie.title} (default)</span>
