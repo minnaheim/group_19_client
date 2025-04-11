@@ -1,23 +1,24 @@
 import React from "react";
-import { Movie } from "@/app/types/movie";
-import { Button } from "./button";
+import {Movie} from "@/app/types/movie";
+import {Button} from "./button";
 import MovieCard from "./Movie_card";
 
 interface MovieListProps {
-    movies: Movie[];
-    isLoading?: boolean;
-    isEditing?: boolean;
-    isSearching?: boolean;
-    selectedMovieIds?: number[];
-    onMovieClick: (movie: Movie) => void;
-    onMovieSelect?: (movieId: number) => void;
-    onAddMovieClick?: () => void;
-    onClearSearch?: () => void;
-    emptyMessage?: string;
-    noResultsMessage?: string;
-    isInWatchlistFn?: (movie: Movie) => boolean;
-    isInSeenListFn?: (movie: Movie) => boolean;
-    className?: string;
+    movies: Movie[],
+    isLoading?: boolean,
+    isEditing?: boolean,
+    isSearching?: boolean,
+    selectedMovieIds?: number[],
+    onMovieClick: (movie: Movie) => void,
+    onMovieSelect?: (movieId: number) => void,
+    onAddMovieClick?: () => void,
+    onClearSearch?: () => void,
+    emptyMessage?: string,
+    noResultsMessage?: string,
+    isInWatchlistFn?: (movie: Movie) => boolean,
+    isInSeenListFn?: (movie: Movie) => boolean,
+    className?: string,
+    isSelectingFavorite?: boolean
 }
 
 const MovieList: React.FC<MovieListProps> = ({
@@ -35,6 +36,7 @@ const MovieList: React.FC<MovieListProps> = ({
                                                  isInWatchlistFn = () => false,
                                                  isInSeenListFn = () => false,
                                                  className = "",
+                                                 isSelectingFavorite
                                              }) => {
     if (isLoading) {
         return (
