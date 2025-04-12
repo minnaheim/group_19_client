@@ -75,8 +75,8 @@ reason).
 
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ---------------- | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **BeneJung**     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **BeneJung**     | 12.04.2025   | https://github.com/minnaheim/group_19_server/commit/4dba62bee21cf68ad6194114d012fc4e512166e8 | implement movie ranking data layer and core entities | To enable ranking of movies within groups -> key element of app |
+| **BeneJung**   | [date]   | https://github.com/minnaheim/group_19_server/commit/4dba62bee21cf68ad6194114d012fc4e512166e8,  | Ranking Business Logic and Results Processing | To enable ranking of movies within groups -> key element of app  |
 | **ellaruby0**    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **AnabelNigsch** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
