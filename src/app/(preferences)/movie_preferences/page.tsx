@@ -167,7 +167,24 @@ const moviePreferences: React.FC = () => {
     },
   ];
 
-  const handleMovieClick = async () => {
+  const toggleMovie = (movie: Movie) => {
+    setSelectedMovies((prev) => {
+      console.log(prev);
+      // can be adjusted to checking by title not ID, but ID usually unique
+      if (prev.some((m) => m.id === movie.id)) {
+        return prev.filter((m) => m.id !== movie.id);
+      } else {
+        if (prev.length >= 1) {
+          alert("You can only select one favorite movie");
+          return prev;
+        }
+        console.log([...prev, movie]);
+        return [...prev, movie];
+      }
+    });
+  };
+
+  const handleNext = async () => {
     if (selectedMovies.length === 0) {
       alert("Please select a movie before proceeding.");
       return;
@@ -201,8 +218,8 @@ const moviePreferences: React.FC = () => {
       <div className="overflow-x-auto">
         <MovieListHorizontal
           movies={mockMovies}
-          isLoading={false}
-          onMovieClick={handleMovieClick} // TODO: decide where endpoint call happens
+          // isLoading={false}
+          onMovieClick={toggleMovie} // TODO: decide where endpoint call happens
           emptyMessage="No movies match your genre"
           noResultsMessage="No movies match your search"
           hasOuterContainer={false}
@@ -217,10 +234,13 @@ const moviePreferences: React.FC = () => {
       {/* TODO: make padding work, not br */}
       <br></br>
       <div className="flex justify-between">
-        <Button variant="destructive" onClick={() => router.push("/")}>
+        <Button
+          variant="destructive"
+          onClick={() => router.push("/genre_preferences")}
+        >
           Back
         </Button>
-        {/* onClick={handleMovieClick} */}
+        {/* onClick={handleNext} */}
         <Button onClick={() => router.push("/users/no_token/profile")}>
           Next
         </Button>

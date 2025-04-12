@@ -42,7 +42,7 @@ const genrePreferences: React.FC = () => {
     setSelectedGenres((prev) => {
       console.log(prev);
       if (prev.includes(genre)) {
-        return prev.filter((g) => g !== genre); // return genres which arent currently selected?
+        return prev.filter((g) => g !== genre); // return genres which aren't currently selected?
       } else {
         if (prev.length >= 1) {
           // TODO: find better way to handle error
@@ -56,7 +56,7 @@ const genrePreferences: React.FC = () => {
     });
   };
 
-  const handleGenre = async () => {
+  const handleNext = async () => {
     if (selectedGenres.length === 0) {
       alert("Please select a genre before proceeding.");
       return;
@@ -107,7 +107,7 @@ const genrePreferences: React.FC = () => {
           Back
         </Button>
         {/* TODO: figure out how to do next, dep on page currently on */}
-        {/* onClick={handleGenre} */}
+        {/* onClick={handleNext} */}
         <Button onClick={() => router.push("/movie_preferences")}>Next</Button>
       </div>
     </div>
