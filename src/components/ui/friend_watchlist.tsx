@@ -50,7 +50,7 @@ const FriendWatchlist: React.FC = () => {
         {
             movieId: 1,
             title: "To All the Boys I've Loved Before",
-            posterURL: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
+            posterURL: "`https://image.tmdb.org/t/p/w92$/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
             description:
                 "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
             genres: ["Teen Romance", "Comedy", "Drama"],
@@ -63,7 +63,7 @@ const FriendWatchlist: React.FC = () => {
         {
             movieId: 2,
             title: "The Kissing Booth",
-            posterURL: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
+            posterURL: "`https://image.tmdb.org/t/p/w92$/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
             description:
                 "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
             genres: ["Teen Romance", "Comedy"],
@@ -76,7 +76,7 @@ const FriendWatchlist: React.FC = () => {
         {
             movieId: 35,
             title: "Dune: Part Two",
-            posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+            posterURL: "https://image.tmdb.org/t/p/w92$/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
             description:
                 "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
             genres: ["Science Fiction", "Adventure", "Action"],

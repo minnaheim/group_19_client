@@ -46,7 +46,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
                 } ${isEditing && isSelected ? "border-2 border-destructive" : ""}
         ${isSelectingFavorite ? "border border-gray-300" : ""}`}
                 alt={movie.title}
-                src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
+                src={movie.posterURL}
             />
 
             {isEditing && isSelected && (

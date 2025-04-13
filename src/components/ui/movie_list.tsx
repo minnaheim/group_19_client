@@ -35,8 +35,7 @@ const MovieList: React.FC<MovieListProps> = ({
                                                  noResultsMessage = "No movies match your search",
                                                  isInWatchlistFn = () => false,
                                                  isInSeenListFn = () => false,
-                                                 className = "",
-                                                 isSelectingFavorite
+                                                 className = ""
                                              }) => {
     if (isLoading) {
         return (

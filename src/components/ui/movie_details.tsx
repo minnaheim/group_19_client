@@ -84,7 +84,7 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
               <img
                 className="w-[120px] h-[180px] object-cover rounded-md mx-auto sm:mx-0"
                 alt={movie.title}
-                src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
+                src={movie.posterURL}
               />
             </div>
             <div className="flex-grow">
