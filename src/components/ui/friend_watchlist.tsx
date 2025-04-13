@@ -7,11 +7,18 @@ import { useApi } from "@/app/hooks/useApi";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
-import { ApplicationError } from "@/app/types/error";
 import SearchBar from "@/components/ui/search_bar";
 import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
+
+interface Friend {
+    userId: number;
+    username: string;
+    email?: string;
+    bio?: string;
+    // other properties as needed
+}
 
 const FriendWatchlist: React.FC = () => {
     const { id } = useParams();
@@ -89,23 +96,32 @@ const FriendWatchlist: React.FC = () => {
             try {
                 setLoading(true);
 
-                // try to get the friend profile data
-                // According to REST spec: GET /profile/{userId}
-                let userData: User;
                 try {
-                    userData = await apiService.get(`/profile/${id}`);
+                    // First check if this user is actually a friend
 
-                    // Get friend's watchlist
-                    // According to REST spec: GET /watchlist/{userId}
-                    const watchlistData = await apiService.get(`/watchlist/${id}`);
+                    const friendsResponse = await apiService.get<Friend[]>('/friends');
+
+                    // Check if the user is in the friends list
+                    const isFriend = Array.isArray(friendsResponse) &&
+                        friendsResponse.some((friend) => friend.userId.toString() === id.toString());
+
+                    if (!isFriend) {
+                        throw new Error("User is not in your friends list");
+                    }
+
+                    // Get the friend's profile data
+                    const userData = await apiService.get<User>(`/profile/${id}`);
+
+                    // Get friend's watchlist according to REST spec: GET /watchlist/{userId}
+                    const watchlistData = await apiService.get<Movie[]>(`/watchlist/${id}`);
 
                     // Update user with watchlist
-                    userData = {
+                    const friendWithWatchlist = {
                         ...userData,
-                        watchlist: watchlistData as Movie[]
+                        watchlist: watchlistData
                     };
 
-                    setFriend(userData);
+                    setFriend(friendWithWatchlist);
                 } catch (apiError) {
                     console.log("API error, using mock data:", apiError);
                     // fall back to mock data
@@ -121,13 +137,12 @@ const FriendWatchlist: React.FC = () => {
                         watchedMovies: [],
                     });
                 }
-                setLoading(false);
             } catch (error) {
                 setError("Failed to load friend data");
-                if (error instanceof Error && "status" in error) {
-                    const applicationError = error as ApplicationError;
-                    showMessage(`Error: ${applicationError.message}`);
+                if (error instanceof Error) {
+                    showMessage(`Error: ${error.message}`);
                 }
+            } finally {
                 setLoading(false);
             }
         };

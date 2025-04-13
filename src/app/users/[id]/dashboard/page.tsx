@@ -8,6 +8,34 @@ import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
 
+// Define interfaces for API responses
+interface FriendRequest {
+    id: number;
+    sender: {
+        userId: number;
+        username: string;
+    };
+    receiver: {
+        userId: number;
+        username: string;
+    };
+    status: string;
+    createdAt: string;
+}
+
+interface GroupInvitation {
+    id: number;
+    groupId: number;
+    groupName: string;
+    sender: string;
+    receiver: {
+        userId: number;
+        username: string;
+    };
+    status: string;
+    createdAt: string;
+}
+
 interface Notification {
     id: number;
     type: 'friend_request' | 'group_invite' | 'group_update' | 'custom';
@@ -16,6 +44,9 @@ interface Notification {
     actionLabel?: string;
     actionUrl?: string;
     sender?: string;
+    requestId?: number;
+    invitationId?: number;
+    groupId?: number;
 }
 
 const Dashboard: React.FC = () => {
@@ -42,14 +73,17 @@ const Dashboard: React.FC = () => {
             type: 'friend_request',
             message: 'alex.np wants to be your friend',
             actionType: 'accept_decline',
-            sender: 'alex.np'
+            sender: 'alex.np',
+            requestId: 123
         },
         {
             id: 2,
             type: 'group_invite',
             message: 'minna invited you to miivel-bean!',
             actionType: 'accept_decline',
-            sender: 'minna'
+            sender: 'minna',
+            invitationId: 456,
+            groupId: 22
         },
         {
             id: 3,
@@ -57,7 +91,8 @@ const Dashboard: React.FC = () => {
             message: "it's time to add movies to girls night!",
             actionType: 'go_to',
             actionLabel: 'go to group',
-            actionUrl: `/users/${id}/groups/1`
+            actionUrl: `/users/${id}/groups/1`,
+            groupId: 1
         },
         {
             id: 4,
@@ -65,21 +100,8 @@ const Dashboard: React.FC = () => {
             message: 'the results are in for miivel-bean!',
             actionType: 'view',
             actionLabel: 'view results',
-            actionUrl: `/users/${id}/groups/2/results`
-        },
-        {
-            id: 5,
-            type: 'friend_request',
-            message: 'jordan_f wants to be your friend',
-            actionType: 'accept_decline',
-            sender: 'jordan_f'
-        },
-        {
-            id: 6,
-            type: 'group_invite',
-            message: 'sarah invited you to Horror Movie Night!',
-            actionType: 'accept_decline',
-            sender: 'sarah'
+            actionUrl: `/users/${id}/groups/2/results`,
+            groupId: 2
         }
     ];
 
@@ -92,32 +114,49 @@ const Dashboard: React.FC = () => {
                 setLoading(true);
 
                 try {
-                    // TODO: API call to GET /profile/{userId} as per REST spec
-                    // const userData = await apiService.get(`/profile/${id}`);
-                    // setUser(userData as User);
+                    // Fetch user profile
+                    const userData = await apiService.get<User>(`/profile/${id}`);
+                    setUser(userData);
 
-                    // TODO: Notifications API is not in the REST spec yet
-                    // we would need to implement this endpoint in the future
+                    // Get friend requests
+                    const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
 
-                    // TODO: Would need to fetch:
-                    // - Friend requests: GET /friends/{userId} for pending requests
-                    // - Group invites: Need a new endpoint like GET /groups/invites/{userId}
-                    // - Group updates: Need a new endpoint
-                    // - Custom notifications: Need a new endpoint
+                    // Get group invitations
+                    const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
 
-                    // using mock data for testing
-                    setUser({
-                        userId: parseInt(id as string),
-                        username: "ivan.movies",
-                        email: "ivan@movies.com",
-                        password: "******",
-                        bio: "I love watching movies!",
-                        favoriteGenres: ["Time Travel", "Sci-Fi", "Romance"],
-                        favoriteMovie: undefined,
-                        watchlist: [],
-                        watchedMovies: [],
-                    });
-                    setNotifications(mockNotifications);
+                    // Convert API responses to notification format
+                    const notificationsList: Notification[] = [];
+
+                    // Add friend requests to notifications
+                    if (friendRequests && Array.isArray(friendRequests)) {
+                        friendRequests.forEach((request) => {
+                            notificationsList.push({
+                                id: notificationsList.length + 1,
+                                type: 'friend_request',
+                                message: `${request.sender.username} wants to be your friend`,
+                                actionType: 'accept_decline',
+                                sender: request.sender.username,
+                                requestId: request.id
+                            });
+                        });
+                    }
+
+                    // Add group invitations to notifications
+                    if (groupInvites && Array.isArray(groupInvites)) {
+                        groupInvites.forEach((invite) => {
+                            notificationsList.push({
+                                id: notificationsList.length + 1,
+                                type: 'group_invite',
+                                message: `${invite.sender} invited you to ${invite.groupName}!`,
+                                actionType: 'accept_decline',
+                                sender: invite.sender,
+                                invitationId: invite.id,
+                                groupId: invite.groupId
+                            });
+                        });
+                    }
+
+                    setNotifications(notificationsList);
                 } catch (apiError) {
                     console.log("API error, using mock data:", apiError);
                     // set mock data for testing
@@ -158,20 +197,18 @@ const Dashboard: React.FC = () => {
     const handleAccept = async (notification: Notification, e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            if (notification.type === 'friend_request') {
-                // TODO: According to REST spec, an endpoint for accepting friend requests
-                // doesn't exist yet. need to implement POST /friends/{userId}/accept
-                // await apiService.post(`/friends/${id}/accept`, { requestId: notification.id });
-
-                // for now, we would need to use POST /friends/add/{userId}
-                // await apiService.post(`/friends/add/${id}`, { userId: senderId });
+            if (notification.type === 'friend_request' && notification.requestId) {
+                await apiService.post<FriendRequest>(
+                    `/friends/friendrequest/${notification.requestId}/accept`,
+                    {} // empty data object
+                );
 
                 showMessage(`Friend request from ${notification.sender} accepted!`);
-            } else if (notification.type === 'group_invite') {
-                // TODO: API call to POST /groups/{groupId}/invite/accept as per REST spec
-                // we would need to extract the groupId from the notification
-                // const groupId = extractGroupId(notification);
-                // await apiService.post(`/groups/${groupId}/invite/accept`, { userId: id });
+            } else if (notification.type === 'group_invite' && notification.invitationId) {
+                await apiService.post<GroupInvitation>(
+                    `/groups/invitations/${notification.invitationId}/accept`,
+                    {} // empty data object
+                );
 
                 showMessage(`Invitation to join from ${notification.sender} accepted!`);
             }
@@ -187,20 +224,24 @@ const Dashboard: React.FC = () => {
     const handleDecline = async (notification: Notification, e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            if (notification.type === 'friend_request') {
-                // TODO: Friend request rejection is not in the REST spec
-                // need to implement POST /friends/{userId}/reject
-                // await apiService.post(`/friends/${id}/reject`, { requestId: notification.id });
-            } else if (notification.type === 'group_invite') {
-                // TODO: API call to POST /groups/{groupId}/invite/reject as per REST spec
-                // we would need to extract the groupId from the notification
-                // const groupId = extractGroupId(notification);
-                // await apiService.post(`/groups/${groupId}/invite/reject`, { userId: id });
+            if (notification.type === 'friend_request' && notification.requestId) {
+                await apiService.post<FriendRequest>(
+                    `/friends/friendrequest/${notification.requestId}/reject`,
+                    {}
+                );
+
+                showMessage(`Friend request declined`);
+            } else if (notification.type === 'group_invite' && notification.invitationId) {
+                await apiService.post<GroupInvitation>(
+                    `/groups/invitations/${notification.invitationId}/reject`,
+                    {}
+                );
+
+                showMessage(`Group invitation declined`);
             }
 
             // Remove the notification
             setNotifications(notifications.filter(n => n.id !== notification.id));
-            showMessage(`Request declined`);
         } catch (error) {
             console.error("Error declining notification:", error);
             showMessage("Failed to process the request");
@@ -216,11 +257,6 @@ const Dashboard: React.FC = () => {
     };
 
     // Navigation handlers
-    // These align with REST endpoints:
-    // - Watchlist: GET /watchlist/{userId}
-    // - Groups: Multiple group endpoints like /groups/{groupId}
-    // - Search Movies: GET /movies with query parameters
-    // - Profile: GET /profile/{userId}
     const navigateToWatchlist = () => router.push(`/users/${id}/watchlist`);
     const navigateToGroups = () => router.push(`/users/${id}/groups`);
     const navigateToSearchMovies = () => router.push(`/users/${id}/movie_search`);
