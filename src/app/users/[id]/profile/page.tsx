@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import { ApplicationError } from "@/app/types/error";
 import ActionMessage from "@/components/ui/action_message";
+import MovieCard from "@/components/ui/Movie_card";
+import MovieDetailsModal from "@/components/ui/movie_details";
 
 const Profile: React.FC = () => {
   const { id } = useParams();
@@ -18,6 +20,9 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
@@ -40,6 +45,16 @@ const Profile: React.FC = () => {
     } else {
       showMessage("You can only edit your own profile");
     }
+  };
+
+  const handleMovieClick = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedMovie(null), 300); // Delay to allow animation
   };
 
   const handleBack = () => {
@@ -102,7 +117,7 @@ const Profile: React.FC = () => {
     {
       movieId: 1,
       title: "To All the Boys I've Loved Before",
-      posterURL: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
       description:
         "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
       genres: ["Teen Romance", "Comedy", "Drama"],
@@ -115,7 +130,7 @@ const Profile: React.FC = () => {
     {
       movieId: 2,
       title: "The Kissing Booth",
-      posterURL: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
       description:
         "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
       genres: ["Teen Romance", "Comedy"],
@@ -128,7 +143,7 @@ const Profile: React.FC = () => {
     {
       movieId: 35,
       title: "Dune: Part Two",
-      posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
       description:
         "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
       genres: ["Science Fiction", "Adventure", "Action"],
@@ -141,7 +156,7 @@ const Profile: React.FC = () => {
     {
       movieId: 40,
       title: "Oppenheimer",
-      posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
       description:
         "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
       genres: ["Drama", "Biography", "History"],
@@ -154,7 +169,7 @@ const Profile: React.FC = () => {
     {
       movieId: 3,
       title: "Poor Things",
-      posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
       description:
         "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
       genres: ["Science Fiction", "Comedy", "Drama"],
@@ -167,7 +182,7 @@ const Profile: React.FC = () => {
     {
       movieId: 4,
       title: "The Fall Guy",
-      posterURL: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
       description:
         "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
       genres: ["Action", "Comedy"],
@@ -180,7 +195,7 @@ const Profile: React.FC = () => {
     {
       movieId: 5,
       title: "The Batman",
-      posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
       description:
         "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
       genres: ["Action", "Crime", "Drama"],
@@ -193,7 +208,7 @@ const Profile: React.FC = () => {
     {
       movieId: 6,
       title: "The Whale",
-      posterURL: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
       description:
         "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
       genres: ["Drama"],
@@ -206,7 +221,7 @@ const Profile: React.FC = () => {
     {
       movieId: 7,
       title: "Top Gun: Maverick",
-      posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
       description:
         "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
       genres: ["Action", "Drama"],
@@ -219,7 +234,7 @@ const Profile: React.FC = () => {
     {
       movieId: 8,
       title: "Everything Everywhere All at Once",
-      posterURL: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
       description:
         "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
       genres: ["Science Fiction", "Comedy", "Action"],
@@ -232,7 +247,7 @@ const Profile: React.FC = () => {
     {
       movieId: 10,
       title: "Killers of the Flower Moon",
-      posterURL: "/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
       description:
         "When oil is discovered in 1920s Oklahoma under Osage Nation land, the Osage people are murdered one by one—until the FBI steps in to unravel the mystery.",
       genres: ["Crime", "Drama", "Western"],
@@ -245,7 +260,7 @@ const Profile: React.FC = () => {
     {
       movieId: 13,
       title: "Anatomy of a Fall",
-      posterURL: "/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
       description:
         "A woman is suspected of her husband's murder, and their blind son faces a moral dilemma as the sole witness.",
       genres: ["Legal Drama", "Mystery", "Thriller"],
@@ -258,7 +273,7 @@ const Profile: React.FC = () => {
     {
       movieId: 15,
       title: "Mission: Impossible - Dead Reckoning Part One",
-      posterURL: "/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
       description:
         "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that threatens all of humanity before it falls into the wrong hands.",
       genres: ["Action", "Adventure", "Thriller"],
@@ -271,7 +286,7 @@ const Profile: React.FC = () => {
     {
       movieId: 22,
       title: "Civil War",
-      posterURL: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
       description:
         "In a near-future America ravaged by political divisions, a team of journalists traverses the war-torn landscape to report on the conflict as rebel factions fight against the government.",
       genres: ["Drama", "Action", "Thriller"],
@@ -284,7 +299,7 @@ const Profile: React.FC = () => {
     {
       movieId: 25,
       title: "John Wick: Chapter 4",
-      posterURL: "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+      posterURL: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
       description:
         "John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances across the globe.",
       genres: ["Action", "Thriller", "Crime"],
@@ -366,10 +381,49 @@ const Profile: React.FC = () => {
                 </p>
               </div>
 
+              <div className="mt-6">
+                <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                  favorite movie:
+                </p>
+                {user?.favoriteMovie ? (
+                    <div className="flex justify-center">
+                      <MovieCard
+                          movie={user.favoriteMovie}
+                          isInWatchlist={false}
+                          isInSeenList={false}
+                          isFavorite={true}
+                          onClick={handleMovieClick}
+                      />
+                    </div>
+                ) : (
+                    <div className="flex justify-center">
+                      <MovieCard
+                          movie={mockMovies[0]} /* Use the first mock movie as default */
+                          isInWatchlist={false}
+                          isInSeenList={false}
+                          onClick={handleMovieClick}
+                      />
+                    </div>
+                )}
+                {/* Movie Details Modal */}
+                {selectedMovie && (
+                    <MovieDetailsModal
+                        movie={selectedMovie}
+                        isOpen={isModalOpen}
+                        onClose={closeModal}
+                        isInWatchlist={user?.favoriteMovie?.movieId !== selectedMovie.movieId ?
+                            (user?.watchlist?.some(m => m.movieId === selectedMovie.movieId) || false) : false}
+                        isInSeenList={user?.favoriteMovie?.movieId !== selectedMovie.movieId ?
+                            (user?.watchedMovies?.some(m => m.movieId === selectedMovie.movieId) || false) : false}
+                    />
+                )}
+              </div>
+
+
               <Button
-                variant="default"
-                className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
-                onClick={handleEditProfile}
+                  variant="default"
+                  className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                  onClick={handleEditProfile}
               >
                 edit profile
               </Button>
@@ -386,9 +440,9 @@ const Profile: React.FC = () => {
               {/* Movie Grid using custom component approach */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {watchedMoviesToDisplay.map((movie) => (
-                  <img
-                    key={movie.movieId}
-                    className="w-full aspect-[2/3] object-cover rounded"
+                    <img
+                        key={movie.movieId}
+                        className="w-full aspect-[2/3] object-cover rounded"
                     alt={movie.title}
                     src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
                   />

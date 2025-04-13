@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   {
     id: "Movie Groups",
     icon: Film,
-    path: (userId: string) => `/users/${userId}/movieGroups`,
+    path: (userId: string) => `/users/${userId}/groups`,
   },
   {
     id: "Search Movies",
