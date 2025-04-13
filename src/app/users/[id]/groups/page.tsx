@@ -499,7 +499,7 @@ const GroupsManagement: React.FC = () => {
     const handleLeaveGroup = async (groupId: number) => {
         try {
             // This would be the actual API call if needed
-            // For now, we just remove from the local state
+            // For now, just remove from the local state
             const updatedGroups = groups.filter(group => group.groupId !== groupId);
             setGroups(updatedGroups);
 
