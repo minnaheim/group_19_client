@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter, useParams } from "next/navigation";
-import { useApi } from "@/app/hooks/useApi";
+import { useRouter } from "next/navigation";
+// import { useApi } from "@/app/hooks/useApi";
 
 const GenrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
