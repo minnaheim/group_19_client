@@ -5,8 +5,9 @@ import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import SearchBar from "@/components/ui/search_bar";
 import { Button } from "@/components/ui/button";
-import { useRouter, useParams } from "next/navigation";
-import { useApi } from "@/app/hooks/useApi";
+import { useRouter } from "next/navigation";
+//  useParams
+// import { useApi } from "@/app/hooks/useApi";
 
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
@@ -14,9 +15,9 @@ const MoviePreferences: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<string>("all");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const apiService = useApi();
+  // const apiService = useApi();
   const router = useRouter();
-  const { id } = useParams();
+  // const { id } = useParams();
 
   // Mock movies for testing
   const mockMovies: Movie[] = [
