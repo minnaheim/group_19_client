@@ -236,28 +236,28 @@ const MoviePreferences: React.FC = () => {
       }
     });
   };
-  const handleNext = async () => {
-    if (selectedMovies.length === 0) {
-      alert("Please select a movie before proceeding.");
-      return;
-    }
+  // const handleNext = async () => {
+  //   if (selectedMovies.length === 0) {
+  //     alert("Please select a movie before proceeding.");
+  //     return;
+  //   }
 
-    try {
-      // Send the selected movie to the backend
-      await apiService.post(`/preferences/${id}`, {
-        userId: id,
-        favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
-      });
+  //   try {
+  //     // Send the selected movie to the backend
+  //     await apiService.post(`/preferences/${id}`, {
+  //       userId: id,
+  //       favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
+  //     });
 
-      // Navigate to the profile page
-      router.push(`/users/${id}/profile`);
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      alert(
-        "An error occurred while saving your preferences. Please try again."
-      );
-    }
-  };
+  //     // Navigate to the profile page
+  //     router.push(`/users/${id}/profile`);
+  //   } catch (error) {
+  //     console.error("Failed to save preferences:", error);
+  //     alert(
+  //       "An error occurred while saving your preferences. Please try again."
+  //     );
+  //   }
+  // };
 
   const displayMovies = isSearching ? searchResults : mockMovies;
 
