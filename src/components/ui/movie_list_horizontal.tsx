@@ -1,11 +1,10 @@
 import React from "react";
 import { Movie } from "@/app/types/movie";
 import { Button } from "./button";
-import MovieCard from "./Movie_card";
+import MovieCardSimple from "./movie_card_simple";
 
-interface MovieListProps {
+interface MovieListHorizontalProps {
   movies: Movie[];
-  isLoading?: boolean;
   isEditing?: boolean;
   isSearching?: boolean;
   selectedMovieIds?: number[];
@@ -15,43 +14,26 @@ interface MovieListProps {
   onClearSearch?: () => void;
   emptyMessage?: string;
   noResultsMessage?: string;
-  isInWatchlistFn?: (movie: Movie) => boolean;
-  isInSeenListFn?: (movie: Movie) => boolean;
-  className?: string;
-  isSelectingFavorite?: boolean;
+  hasOuterContainer?: boolean; // New prop to control the outer container
 }
-
-const MovieList: React.FC<MovieListProps> = ({
+const MovieListHorizontal: React.FC<MovieListHorizontalProps> = ({
   movies,
-  isLoading = false,
+  onMovieClick,
   isEditing = false,
   isSearching = false,
-  selectedMovieIds = [],
-  onMovieClick,
-  onMovieSelect,
+  // selectedMovieIds = [],
+  // onMovieSelect,
   onAddMovieClick,
   onClearSearch,
   emptyMessage = "No movies found",
   noResultsMessage = "No movies match your search",
-  isInWatchlistFn = () => false,
-  isInSeenListFn = () => false,
-  className = "",
+  hasOuterContainer = true,
 }) => {
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
-      </div>
-    );
-  }
-
   const isEmpty = movies.length === 0;
 
-  return (
-    <div
-      className={`bg-white rounded-[30px] shadow-lg relative p-6 min-h-[500px] max-h-[70vh] overflow-y-auto ${className}`}
-    >
-      {/* No results message when searching */}
+  const content = (
+    <>
+      {/* Empty state when searching */}
       {isSearching && isEmpty && (
         <div className="flex flex-col items-center justify-center h-full">
           <p className="text-gray-500 text-lg mb-4">{noResultsMessage}</p>
@@ -62,8 +44,7 @@ const MovieList: React.FC<MovieListProps> = ({
           )}
         </div>
       )}
-
-      {/* Empty state message when not searching */}
+      {/* Empty state when not searching */}
       {!isSearching && isEmpty && (
         <div className="flex flex-col items-center justify-center h-full">
           <p className="text-gray-500 text-lg mb-4">{emptyMessage}</p>
@@ -74,22 +55,13 @@ const MovieList: React.FC<MovieListProps> = ({
           )}
         </div>
       )}
-
-      {/* Movies grid */}
-      <div className="flex flex-wrap gap-6">
+      {/* Movies Grid */}
+      <div className="flex flex-nowrap gap-4">
         {movies.map((movie) => (
-          <MovieCard
-            key={movie.movieId}
-            movie={movie}
-            isEditing={isEditing}
-            isSelected={selectedMovieIds.includes(movie.movieId)}
-            isInWatchlist={isInWatchlistFn(movie)}
-            isInSeenList={isInSeenListFn(movie)}
-            onClick={onMovieClick}
-            onSelect={onMovieSelect}
-          />
+          <div key={movie.movieId} className="flex-shrink-0">
+            <MovieCardSimple movie={movie} onClick={onMovieClick} />
+          </div>
         ))}
-
         {/* Add Movie Button */}
         {!isEditing && onAddMovieClick && !isEmpty && (
           <div
@@ -106,8 +78,14 @@ const MovieList: React.FC<MovieListProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </>
   );
+
+  if (!hasOuterContainer) {
+    return content;
+  }
+
+  return <div className="bg-white rounded-[30px] shadow-lg p-6">{content}</div>;
 };
 
-export default MovieList;
+export default MovieListHorizontal;
