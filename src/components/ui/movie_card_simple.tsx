@@ -15,7 +15,7 @@ const MovieCardSimple: React.FC<MovieCardSimpleProps> = ({
 }) => {
   const handleClick = () => {
     if (onSelect) {
-      onSelect(movie.id);
+      onSelect(movie.movieId);
     } else {
       onClick(movie);
     }
@@ -27,7 +27,7 @@ const MovieCardSimple: React.FC<MovieCardSimpleProps> = ({
       <img
         className="w-[90px] h-[130px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md group-hover:opacity-75 transition-opacity"
         alt={movie.title}
-        src={`https://image.tmdb.org/t/p/w500${movie.posterUrl}`}
+        src={`https://image.tmdb.org/t/p/w500${movie.posterURL}`}
       />
       {
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

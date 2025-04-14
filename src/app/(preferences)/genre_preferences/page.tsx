@@ -1,11 +1,10 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 
-const genrePreferences: React.FC = () => {
+const GenrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const apiService = useApi();
   const router = useRouter();
@@ -114,4 +113,4 @@ const genrePreferences: React.FC = () => {
   );
 };
 
-export default genrePreferences;
+export default GenrePreferences;

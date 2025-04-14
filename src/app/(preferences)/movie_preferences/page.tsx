@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 
-interface MoviePreferencesProps {
-  setSelectedMovie: (movieId: number | null) => void;
-}
+// interface MoviePreferencesProps {
+//   setSelectedMovie: (movieId: number | null) => void;
+// }
 
-const moviePreferences: React.FC = () => {
+const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const apiService = useApi();
   const router = useRouter();
@@ -20,150 +20,160 @@ const moviePreferences: React.FC = () => {
   // simulate movies which we would get from backend
   const mockMovies: Movie[] = [
     {
-      id: 1,
+      movieId: 1,
       title: "To All the Boys I've Loved Before",
-      posterUrl: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
-      details:
+      posterURL: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
+      description:
         "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
-      genre: "Teen Romance",
-      director: "Susan Johnson",
+      genres: ["Teen Romance"],
+      directors: ["Susan Johnson"],
       actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
       trailerURL: "https://www.example.com/to-all-the-boys",
+      year: 2002,
+      originallanguage: "English",
     },
     {
-      id: 2,
+      movieId: 2,
       title: "The Kissing Booth",
-      posterUrl: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
-      details:
+      posterURL: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
+      description:
         "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
-      genre: "Teen Romance",
-      director: "Vince Marcello",
+      genres: ["Teen Romance"],
+      directors: ["Vince Marcello"],
       actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
       trailerURL: "https://www.example.com/kissing-booth",
+      year: 2018,
+      originallanguage: "English",
     },
     {
-      id: 35,
+      movieId: 3,
       title: "Dune: Part Two",
-      posterUrl: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-      details:
+      posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+      description:
         "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-      genre: "Science Fiction",
-      director: "Denis Villeneuve",
+      genres: ["Science Fiction"],
+      directors: ["Denis Villeneuve"],
       actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
       trailerURL: "https://www.example.com/dune-part-two",
+      year: 2023,
+      originallanguage: "English",
     },
     {
-      id: 40,
+      movieId: 4,
       title: "Oppenheimer",
-      posterUrl: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      details:
+      posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      description:
         "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-      genre: "Drama",
-      director: "Christopher Nolan",
+      genres: ["Drama"],
+      directors: ["Christopher Nolan"],
       actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
       trailerURL: "https://www.example.com/oppenheimer",
+      year: 2023,
+      originallanguage: "English",
     },
     {
-      id: 3,
+      movieId: 5,
       title: "Poor Things",
-      posterUrl: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-      details:
+      posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+      description:
         "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-      genre: "Science Fiction",
-      director: "Yorgos Lanthimos",
+      genres: ["Science Fiction"],
+      directors: ["Yorgos Lanthimos"],
       actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
       trailerURL: "https://www.example.com/poor-things",
+      year: 2023,
+      originallanguage: "English",
     },
     {
-      id: 4,
+      movieId: 4,
+      title: "Oppenheimer",
+      posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      description:
+        "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+      genres: ["Drama"],
+      directors: ["Christopher Nolan"],
+      actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
+      trailerURL: "https://www.example.com/oppenheimer",
+      year: 2023,
+      originallanguage: "English",
+    },
+    {
+      movieId: 5,
+      title: "Poor Things",
+      posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+      description:
+        "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
+      genres: ["Science Fiction"],
+      directors: ["Yorgos Lanthimos"],
+      actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
+      trailerURL: "https://www.example.com/poor-things",
+      year: 2023,
+      originallanguage: "English",
+    },
+    {
+      movieId: 6,
       title: "The Fall Guy",
-      posterUrl: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
-      details:
+      posterURL: "/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
+      description:
         "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
-      genre: "Action",
-      director: "David Leitch",
+      genres: ["Action"],
+      directors: ["David Leitch"],
       actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
       trailerURL: "https://www.example.com/fall-guy",
+      year: 2024,
+      originallanguage: "English",
     },
     {
-      id: 5,
+      movieId: 7,
       title: "The Batman",
-      posterUrl: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-      details:
+      posterURL: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+      description:
         "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-      genre: "Action",
-      director: "Matt Reeves",
+      genres: ["Action"],
+      directors: ["Matt Reeves"],
       actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
       trailerURL: "https://www.example.com/the-batman",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 6,
+      movieId: 8,
       title: "The Whale",
-      posterUrl: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
-      details:
+      posterURL: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+      description:
         "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
-      genre: "Drama",
-      director: "Darren Aronofsky",
+      genres: ["Drama"],
+      directors: ["Darren Aronofsky"],
       actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
       trailerURL: "https://www.example.com/the-whale",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 7,
+      movieId: 9,
       title: "Top Gun: Maverick",
-      posterUrl: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-      details:
+      posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+      description:
         "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-      genre: "Action",
-      director: "Joseph Kosinski",
+      genres: ["Action"],
+      directors: ["Joseph Kosinski"],
       actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
       trailerURL: "https://www.example.com/top-gun-maverick",
+      year: 2022,
+      originallanguage: "English",
     },
     {
-      id: 8,
+      movieId: 10,
       title: "Everything Everywhere All at Once",
-      posterUrl: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-      details:
+      posterURL: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+      description:
         "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-      genre: "Science Fiction",
-      director: "Daniel Kwan, Daniel Scheinert",
+      genres: ["Science Fiction"],
+      directors: ["Daniel Kwan", "Daniel Scheinert"],
       actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
       trailerURL: "https://www.example.com/everything-everywhere",
-    },
-
-    {
-      id: 10,
-      title: "Killers of the Flower Moon",
-      posterUrl: "/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
-      details:
-        "When oil is discovered in 1920s Oklahoma under Osage Nation land, the Osage people are murdered one by one—until the FBI steps in to unravel the mystery.",
-      genre: "Crime",
-      director: "Martin Scorsese",
-      actors: ["Leonardo DiCaprio", "Robert De Niro", "Lily Gladstone"],
-      trailerURL: "https://www.example.com/killers-flower-moon",
-    },
-
-    {
-      id: 13,
-      title: "Anatomy of a Fall",
-      posterUrl: "/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
-      details:
-        "A woman is suspected of her husband's murder, and their blind son faces a moral dilemma as the sole witness.",
-      genre: "Legal Drama",
-      director: "Justine Triet",
-      actors: ["Sandra Hüller", "Swann Arlaud", "Milo Machado Graner"],
-      trailerURL: "https://www.example.com/anatomy-of-a-fall",
-    },
-
-    {
-      id: 15,
-      title: "Mission: Impossible - Dead Reckoning Part One",
-      posterUrl: "/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
-      details:
-        "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that threatens all of humanity before it falls into the wrong hands.",
-      genre: "Action",
-      director: "Christopher McQuarrie",
-      actors: ["Tom Cruise", "Hayley Atwell", "Simon Pegg"],
-      trailerURL: "https://www.example.com/mission-impossible",
+      year: 2022,
+      originallanguage: "English",
     },
   ];
 
@@ -171,8 +181,8 @@ const moviePreferences: React.FC = () => {
     setSelectedMovies((prev) => {
       console.log(prev);
       // can be adjusted to checking by title not ID, but ID usually unique
-      if (prev.some((m) => m.id === movie.id)) {
-        return prev.filter((m) => m.id !== movie.id);
+      if (prev.some((m) => m.movieId === movie.movieId)) {
+        return prev.filter((m) => m.movieId !== movie.movieId);
       } else {
         if (prev.length >= 1) {
           alert("You can only select one favorite movie");
@@ -184,11 +194,11 @@ const moviePreferences: React.FC = () => {
     });
   };
 
-  const handleNext = async () => {
-    if (selectedMovies.length === 0) {
-      alert("Please select a movie before proceeding.");
-      return;
-    }
+  // const handleNext = async () => {
+  //   if (selectedMovies.length === 0) {
+  //     alert("Please select a movie before proceeding.");
+  //     return;
+  //   }
 
     try {
       await apiService.post(`/preferences/${id}`, {
@@ -249,4 +259,4 @@ const moviePreferences: React.FC = () => {
   );
 };
 
-export default moviePreferences;
+export default MoviePreferences;
