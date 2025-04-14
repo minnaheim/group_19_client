@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import { Button } from "@/components/ui/button";
-import { useRouter, useParams } from "next/navigation";
-import { useApi } from "@/app/hooks/useApi";
+import { useRouter } from "next/navigation";
+// import { useApi } from "@/app/hooks/useApi";
 
 // interface MoviePreferencesProps {
 //   setSelectedMovie: (movieId: number | null) => void;

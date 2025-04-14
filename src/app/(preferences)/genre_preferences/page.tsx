@@ -55,11 +55,11 @@ const GenrePreferences: React.FC = () => {
     });
   };
 
-  const handleNext = async () => {
-    if (selectedGenres.length === 0) {
-      alert("Please select a genre before proceeding.");
-      return;
-    }
+  // const handleNext = async () => {
+  //   if (selectedGenres.length === 0) {
+  //     alert("Please select a genre before proceeding.");
+  //     return;
+  //   }
 
     try {
       await apiService.post(`/preferences/${id}`, {
