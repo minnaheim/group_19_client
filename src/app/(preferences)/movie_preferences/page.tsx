@@ -1,23 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
+import SearchBar from "@/components/ui/search_bar";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-// import { useApi } from "@/app/hooks/useApi";
-
-// interface MoviePreferencesProps {
-//   setSelectedMovie: (movieId: number | null) => void;
-// }
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
 
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
-  // const apiService = useApi();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchCategory, setSearchCategory] = useState<string>("all");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const apiService = useApi();
   const router = useRouter();
-  // const { id } = useParams();
+  const { id } = useParams();
 
-  // simulate movies which we would get from backend
+  // Mock movies for testing
   const mockMovies: Movie[] = [
     {
       movieId: 1,
@@ -85,7 +86,7 @@ const MoviePreferences: React.FC = () => {
       originallanguage: "English",
     },
     {
-      movieId: 4,
+      movieId: 11,
       title: "Oppenheimer",
       posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
       description:
@@ -98,7 +99,7 @@ const MoviePreferences: React.FC = () => {
       originallanguage: "English",
     },
     {
-      movieId: 5,
+      movieId: 12,
       title: "Poor Things",
       posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
       description:
@@ -177,10 +178,52 @@ const MoviePreferences: React.FC = () => {
     },
   ];
 
+  // Search logic
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setIsSearching(false);
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = mockMovies.filter((movie) => {
+      if (searchCategory === "title" || searchCategory === "all") {
+        if (movie.title.toLowerCase().includes(query)) return true;
+      }
+
+      if (searchCategory === "genre" || searchCategory === "all") {
+        if (movie.genres.some((genre) => genre.toLowerCase().includes(query))) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    setSearchResults(filtered);
+  }, [searchQuery, searchCategory]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchCategory(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchCategory("all");
+    setIsSearching(false);
+    setSearchResults([]);
+  };
+
   const toggleMovie = (movie: Movie) => {
     setSelectedMovies((prev) => {
       console.log(prev);
-      // can be adjusted to checking by title not ID, but ID usually unique
       if (prev.some((m) => m.movieId === movie.movieId)) {
         return prev.filter((m) => m.movieId !== movie.movieId);
       } else {
@@ -193,65 +236,80 @@ const MoviePreferences: React.FC = () => {
       }
     });
   };
+  const handleNext = async () => {
+    if (selectedMovies.length === 0) {
+      alert("Please select a movie before proceeding.");
+      return;
+    }
 
-  // const handleNext = async () => {
-  //   if (selectedMovies.length === 0) {
-  //     alert("Please select a movie before proceeding.");
-  //     return;
-  //   }
-  // TODO: implement this when connecting with backend
-  // try {
-  //   await apiService.post(`/preferences/${id}`, {
-  //     userId: id,
-  //     favoriteMovies: selectedMovies,
-  //   });
+    try {
+      // Send the selected movie to the backend
+      await apiService.post(`/preferences/${id}`, {
+        userId: id,
+        favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
+      });
 
-  //   router.push("/users/no_token/profile");
-  // } catch (error) {
-  //   console.error("Failed to save preferences:", error);
-  //   alert(
-  //     "An error occurred while saving your preferences. Please try again."
-  //   );
-  // }
-  // };
-  // TODO: wait for backend to finish this endpoint
-  // const movies = await apiService.get(`/movies?GenreList=${}`);
+      // Navigate to the profile page
+      router.push(`/users/${id}/profile`);
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert(
+        "An error occurred while saving your preferences. Please try again."
+      );
+    }
+  };
+
+  const displayMovies = isSearching ? searchResults : mockMovies;
 
   return (
     <div>
-      {/* Subheading - preference specific */}
+      {/* Subheading */}
       <h3 className="text-center text-[#3C3F88] mb-6">
         Based on the previous genre you have selected, select one favorite
         movie!
       </h3>
-      {/* map mockMovies  */}
+
+      {/* Search Bar */}
+      <SearchBar
+        searchQuery={searchQuery}
+        searchCategory={searchCategory}
+        onSearchChange={handleSearchChange}
+        onCategoryChange={handleCategoryChange}
+        onClearSearch={clearSearch}
+        placeholder="Search for movies..."
+        className="mb-6"
+      />
+
+      {/* Movie List */}
       <div className="overflow-x-auto">
         <MovieListHorizontal
-          movies={mockMovies}
-          // isLoading={false}
-          onMovieClick={toggleMovie} // TODO: decide where endpoint call happens
+          movies={displayMovies}
+          onMovieClick={toggleMovie}
           emptyMessage="No movies match your genre"
           noResultsMessage="No movies match your search"
           hasOuterContainer={false}
         />
       </div>
+
       {/* Selected Movie Info */}
       <p className="text-center mt-4 text-sm text-[#3C3F88]">
         {selectedMovies.length > 0
           ? `You selected: ${selectedMovies[0].title}`
           : "No movie selected"}
       </p>
-      {/* TODO: make padding work, not br */}
-      <br></br>
-      <div className="flex justify-between">
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-4">
         <Button
           variant="destructive"
           onClick={() => router.push("/genre_preferences")}
         >
           Back
         </Button>
-        {/* onClick={handleNext} */}
-        <Button onClick={() => router.push("/users/no_token/profile")}>
+        <Button
+          // onClick={handleNext}
+          onClick={() => router.push("/users/no_token/profile")}
+        >
           Next
         </Button>
       </div>
