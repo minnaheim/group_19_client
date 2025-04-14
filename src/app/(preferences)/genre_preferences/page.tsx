@@ -6,9 +6,9 @@ import { useApi } from "@/app/hooks/useApi";
 
 const GenrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const apiService = useApi();
+  // const apiService = useApi();
   const router = useRouter();
-  const { id } = useParams();
+  // const { id } = useParams();
 
   // simulate genre which we would get from backend
   const mockGenres = [
