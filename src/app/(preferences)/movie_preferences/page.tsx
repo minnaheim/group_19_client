@@ -13,9 +13,9 @@ import { useApi } from "@/app/hooks/useApi";
 
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
-  const apiService = useApi();
+  // const apiService = useApi();
   const router = useRouter();
-  const { id } = useParams();
+  // const { id } = useParams();
 
   // simulate movies which we would get from backend
   const mockMovies: Movie[] = [
