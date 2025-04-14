@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Home, Search, ListChecks, User, Film, Users } from "lucide-react";
+import { Film, Home, ListChecks, Search, User, Users } from "lucide-react";
 
 // Define all navigation item configurations with Lucide icons
 const NAV_ITEMS = [
@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   {
     id: "Movie Groups",
     icon: Film,
-    path: (userId: string) => `/users/${userId}/movieGroups`,
+    path: (userId: string) => `/users/${userId}/groups`,
   },
   {
     id: "Search Movies",
@@ -77,17 +77,13 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
 };
 
 const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
-  const router = useRouter();
   // Use pathname from next/navigation
   usePathname();
   return (
     <div className="w-full md:w-72 bg-[#ffffffcc] backdrop-blur-2xl [-webkit-backdrop-filter:blur(40px)_brightness(100%)]">
       <div className="p-6">
         <div className="flex items-center mb-12">
-          <div
-            className="absolute top-4 left-4 flex items-center space-x-2"
-            onClick={() => router.push("/")}
-          >
+          <div className="absolute top-4 left-4 flex items-center space-x-2">
             <Image src="/projector.png" alt="App Icon" width={50} height={50} />
             <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
               Movie Night

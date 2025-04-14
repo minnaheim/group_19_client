@@ -40,6 +40,10 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
           <h2 className="text-xl font-bold text-center text-[#3C3F88] mb-4">
             Let’s get to know you!
           </h2>
+          <h3 className="text-center text-[#3C3F88] mb-6">
+            Please select your preferences.
+          </h3>
+          {/* layout static, here specific preference choices are being shown */}
           {children}
           {/* commented out, because for simplicity sake, this should be within pages, so that I can better construct endpoints */}
           {/* <CardFooter className="flex justify-between">

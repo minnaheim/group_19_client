@@ -18,6 +18,7 @@ interface MovieListProps {
   isInWatchlistFn?: (movie: Movie) => boolean;
   isInSeenListFn?: (movie: Movie) => boolean;
   className?: string;
+  isSelectingFavorite?: boolean;
 }
 
 const MovieList: React.FC<MovieListProps> = ({
@@ -78,10 +79,10 @@ const MovieList: React.FC<MovieListProps> = ({
       <div className="flex flex-wrap gap-6">
         {movies.map((movie) => (
           <MovieCard
-            key={movie.id}
+            key={movie.movieId}
             movie={movie}
             isEditing={isEditing}
-            isSelected={selectedMovieIds.includes(movie.id)}
+            isSelected={selectedMovieIds.includes(movie.movieId)}
             isInWatchlist={isInWatchlistFn(movie)}
             isInSeenList={isInSeenListFn(movie)}
             onClick={onMovieClick}
