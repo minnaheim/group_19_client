@@ -61,20 +61,20 @@ const GenrePreferences: React.FC = () => {
   //     return;
   //   }
 
-    try {
-      await apiService.post(`/preferences/${id}`, {
-        userId: id,
-        favoriteGenres: selectedGenres,
-      });
+  //   try {
+  //     await apiService.post(`/preferences/${id}`, {
+  //       userId: id,
+  //       favoriteGenres: selectedGenres,
+  //     });
 
-      router.push("/movie_preferences");
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      alert(
-        "An error occurred while saving your preferences. Please try again."
-      );
-    }
-  };
+  //     router.push("/movie_preferences");
+  //   } catch (error) {
+  //     console.error("Failed to save preferences:", error);
+  //     alert(
+  //       "An error occurred while saving your preferences. Please try again."
+  //     );
+  //   }
+  // };
 
   return (
     <div>

@@ -58,7 +58,7 @@ const MovieListHorizontal: React.FC<MovieListHorizontalProps> = ({
       {/* Movies Grid */}
       <div className="flex flex-nowrap gap-4">
         {movies.map((movie) => (
-          <div key={movie.id} className="flex-shrink-0">
+          <div key={movie.movieId} className="flex-shrink-0">
             <MovieCardSimple movie={movie} onClick={onMovieClick} />
           </div>
         ))}
