@@ -199,21 +199,21 @@ const MoviePreferences: React.FC = () => {
   //     alert("Please select a movie before proceeding.");
   //     return;
   //   }
+  // TODO: implement this when connecting with backend
+  // try {
+  //   await apiService.post(`/preferences/${id}`, {
+  //     userId: id,
+  //     favoriteMovies: selectedMovies,
+  //   });
 
-    try {
-      await apiService.post(`/preferences/${id}`, {
-        userId: id,
-        favoriteMovies: selectedMovies,
-      });
-
-      router.push("/users/no_token/profile");
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      alert(
-        "An error occurred while saving your preferences. Please try again."
-      );
-    }
-  };
+  //   router.push("/users/no_token/profile");
+  // } catch (error) {
+  //   console.error("Failed to save preferences:", error);
+  //   alert(
+  //     "An error occurred while saving your preferences. Please try again."
+  //   );
+  // }
+  // };
   // TODO: wait for backend to finish this endpoint
   // const movies = await apiService.get(`/movies?GenreList=${}`);
 
