@@ -31,12 +31,10 @@ interface GroupInvitation {
     createdAt: string;
 }
 
-/*
 interface UserSearchResponse {
     userId: number;
     username: string;
 }
-*/
 
 const GroupsManagement: React.FC = () => {
     const { id } = useParams();
@@ -76,75 +74,6 @@ const GroupsManagement: React.FC = () => {
 
     const { value: userId } = useLocalStorage<string>("userId", "");
 
-    // Mock movie data for pools
-    const mockMovies: Movie[] = [
-        {
-            movieId: 1,
-            title: "To All the Boys I've Loved Before",
-            posterURL: "https://image.tmdb.org/t/p/w500/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
-            description:
-                "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
-            genres: ["Teen Romance", "Comedy", "Drama"],
-            directors: ["Susan Johnson"],
-            actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
-            trailerURL: "https://www.example.com/to-all-the-boys",
-            year: 2018,
-            originallanguage: "English",
-        },
-        {
-            movieId: 2,
-            title: "The Kissing Booth",
-            posterURL: "https://image.tmdb.org/t/p/w500/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
-            description:
-                "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
-            genres: ["Teen Romance", "Comedy"],
-            directors: ["Vince Marcello"],
-            actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
-            trailerURL: "https://www.example.com/kissing-booth",
-            year: 2018,
-            originallanguage: "English",
-        },
-        {
-            movieId: 301,
-            title: "Dune: Part Two",
-            posterURL: "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-            description:
-                "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-            genres: ["Science Fiction", "Adventure", "Action"],
-            directors: ["Denis Villeneuve"],
-            actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-            trailerURL: "https://www.example.com/dune-part-two",
-            year: 2024,
-            originallanguage: "English",
-        },
-        {
-            movieId: 300,
-            title: "Oppenheimer",
-            posterURL: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-            description:
-                "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-            genres: ["Drama", "Biography", "History"],
-            directors: ["Christopher Nolan"],
-            actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-            trailerURL: "https://www.example.com/oppenheimer",
-            year: 2023,
-            originallanguage: "English",
-        },
-        {
-            movieId: 3,
-            title: "Poor Things",
-            posterURL: "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-            description:
-                "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-            genres: ["Science Fiction", "Comedy", "Drama"],
-            directors: ["Yorgos Lanthimos"],
-            actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
-            trailerURL: "https://www.example.com/poor-things",
-            year: 2023,
-            originallanguage: "English",
-        }
-    ];
-
     // Fetch groups data
     useEffect(() => {
         const fetchGroupsData = async () => {
@@ -154,128 +83,17 @@ const GroupsManagement: React.FC = () => {
                 setLoading(true);
 
                 try {
-                    // This would be the actual API call
-                    // const groupsData = await apiService.get<Group[]>('/groups');
-                    // setGroups(groupsData);
+                    // Get user's groups
+                    const groupsData = await apiService.get<Group[]>('/groups');
+                    setGroups(Array.isArray(groupsData) ? groupsData.sort((a, b) => a.name.localeCompare(b.name)) : []);
 
                     // Get received group invitations
-                    // const receivedInvitationsData = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
-                    // setReceivedInvitations(receivedInvitationsData);
+                    const receivedInvitationsData = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+                    setReceivedInvitations(Array.isArray(receivedInvitationsData) ? receivedInvitationsData : []);
 
                     // Get sent group invitations
-                    // const sentInvitationsData = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
-                    // setSentInvitations(sentInvitationsData);
-
-                    // Mock data for testing
-                    const mockUsers: User[] = [
-                        {
-                            userId: 2,
-                            username: "alex.np",
-                            email: "alex@example.com",
-                            bio: "Horror fan with a passion for classic slasher films and psychological thrillers. Always looking for the next scare!",
-                            favoriteGenres: ["Horror", "Thriller", "Mystery"],
-                            favoriteMovie: mockMovies[0],
-                            watchlist: [mockMovies[0], mockMovies[1]],
-                            password: "",
-                            watchedMovies: []
-                        },
-                        {
-                            userId: 3,
-                            username: "cinematic_soul",
-                            email: "cinematic@example.com",
-                            bio: "Finding meaning through cinema since 1995.",
-                            favoriteGenres: ["Drama", "Independent", "Foreign"],
-                            favoriteMovie: mockMovies[2],
-                            watchlist: [mockMovies[2], mockMovies[3]],
-                            password: "",
-                            watchedMovies: []
-                        },
-                        {
-                            userId: 4,
-                            username: "film_buff",
-                            email: "buff@movies.com",
-                            bio: "Movie enthusiast with a passion for classics.",
-                            favoriteGenres: ["Drama", "Classic", "Film Noir"],
-                            favoriteMovie: mockMovies[3],
-                            watchlist: [mockMovies[3], mockMovies[4]],
-                            password: "",
-                            watchedMovies: []
-                        }
-                    ];
-
-                    const currentUser: User = {
-                        password: "", watchedMovies: [],
-                        userId: parseInt(id as string),
-                        username: "current_user",
-                        email: "user@example.com",
-                        bio: "Movie lover",
-                        favoriteGenres: ["Action", "Comedy"],
-                        favoriteMovie: mockMovies[0],
-                        watchlist: [mockMovies[0], mockMovies[1]]
-                    };
-
-                    const mockGroups: Group[] = [
-                        {
-                            groupId: 1,
-                            name: "Weekend Movie Club",
-                            description: "We watch movies every weekend and discuss them!",
-                            creator: currentUser,
-                            members: [currentUser, mockUsers[0], mockUsers[1]],
-                            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-                            moviePool: [mockMovies[0], mockMovies[1], mockMovies[2]]
-                        },
-                        {
-                            groupId: 2,
-                            name: "Sci-Fi Enthusiasts",
-                            description: "Only the best science fiction films!",
-                            creator: mockUsers[1],
-                            members: [currentUser, mockUsers[1], mockUsers[2]],
-                            createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-                            moviePool: [mockMovies[2], mockMovies[4]]
-                        },
-                        {
-                            groupId: 3,
-                            name: "Oscar Winners Club",
-                            description: "We watch and rate Oscar-winning movies",
-                            creator: mockUsers[0],
-                            members: [currentUser, mockUsers[0]],
-                            createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-                            moviePool: [mockMovies[3], mockMovies[4]]
-                        }
-                    ];
-
-                    // Sort groups alphabetically
-                    setGroups(mockGroups.sort((a, b) => a.name.localeCompare(b.name)));
-
-                    setReceivedInvitations([
-                        {
-                            id: 1,
-                            sender: mockUsers[2],
-                            receiver: currentUser,
-                            group: {
-                                groupId: 4,
-                                name: "Cinema Classics",
-                                description: "Appreciating the golden age of cinema",
-                                creator: mockUsers[2],
-                                members: [mockUsers[2]],
-                                createdAt: new Date().toISOString(),
-                                moviePool: []
-                            },
-                            status: 'PENDING',
-                            createdAt: new Date().toISOString()
-                        }
-                    ]);
-
-                    setSentInvitations([
-                        {
-                            id: 2,
-                            sender: currentUser,
-                            receiver: mockUsers[2],
-                            group: mockGroups[0],
-                            status: 'PENDING',
-                            createdAt: new Date().toISOString()
-                        }
-                    ]);
+                    const sentInvitationsData = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+                    setSentInvitations(Array.isArray(sentInvitationsData) ? sentInvitationsData : []);
                 } catch (apiError) {
                     console.log("API error:", apiError);
                     setError("Failed to connect to the server");
@@ -328,32 +146,16 @@ const GroupsManagement: React.FC = () => {
         setIsSubmittingGroup(true);
 
         try {
-            // This would be the actual API call
-            // const createdGroup = await apiService.post('/groups', {
-            //   name: newGroupName,
-            //   description: newGroupDescription
-            // });
-
-            // For mock purposes, create a new group
-            const newGroup: Group = {
-                groupId: groups.length + 4, // Just for mock ID
+            const createdGroup = await apiService.post('/groups', {
                 name: newGroupName,
-                description: newGroupDescription,
-                creator: {
-                    userId: parseInt(id as string),
-                    username: "current_user"
-                } as User,
-                members: [{
-                    userId: parseInt(id as string),
-                    username: "current_user"
-                } as User],
-                createdAt: new Date().toISOString(),
-                moviePool: []
-            };
+                description: newGroupDescription
+            });
 
-            // Update groups list
-            const updatedGroups = [...groups, newGroup];
-            setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+            // Update groups list with the newly created group
+            if (createdGroup) {
+                const updatedGroups = [...groups, createdGroup as Group];
+                setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+            }
 
             showMessage(`Group "${newGroupName}" created successfully`);
             setNewGroupName("");
@@ -383,40 +185,27 @@ const GroupsManagement: React.FC = () => {
         setIsSubmittingInvite(true);
 
         try {
-            // This would be the actual API call
             // First, find the receiverId based on username
-            // const searchResults = await apiService.get<UserSearchResponse[]>(
-            //    `/friends/search?username=${encodeURIComponent(inviteUsername)}`
-            // );
+            const searchResults = await apiService.get<UserSearchResponse[]>(
+                `/users/search?username=${encodeURIComponent(inviteUsername)}`
+            );
 
-            // if (!searchResults || searchResults.length === 0) {
-            //    showMessage(`Could not find user with username ${inviteUsername}`);
-            //    setIsSubmittingInvite(false);
-            //    return;
-            // }
+            if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
+                showMessage(`Could not find user with username ${inviteUsername}`);
+                setIsSubmittingInvite(false);
+                return;
+            }
 
-            // const receiverId = searchResults[0].userId;
-            // await apiService.post(`/groups/invitations/send/${selectedGroupId}/${receiverId}`, {});
+            const receiverId = searchResults[0].userId;
+            const response = await apiService.post(`/groups/invitations/send/${selectedGroupId}/${receiverId}`, {});
 
-            // For mock purposes
-            const mockReceiverId = 4; // Just for mock
-
-            const updatedSentInvitations = [...sentInvitations, {
-                id: sentInvitations.length + 3,
-                sender: {
-                    userId: parseInt(id as string),
-                    username: "current_user"
-                } as User,
-                receiver: {
-                    userId: mockReceiverId,
-                    username: inviteUsername
-                } as User,
-                group: groups.find(g => g.groupId === selectedGroupId) as Group,
-                status: 'PENDING' as 'PENDING' | 'ACCEPTED' | 'REJECTED',
-                createdAt: new Date().toISOString()
-            }];
-
-            setSentInvitations(updatedSentInvitations);
+            if (response) {
+                // Refresh sent invitations
+                const updatedSentInvitations = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+                if (Array.isArray(updatedSentInvitations)) {
+                    setSentInvitations(updatedSentInvitations);
+                }
+            }
 
             showMessage(`Invitation sent to ${inviteUsername}`);
             setInviteUsername("");
@@ -440,19 +229,18 @@ const GroupsManagement: React.FC = () => {
     // Handle accepting a group invitation
     const handleAcceptInvitation = async (invitationId: number) => {
         try {
-            // This would be the actual API call
-            // await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
+            await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
 
-            const invitation = receivedInvitations.find(inv => inv.id === invitationId);
-            if (!invitation) return;
+            // Refresh groups and invitations
+            const updatedGroups = await apiService.get<Group[]>('/groups');
+            if (Array.isArray(updatedGroups)) {
+                setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+            }
 
-            // Add group to user's groups
-            const updatedGroups = [...groups, invitation.group];
-            setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
-
-            // Remove invitation from received invitations
-            const updatedInvitations = receivedInvitations.filter(inv => inv.id !== invitationId);
-            setReceivedInvitations(updatedInvitations);
+            const updatedInvitations = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+            if (Array.isArray(updatedInvitations)) {
+                setReceivedInvitations(updatedInvitations);
+            }
 
             showMessage("Group invitation accepted");
         } catch (error) {
@@ -464,12 +252,13 @@ const GroupsManagement: React.FC = () => {
     // Handle rejecting a group invitation
     const handleRejectInvitation = async (invitationId: number) => {
         try {
-            // This would be the actual API call
-            // await apiService.post(`/groups/invitations/${invitationId}/reject`, {});
+            await apiService.post(`/groups/invitations/${invitationId}/reject`, {});
 
-            // Remove invitation from received invitations
-            const updatedInvitations = receivedInvitations.filter(inv => inv.id !== invitationId);
-            setReceivedInvitations(updatedInvitations);
+            // Refresh invitations
+            const updatedInvitations = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+            if (Array.isArray(updatedInvitations)) {
+                setReceivedInvitations(updatedInvitations);
+            }
 
             showMessage("Group invitation rejected");
         } catch (error) {
@@ -481,12 +270,13 @@ const GroupsManagement: React.FC = () => {
     // Handle canceling a sent group invitation
     const handleCancelInvitation = async (invitationId: number) => {
         try {
-            // This would be the actual API call
-            // await apiService.delete(`/groups/invitations/${invitationId}`);
+            await apiService.delete(`/groups/invitations/${invitationId}`);
 
-            // Remove invitation from sent invitations
-            const updatedInvitations = sentInvitations.filter(inv => inv.id !== invitationId);
-            setSentInvitations(updatedInvitations);
+            // Refresh sent invitations
+            const updatedInvitations = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+            if (Array.isArray(updatedInvitations)) {
+                setSentInvitations(updatedInvitations);
+            }
 
             showMessage("Invitation canceled");
         } catch (error) {
@@ -498,10 +288,13 @@ const GroupsManagement: React.FC = () => {
     // Handle leaving a group
     const handleLeaveGroup = async (groupId: number) => {
         try {
-            // This would be the actual API call if needed
-            // For now, just remove from the local state
-            const updatedGroups = groups.filter(group => group.groupId !== groupId);
-            setGroups(updatedGroups);
+            await apiService.post(`/groups/${groupId}/leave`, {});
+
+            // Refresh groups
+            const updatedGroups = await apiService.get<Group[]>('/groups');
+            if (Array.isArray(updatedGroups)) {
+                setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+            }
 
             setIsGroupDetailDialogOpen(false);
             setSelectedGroup(null);
@@ -559,6 +352,7 @@ const GroupsManagement: React.FC = () => {
     }
 
     const displayGroups = searchQuery ? filteredGroups : groups;
+
 
     return (
         <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">

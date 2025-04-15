@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
-import { Movie } from "@/app/types/movie";
 import { useApi } from "@/app/hooks/useApi";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
@@ -48,205 +47,6 @@ const FriendsManagement: React.FC = () => {
 
   const { value: userId } = useLocalStorage<string>("userId", "");
 
-  // Mock movie data for watchlists
-  const mockMovies: Movie[] = [
-    {
-      movieId: 1,
-      title: "To All the Boys I've Loved Before",
-      posterURL: "https://image.tmdb.org/t/p/w500/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
-      description:
-          "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
-      genres: ["Teen Romance", "Comedy", "Drama"],
-      directors: ["Susan Johnson"],
-      actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
-      trailerURL: "https://www.example.com/to-all-the-boys",
-      year: 2018,
-      originallanguage: "English",
-    },
-    {
-      movieId: 2,
-      title: "The Kissing Booth",
-      posterURL: "https://image.tmdb.org/t/p/w500/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
-      description:
-          "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
-      genres: ["Teen Romance", "Comedy"],
-      directors: ["Vince Marcello"],
-      actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
-      trailerURL: "https://www.example.com/kissing-booth",
-      year: 2018,
-      originallanguage: "English",
-    },
-    {
-      movieId: 301,
-      title: "Dune: Part Two",
-      posterURL: "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-      description:
-          "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-      genres: ["Science Fiction", "Adventure", "Action"],
-      directors: ["Denis Villeneuve"],
-      actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-      trailerURL: "https://www.example.com/dune-part-two",
-      year: 2024,
-      originallanguage: "English",
-    },
-    {
-      movieId: 300,
-      title: "Oppenheimer",
-      posterURL: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      description:
-          "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-      genres: ["Drama", "Biography", "History"],
-      directors: ["Christopher Nolan"],
-      actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-      trailerURL: "https://www.example.com/oppenheimer",
-      year: 2023,
-      originallanguage: "English",
-    },
-    {
-      movieId: 3,
-      title: "Poor Things",
-      posterURL: "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-      description:
-          "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-      genres: ["Science Fiction", "Comedy", "Drama"],
-      directors: ["Yorgos Lanthimos"],
-      actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
-      trailerURL: "https://www.example.com/poor-things",
-      year: 2023,
-      originallanguage: "English",
-    },
-    {
-      movieId: 4,
-      title: "The Fall Guy",
-      posterURL: "https://image.tmdb.org/t/p/w500/6OnoMgGFuZ921eV8v8yEyXoag19.jpg",
-      description:
-          "A stuntman is drawn back into service when the star of a mega-budget studio movie goes missing.",
-      genres: ["Action", "Comedy"],
-      directors: ["David Leitch"],
-      actors: ["Ryan Gosling", "Emily Blunt", "Aaron Taylor-Johnson"],
-      trailerURL: "https://www.example.com/fall-guy",
-      year: 2024,
-      originallanguage: "English",
-    },
-    {
-      movieId: 5,
-      title: "The Batman",
-      posterURL: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-      description:
-          "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption and question his family's involvement.",
-      genres: ["Action", "Crime", "Drama"],
-      directors: ["Matt Reeves"],
-      actors: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
-      trailerURL: "https://www.example.com/the-batman",
-      year: 2022,
-      originallanguage: "English",
-    },
-    {
-      movieId: 6,
-      title: "The Whale",
-      posterURL: "https://image.tmdb.org/t/p/w500/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
-      description:
-          "A reclusive English teacher attempts to reconnect with his estranged teenage daughter.",
-      genres: ["Drama"],
-      directors: ["Darren Aronofsky"],
-      actors: ["Brendan Fraser", "Sadie Sink", "Hong Chau"],
-      trailerURL: "https://www.example.com/the-whale",
-      year: 2022,
-      originallanguage: "English",
-    },
-    {
-      movieId: 7,
-      title: "Top Gun: Maverick",
-      posterURL: "https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-      description:
-          "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-      genres: ["Action", "Drama"],
-      directors: ["Joseph Kosinski"],
-      actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
-      trailerURL: "https://www.example.com/top-gun-maverick",
-      year: 2022,
-      originallanguage: "English",
-    },
-    {
-      movieId: 8,
-      title: "Everything Everywhere All at Once",
-      posterURL: "https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-      description:
-          "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-      genres: ["Science Fiction", "Comedy", "Action"],
-      directors: ["Daniel Kwan", "Daniel Scheinert"],
-      actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
-      trailerURL: "https://www.example.com/everything-everywhere",
-      year: 2022,
-      originallanguage: "English",
-    },
-    {
-      movieId: 10,
-      title: "Killers of the Flower Moon",
-      posterURL: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
-      description:
-          "When oil is discovered in 1920s Oklahoma under Osage Nation land, the Osage people are murdered one by one—until the FBI steps in to unravel the mystery.",
-      genres: ["Crime", "Drama", "Western"],
-      directors: ["Martin Scorsese"],
-      actors: ["Leonardo DiCaprio", "Robert De Niro", "Lily Gladstone"],
-      trailerURL: "https://www.example.com/killers-flower-moon",
-      year: 2023,
-      originallanguage: "English",
-    },
-    {
-      movieId: 13,
-      title: "Anatomy of a Fall",
-      posterURL: "https://image.tmdb.org/t/p/w500/kQs6keheMwCxJxrzV83VUwFtHkB.jpg",
-      description:
-          "A woman is suspected of her husband's murder, and their blind son faces a moral dilemma as the sole witness.",
-      genres: ["Legal Drama", "Mystery", "Thriller"],
-      directors: ["Justine Triet"],
-      actors: ["Sandra Hüller", "Swann Arlaud", "Milo Machado Graner"],
-      trailerURL: "https://www.example.com/anatomy-of-a-fall",
-      year: 2023,
-      originallanguage: "French",
-    },
-    {
-      movieId: 15,
-      title: "Mission: Impossible - Dead Reckoning Part One",
-      posterURL: "https://image.tmdb.org/t/p/w500/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
-      description:
-          "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that threatens all of humanity before it falls into the wrong hands.",
-      genres: ["Action", "Adventure", "Thriller"],
-      directors: ["Christopher McQuarrie"],
-      actors: ["Tom Cruise", "Hayley Atwell", "Simon Pegg"],
-      trailerURL: "https://www.example.com/mission-impossible",
-      year: 2023,
-      originallanguage: "English",
-    },
-    {
-      movieId: 22,
-      title: "Civil War",
-      posterURL: "https://image.tmdb.org/t/p/w500/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
-      description:
-          "In a near-future America ravaged by political divisions, a team of journalists traverses the war-torn landscape to report on the conflict as rebel factions fight against the government.",
-      genres: ["Drama", "Action", "Thriller"],
-      directors: ["Alex Garland"],
-      actors: ["Kirsten Dunst", "Wagner Moura", "Cailee Spaeny"],
-      trailerURL: "https://www.example.com/civil-war",
-      year: 2024,
-      originallanguage: "English",
-    },
-    {
-      movieId: 25,
-      title: "John Wick: Chapter 4",
-      posterURL: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
-      description:
-          "John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances across the globe.",
-      genres: ["Action", "Thriller", "Crime"],
-      directors: ["Chad Stahelski"],
-      actors: ["Keanu Reeves", "Donnie Yen", "Bill Skarsgård"],
-      trailerURL: "https://www.example.com/john-wick-4",
-      year: 2023,
-      originallanguage: "English",
-    },
-  ];
-
   // Fetch friends data
   useEffect(() => {
     const fetchFriendsData = async () => {
@@ -255,141 +55,21 @@ const FriendsManagement: React.FC = () => {
       try {
         setLoading(true);
 
-        try {
-          // Get all friends - GET /friends
-          const friendsData = await apiService.get<User[]>('/friends');
+        // Get all friends
+        const friendsData = await apiService.get<User[]>('/friends');
+        // Sort friends alphabetically by username
+        const sortedFriends = Array.isArray(friendsData)
+            ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
+            : [];
+        setFriends(sortedFriends);
 
-          // Sort friends alphabetically by username
-          const sortedFriends = [...friendsData].sort((a, b) =>
-              a.username.localeCompare(b.username)
-          );
+        // Get received friend requests
+        const receivedRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+        setReceivedRequests(Array.isArray(receivedRequestsData) ? receivedRequestsData : []);
 
-          setFriends(sortedFriends);
-
-          // Get received friend requests - GET /friends/friendrequests/received
-          const receivedRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-          setReceivedRequests(receivedRequestsData);
-
-          // Get sent friend requests - GET /friends/friendrequests/sent
-          const sentRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-          setSentRequests(sentRequestsData);
-        } catch (apiError) {
-          console.log("API error:", apiError);
-          // Set mock data for testing if needed
-          const mockFriends = [
-            {
-              userId: 2,
-              username: "alex.np",
-              email: "alex@example.com",
-              bio: "Horror fan with a passion for classic slasher films and psychological thrillers. Always looking for the next scare!",
-              favoriteGenres: ["Horror", "Thriller", "Mystery"],
-              favoriteMovie: mockMovies[5], // The Batman
-              watchlist: [mockMovies[2], mockMovies[3], mockMovies[5]],
-            },
-            {
-              userId: 3,
-              username: "cinematic_soul",
-              email: "cinematic@example.com",
-              bio: "Finding meaning through cinema since 1995. Love thought-provoking films that challenge perspectives and inspire conversation.",
-              favoriteGenres: ["Drama", "Independent", "Foreign", "Documentary"],
-              favoriteMovie: mockMovies[7], // The Whale
-              watchlist: [mockMovies[0], mockMovies[4], mockMovies[5]],
-            },
-            {
-              userId: 4,
-              username: "film_buff",
-              email: "buff@movies.com",
-              bio: "Movie enthusiast with a passion for classics. Citizen Kane changed my life, and I've been exploring the history of cinema ever since.",
-              favoriteGenres: ["Drama", "Classic", "Film Noir", "Western"],
-              favoriteMovie: mockMovies[4], // Poor Things
-              watchlist: [mockMovies[3], mockMovies[4]],
-            },
-            {
-              userId: 5,
-              username: "minna",
-              email: "minna@example.com",
-              bio: "Movie enthusiast with eclectic taste. I can enjoy anything from a blockbuster action film to an indie arthouse drama.",
-              favoriteGenres: ["Drama", "Action", "Romance", "Comedy"],
-              favoriteMovie: mockMovies[1], // Kissing Booth
-              watchlist: [mockMovies[0], mockMovies[1], mockMovies[2]],
-            },
-            {
-              userId: 6,
-              username: "movie_master",
-              email: "master@movies.com",
-              bio: "Film school graduate with a passion for storytelling. Studying the craft of cinema has only deepened my love for it.",
-              favoriteGenres: ["Independent", "Documentary", "Drama", "Experimental"],
-              favoriteMovie: mockMovies[3], // Oppenheimer
-              watchlist: [mockMovies[2], mockMovies[3], mockMovies[5]],
-            },
-            {
-              userId: 7,
-              username: "sarah_cinephile",
-              email: "sarah@example.com",
-              bio: "Living for classic cinema and popcorn. I believe in the magic of the silver screen and the communal experience of watching films.",
-              favoriteGenres: ["Classic", "Drama", "Sci-Fi", "Musical"],
-              favoriteMovie: mockMovies[2], // Dune Part 2
-              watchlist: [mockMovies[2], mockMovies[4]],
-            }
-          ] as User[];
-
-          // Sort friends alphabetically
-          setFriends(mockFriends.sort((a, b) => a.username.localeCompare(b.username)));
-
-          setReceivedRequests([
-            {
-              id: 1,
-              sender: {
-                userId: 8,
-                username: "jordan_f",
-                email: "jordan@example.com",
-                bio: "Film buff, always ready for a movie night. I organize weekly movie screenings at my place for friends who appreciate cinema.",
-                favoriteGenres: ["Action", "Sci-Fi", "Thriller", "Adventure"],
-                favoriteMovie: mockMovies[0] // To All the Boys
-              } as User,
-              receiver: {
-                userId: parseInt(id as string)
-              } as User,
-              status: 'PENDING',
-              createdAt: new Date().toISOString()
-            },
-            {
-              id: 2,
-              sender: {
-                userId: 9,
-                username: "director_dreams",
-                email: "director@example.com",
-                bio: "Aspiring filmmaker with a love for sci-fi. Currently working on my first short film inspired by Blade Runner and Ex Machina.",
-                favoriteGenres: ["Sci-Fi", "Drama", "Documentary", "Cyberpunk"],
-                favoriteMovie: mockMovies[2] // Dune Part 2
-              } as User,
-              receiver: {
-                userId: parseInt(id as string)
-              } as User,
-              status: 'PENDING',
-              createdAt: new Date().toISOString()
-            }
-          ]);
-
-          setSentRequests([
-            {
-              id: 3,
-              sender: {
-                userId: parseInt(id as string)
-              } as User,
-              receiver: {
-                userId: 10,
-                username: "popcorn_lover",
-                email: "popcorn@example.com",
-                bio: "Just here for the snacks and good stories. I judge a theater not just by the film but by the quality of their popcorn!",
-                favoriteGenres: ["Comedy", "Adventure", "Animation", "Family"],
-                favoriteMovie: mockMovies[1] // Kissing Booth
-              } as User,
-              status: 'PENDING',
-              createdAt: new Date().toISOString()
-            }
-          ]);
-        }
+        // Get sent friend requests
+        const sentRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+        setSentRequests(Array.isArray(sentRequestsData) ? sentRequestsData : []);
       } catch (error) {
         setError("Failed to load friends data");
         console.error("Error loading friends:", error);
@@ -439,12 +119,11 @@ const FriendsManagement: React.FC = () => {
 
     try {
       // First, find the receiverId based on username
-      // GET /friends/search?username={username}
       const searchResults = await apiService.get<UserSearchResponse[]>(
-          `/friends/search?username=${encodeURIComponent(friendUsername)}`
+          `/users/search?username=${encodeURIComponent(friendUsername)}`
       );
 
-      if (!searchResults || searchResults.length === 0) {
+      if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
         showMessage(`Could not find user with username ${friendUsername}`);
         setIsSubmitting(false);
         return;
@@ -460,7 +139,7 @@ const FriendsManagement: React.FC = () => {
 
       // Refresh
       const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-      setSentRequests(updatedSentRequests);
+      setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
 
       // Switch to requests tab to show the new request
       setActiveTab('requests');
@@ -486,10 +165,12 @@ const FriendsManagement: React.FC = () => {
       // Refresh data
       const updatedFriends = await apiService.get<User[]>('/friends');
       // Sort friends alphabetically
-      setFriends([...updatedFriends].sort((a, b) => a.username.localeCompare(b.username)));
+      setFriends(Array.isArray(updatedFriends)
+          ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
+          : []);
 
       const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-      setReceivedRequests(updatedRequests);
+      setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
     } catch (error) {
       console.error("Error accepting friend request:", error);
       showMessage("Failed to accept friend request");
@@ -499,14 +180,13 @@ const FriendsManagement: React.FC = () => {
   // Handle rejecting a friend request
   const handleRejectRequest = async (requestId: number) => {
     try {
-
       await apiService.post(`/friends/friendrequest/${requestId}/reject`, {});
 
       showMessage("Friend request rejected");
 
       // Refresh data
       const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-      setReceivedRequests(updatedRequests);
+      setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       showMessage("Failed to reject friend request");
@@ -516,8 +196,6 @@ const FriendsManagement: React.FC = () => {
   // Handle canceling a sent friend request
   const handleCancelRequest = async (requestId: number) => {
     try {
-
-
       const request = sentRequests.find(req => req.id === requestId);
       if (!request) return;
 
@@ -528,7 +206,7 @@ const FriendsManagement: React.FC = () => {
 
       // Refresh sent requests
       const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-      setSentRequests(updatedSentRequests);
+      setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
     } catch (error) {
       console.error("Error canceling friend request:", error);
       showMessage("Failed to cancel friend request");
@@ -546,7 +224,9 @@ const FriendsManagement: React.FC = () => {
       // Refresh friends list
       const updatedFriends = await apiService.get<User[]>('/friends');
       // Sort friends alphabetically
-      setFriends([...updatedFriends].sort((a, b) => a.username.localeCompare(b.username)));
+      setFriends(Array.isArray(updatedFriends)
+          ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
+          : []);
     } catch (error) {
       console.error("Error removing friend:", error);
       showMessage("Failed to remove friend");
@@ -555,12 +235,6 @@ const FriendsManagement: React.FC = () => {
 
   // Navigate to friend's watchlist
   const navigateToFriendWatchlist = (friendId: number) => {
-    // Store the friend's watchlist data in localStorage so it can be accessed for demo
-    const friend = friends.find(f => f.userId === friendId);
-    if (friend && friend.watchlist) {
-      localStorage.setItem(`friend_${friendId}_watchlist`, JSON.stringify(friend.watchlist));
-    }
-
     router.push(`/users/${userId}/friends/${friendId}/watchlist`);
   };
 
@@ -697,7 +371,7 @@ const FriendsManagement: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                       <div className="w-8 h-12 bg-indigo-100 rounded overflow-hidden flex-shrink-0">
                                         <img
-                                            src={`https://image.tmdb.org/t/p/w500${friend.favoriteMovie.posterURL}`}
+                                            src={friend.favoriteMovie.posterURL}
                                             alt={friend.favoriteMovie.title}
                                             className="w-full h-full object-cover"
                                         />
@@ -718,13 +392,12 @@ const FriendsManagement: React.FC = () => {
                                               key={idx}
                                               className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full"
                                           >
-                                            {genre}
-                                          </span>
+                                {genre}
+                              </span>
                                       ))}
                                     </div>
                                   </div>
                               )}
-
 
                               <div className="flex flex-row gap-2">
                                 <Button
@@ -793,7 +466,6 @@ const FriendsManagement: React.FC = () => {
                                 <p className="text-[#b9c0de] text-xs">
                                   Sent {new Date(request.createdAt).toLocaleDateString()}
                                 </p>
-
                               </div>
                               <div className="flex gap-2">
                                 <Button
@@ -828,7 +500,6 @@ const FriendsManagement: React.FC = () => {
                                 <p className="text-[#b9c0de] text-xs">
                                   Sent {new Date(request.createdAt).toLocaleDateString()}
                                 </p>
-
                               </div>
                               <Button
                                   variant="outline"

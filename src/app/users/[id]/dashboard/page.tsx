@@ -66,45 +66,6 @@ const Dashboard: React.FC = () => {
     // get user ID from local storage
     const { value: userId } = useLocalStorage<string>("userId", "");
 
-    // mock notifications for demonstration
-    const mockNotifications: Notification[] = [
-        {
-            id: 1,
-            type: 'friend_request',
-            message: 'alex.np wants to be your friend',
-            actionType: 'accept_decline',
-            sender: 'alex.np',
-            requestId: 123
-        },
-        {
-            id: 2,
-            type: 'group_invite',
-            message: 'minna invited you to miivel-bean!',
-            actionType: 'accept_decline',
-            sender: 'minna',
-            invitationId: 456,
-            groupId: 22
-        },
-        {
-            id: 3,
-            type: 'group_update',
-            message: "it's time to add movies to girls night!",
-            actionType: 'go_to',
-            actionLabel: 'go to group',
-            actionUrl: `/users/${id}/groups/1`,
-            groupId: 1
-        },
-        {
-            id: 4,
-            type: 'custom',
-            message: 'the results are in for miivel-bean!',
-            actionType: 'view',
-            actionLabel: 'view results',
-            actionUrl: `/users/${id}/groups/2/results`,
-            groupId: 2
-        }
-    ];
-
     // fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
@@ -113,66 +74,49 @@ const Dashboard: React.FC = () => {
             try {
                 setLoading(true);
 
-                try {
-                    // Fetch user profile
-                    const userData = await apiService.get<User>(`/profile/${id}`);
-                    setUser(userData);
+                // Fetch user profile
+                const userData = await apiService.get<User>(`/profile/${id}`);
+                setUser(userData);
 
-                    // Get friend requests
-                    const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+                // Get friend requests
+                const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
 
-                    // Get group invitations
-                    const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+                // Get group invitations
+                const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
 
-                    // Convert API responses to notification format
-                    const notificationsList: Notification[] = [];
+                // Convert API responses to notification format
+                const notificationsList: Notification[] = [];
 
-                    // Add friend requests to notifications
-                    if (friendRequests && Array.isArray(friendRequests)) {
-                        friendRequests.forEach((request) => {
-                            notificationsList.push({
-                                id: notificationsList.length + 1,
-                                type: 'friend_request',
-                                message: `${request.sender.username} wants to be your friend`,
-                                actionType: 'accept_decline',
-                                sender: request.sender.username,
-                                requestId: request.id
-                            });
+                // Add friend requests to notifications
+                if (friendRequests && Array.isArray(friendRequests)) {
+                    friendRequests.forEach((request) => {
+                        notificationsList.push({
+                            id: notificationsList.length + 1,
+                            type: 'friend_request',
+                            message: `${request.sender.username} wants to be your friend`,
+                            actionType: 'accept_decline',
+                            sender: request.sender.username,
+                            requestId: request.id
                         });
-                    }
-
-                    // Add group invitations to notifications
-                    if (groupInvites && Array.isArray(groupInvites)) {
-                        groupInvites.forEach((invite) => {
-                            notificationsList.push({
-                                id: notificationsList.length + 1,
-                                type: 'group_invite',
-                                message: `${invite.sender} invited you to ${invite.groupName}!`,
-                                actionType: 'accept_decline',
-                                sender: invite.sender,
-                                invitationId: invite.id,
-                                groupId: invite.groupId
-                            });
-                        });
-                    }
-
-                    setNotifications(notificationsList);
-                } catch (apiError) {
-                    console.log("API error, using mock data:", apiError);
-                    // set mock data for testing
-                    setUser({
-                        userId: parseInt(id as string),
-                        username: "ivan.movies",
-                        email: "ivan@movies.com",
-                        password: "******",
-                        bio: "I love watching movies!",
-                        favoriteGenres: ["Time Travel", "Sci-Fi", "Romance"],
-                        favoriteMovie: undefined,
-                        watchlist: [],
-                        watchedMovies: [],
                     });
-                    setNotifications(mockNotifications);
                 }
+
+                // Add group invitations to notifications
+                if (groupInvites && Array.isArray(groupInvites)) {
+                    groupInvites.forEach((invite) => {
+                        notificationsList.push({
+                            id: notificationsList.length + 1,
+                            type: 'group_invite',
+                            message: `${invite.sender} invited you to ${invite.groupName}!`,
+                            actionType: 'accept_decline',
+                            sender: invite.sender,
+                            invitationId: invite.id,
+                            groupId: invite.groupId
+                        });
+                    });
+                }
+
+                setNotifications(notificationsList);
             } catch (error) {
                 setError("Failed to load user data");
                 console.error("Error loading dashboard:", error);
