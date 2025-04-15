@@ -4,7 +4,7 @@ import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import MovieCard from "@/components/ui/Movie_card";
+// import MovieCard from "@/components/ui/Movie_card";
 import { useRouter } from "next/navigation";
 
 interface MoviePoolEntry {

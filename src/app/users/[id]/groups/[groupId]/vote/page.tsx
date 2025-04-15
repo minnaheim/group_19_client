@@ -7,16 +7,13 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { useState } from "react";
 import {
   DndContext,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
-  DragStartEvent,
-  DragOverEvent,
 } from "@dnd-kit/core";
-import { rectIntersection, pointerWithin } from "@dnd-kit/core";
+import { pointerWithin } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import MovieCard from "@/components/ui/Movie_card"; // Import your existing MovieCard
@@ -113,7 +110,7 @@ const DraggableMovieCard = ({ id, movie, onClick }) => {
 };
 
 // RankingSlot component
-const RankingSlot = ({ id, index, movie, onDrop }) => {
+const RankingSlot = ({ id, index, movie }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id,
     disabled: !movie,
@@ -162,7 +159,6 @@ const Vote: React.FC = () => {
     null,
     null,
   ]);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const router = useRouter();
 
   const sensors = useSensors(
@@ -174,16 +170,7 @@ const Vote: React.FC = () => {
     useSensor(KeyboardSensor)
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id.toString());
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    // Handle live feedback if needed
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null);
     const { active, over } = event;
 
     if (!over) return;
@@ -243,26 +230,6 @@ const Vote: React.FC = () => {
     }
   };
 
-  const handleMovieClick = (movie: Movie) => {
-    // Find first empty slot
-    const emptySlotIndex = rankings.findIndex((slot) => slot === null);
-    if (emptySlotIndex !== -1) {
-      const movieIndex = availableMovies.findIndex(
-        (entry) => entry.movie.movieId === movie.movieId
-      );
-
-      // Add to ranking
-      const newRankings = [...rankings];
-      newRankings[emptySlotIndex] = movie;
-      setRankings(newRankings);
-
-      // Remove from pool
-      const newAvailableMovies = [...availableMovies];
-      newAvailableMovies.splice(movieIndex, 1);
-      setAvailableMovies(newAvailableMovies);
-    }
-  };
-
   const handleSubmitRanking = () => {
     if (rankings.some((movie) => movie === null)) {
       alert("Please rank all 3 movies before submitting.");
@@ -290,8 +257,6 @@ const Vote: React.FC = () => {
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           {/* Movie Pool Section */}
@@ -306,7 +271,7 @@ const Vote: React.FC = () => {
                   key={`pool-${index}`}
                   id={`pool-${index}`}
                   movie={entry.movie}
-                  onClick={handleMovieClick}
+                  onClick={() => {}}
                 />
               ))}
               {availableMovies.length === 0 && (
@@ -329,7 +294,6 @@ const Vote: React.FC = () => {
                   id={`rank-${index}`}
                   index={index}
                   movie={movie}
-                  onDrop={() => {}}
                 />
               ))}
             </div>
