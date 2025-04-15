@@ -7,7 +7,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { useState, useEffect } from "react";
 // import { useApi } from "@/app/hooks/useApi";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 interface Group {
@@ -183,14 +183,14 @@ const initialMoviePoolEntries: MoviePoolEntry[] = [
 const MoviePool: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const { value: userId } = useLocalStorage<string>("userId", "");
-  // const { value: groupId } = useLocalStorage<string>("groupId", "");
+  const { value: groupId } = useLocalStorage<string>("groupId", "");
   // const { value: movieId } = useLocalStorage<string>("movieId", "");
   const [group, setGroup] = useState<Group | null>(null);
   const [moviePoolEntries, setMoviePoolEntries] = useState<MoviePoolEntry[]>(
     initialMoviePoolEntries
   );
   // const apiService = useApi();
-  // const router = useRouter();
+  const router = useRouter();
 
   // Initialize group with mock data
   useEffect(() => {
@@ -383,7 +383,9 @@ const MoviePool: React.FC = () => {
         </div>
         <div className="flex justify-end mt-4">
           <Button
-            onClick={() => alert("Voting functionality not implemented yet")}
+            onClick={() =>
+              router.push(`/users/${userId}/groups/${groupId}/vote`)
+            }
           >
             Vote
           </Button>
