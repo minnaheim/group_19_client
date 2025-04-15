@@ -269,7 +269,7 @@ const Vote: React.FC = () => {
       return;
     }
     console.log("Submitted Rankings:", rankings);
-    alert("Your rankings have been submitted!");
+    router.push(`/users/${userId}/groups/${groupId}/results`);
   };
 
   return (
