@@ -17,8 +17,14 @@ interface Group {
   creator: User;
   members: User[];
   createdAt: string;
-  moviePool: Movie[];
+  moviePool: MoviePoolEntry[];
 }
+
+interface MoviePoolEntry {
+  userId: number;
+  movie: Movie;
+}
+
 const mockWatchList: Movie[] = [
   {
     movieId: 1,
@@ -161,35 +167,72 @@ const mockGroupMembers: User[] = [
     watchedMovies: [],
   },
 ];
+
+// Initial mock movie pool entries
+const initialMoviePoolEntries: MoviePoolEntry[] = [
+  {
+    userId: 3, // cinematic_soul
+    movie: mockWatchList[2], // Dune: Part Two
+  },
+  {
+    userId: 4, // film_buff
+    movie: mockWatchList[3], // Oppenheimer
+  },
+];
+
 const MoviePool: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: groupId } = useLocalStorage<string>("groupId", "");
   const { value: movieId } = useLocalStorage<string>("movieId", "");
   const [group, setGroup] = useState<Group | null>(null);
+  const [moviePoolEntries, setMoviePoolEntries] = useState<MoviePoolEntry[]>(
+    initialMoviePoolEntries
+  );
   const apiService = useApi();
   const router = useRouter();
 
-  // Fetch group details
+  // Initialize group with mock data
   useEffect(() => {
-    const fetchGroupDetails = async () => {
-      try {
-        const response = await apiService.get<Group>(`/groups/${groupId}`);
-        setGroup(response);
-      } catch (error) {
-        console.error("Failed to fetch group details:", error);
-      }
-    };
+    setGroup({
+      groupId: 1,
+      name: "Movie Enthusiasts",
+      description:
+        "A group for movie lovers to share and vote on their favorite films.",
+      creator: {
+        userId: 1,
+        username: "group_creator",
+        email: "creator@example.com",
+        bio: "Lover of all things cinema.",
+        favoriteGenres: ["Drama", "Action", "Comedy"],
+        favoriteMovie: mockWatchList[0],
+        watchlist: [mockWatchList[0], mockWatchList[1]],
+        password: "",
+        watchedMovies: [],
+      },
+      members: mockGroupMembers,
+      createdAt: "2025-04-01T12:00:00Z",
+      moviePool: moviePoolEntries,
+    });
+  }, [moviePoolEntries]);
 
-    if (groupId) {
-      fetchGroupDetails();
-    }
-  }, [groupId, apiService]);
+  // with endpoints...
+  //   const fetchGroupDetails = async () => {
+  //     try {
+  //       const response = await apiService.get<Group>(`/groups/${groupId}`);
+  //       setGroup(response);
+  //     } catch (error) {
+  //       console.error("Failed to fetch group details:", error);
+  //     }
+  //   };
+
+  //   if (groupId) {
+  //     fetchGroupDetails();
+  //   }
+  // }, [groupId, apiService]);
 
   const handleAddToPool = (movie: Movie) => {
-    // if no movie selected yet, clicked movie is added to pool (below)
     setSelectedMovies((prev) => {
-      console.log(prev);
       if (prev.some((m) => m.movieId === movie.movieId)) {
         return prev.filter((m) => m.movieId !== movie.movieId);
       } else {
@@ -197,7 +240,6 @@ const MoviePool: React.FC = () => {
           alert("You can only select one favorite movie");
           return prev;
         }
-        console.log([...prev, movie]);
         return [...prev, movie];
       }
     });
@@ -210,10 +252,32 @@ const MoviePool: React.FC = () => {
     }
 
     try {
-      await apiService.post(`/groups/${groupId}/pool/${movieId}`, {
-        userId,
+      // In a real implementation, this would call the API
+      // await apiService.post(`/groups/${groupId}/pool/${movieId}`, {
+      //   userId,
+      //   movie: selectedMovies[0],
+      // });
+
+      // For our mock implementation, we'll update the local state
+      const newEntry: MoviePoolEntry = {
+        userId: 2, // alex.np's user ID
         movie: selectedMovies[0],
-      });
+      };
+
+      // Check if alex.np already has a movie in the pool
+      const alexIndex = moviePoolEntries.findIndex(
+        (entry) => entry.userId === 2
+      );
+
+      if (alexIndex !== -1) {
+        // Replace existing movie
+        const updatedEntries = [...moviePoolEntries];
+        updatedEntries[alexIndex] = newEntry;
+        setMoviePoolEntries(updatedEntries);
+      } else {
+        // Add new movie
+        setMoviePoolEntries([...moviePoolEntries, newEntry]);
+      }
 
       alert("Movie added to the pool successfully!");
       setSelectedMovies([]);
@@ -227,6 +291,11 @@ const MoviePool: React.FC = () => {
 
   const displayMovies = mockWatchList;
 
+  // Helper function to get complete image URL
+  const getFullPosterUrl = (posterPath: string) => {
+    return `https://image.tmdb.org/t/p/w500${posterPath}`;
+  };
+
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
       {/* Sidebar navigation */}
@@ -235,7 +304,6 @@ const MoviePool: React.FC = () => {
       {/* Main content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         <div className="mb-8">
-          {/* TODO: add movie into title */}
           <h1 className="font-semibold text-[#3b3e88] text-3xl">
             {group ? `${group.name}'s Movie Pool` : "Movie Pool"}
           </h1>
@@ -264,7 +332,6 @@ const MoviePool: React.FC = () => {
             : "No movie selected"}
         </p>
 
-        {/* TODO: add button on the Side that says add to Movie Pool */}
         {/* Add to Pool Button */}
         <div className="flex justify-end mt-4">
           <Button onClick={handleAddMovieToPool}>Add to Pool</Button>
@@ -278,18 +345,22 @@ const MoviePool: React.FC = () => {
         </div>
         <div className="flex gap-4 overflow-x-auto">
           {mockGroupMembers.map((member) => {
-            const userMovie = group?.moviePool.find(
-              (movie) => movie.movieId === member.userId
+            // Find the movie for this user in the pool
+            const userMovieEntry = moviePoolEntries.find(
+              (entry) => entry.userId === member.userId
             );
 
             return (
               <div key={member.userId} className="flex flex-col items-center">
                 {/* Movie Card or Placeholder */}
-                {userMovie ? (
-                  <div
-                    className="w-[90px] h-[130px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md bg-cover bg-center rounded-lg shadow-md"
-                    style={{ backgroundImage: `url(${userMovie.posterURL})` }}
-                  />
+                {userMovieEntry ? (
+                  <div className="relative w-[90px] h-[130px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] rounded-lg shadow-md overflow-hidden">
+                    <img
+                      className="w-full h-full object-cover"
+                      src={getFullPosterUrl(userMovieEntry.movie.posterURL)}
+                      alt={userMovieEntry.movie.title}
+                    />
+                  </div>
                 ) : (
                   <div className="w-[90px] h-[130px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md bg-white rounded-lg flex items-center justify-center">
                     <span className="text-black text-lg">...</span>
@@ -298,14 +369,24 @@ const MoviePool: React.FC = () => {
 
                 {/* User Name */}
                 <p className="text-center text-sm text-[#3b3e88] mt-2">
-                  {member.username === userId ? "your choice" : member.username}
+                  {member.username}
                 </p>
+                {/* Movie Title (can be shown optionally) */}
+                {userMovieEntry && (
+                  <p className="text-center text-xs text-[#b9c0de] mt-1">
+                    {userMovieEntry.movie.title}
+                  </p>
+                )}
               </div>
             );
           })}
         </div>
         <div className="flex justify-end mt-4">
-          <Button onClick={handleAddMovieToPool}>Vote</Button>
+          <Button
+            onClick={() => alert("Voting functionality not implemented yet")}
+          >
+            Vote
+          </Button>
         </div>
       </div>
     </div>
