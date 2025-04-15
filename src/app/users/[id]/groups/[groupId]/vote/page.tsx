@@ -79,7 +79,11 @@ const mockMoviePool: MoviePoolEntry[] = [
 ];
 
 // DraggableMovieCard component - wrapper for MovieCard that adds drag functionality
-const DraggableMovieCard = ({ id, movie, onClick }) => {
+const DraggableMovieCard: React.FC<{
+  id: string;
+  movie: Movie;
+  onClick: (movie: Movie) => void;
+}> = ({ id, movie, onClick }) => {
   const {
     attributes,
     listeners,
@@ -110,7 +114,11 @@ const DraggableMovieCard = ({ id, movie, onClick }) => {
 };
 
 // RankingSlot component
-const RankingSlot = ({ id, index, movie }) => {
+const RankingSlot: React.FC<{
+  id: string;
+  index: number;
+  movie: Movie | null;
+}> = ({ id, index, movie }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id,
     disabled: !movie,
