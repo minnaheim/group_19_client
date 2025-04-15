@@ -1,15 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+// import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const router = useRouter();
+  // const router = useRouter();
 
   return (
     <div className="h-screen w-full md:grid grid-cols-10">
@@ -40,19 +39,20 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
           <h2 className="text-xl font-bold text-center text-[#3C3F88] mb-4">
             Let’s get to know you!
           </h2>
-          <h3 className="text-center text-[#3C3F88] mb-6">
+          {/* <h3 className="text-center text-[#3C3F88] mb-6">
             Please select your preferences.
-          </h3>
+          </h3> */}
           {/* layout static, here specific preference choices are being shown */}
           {children}
-          <CardFooter className="flex justify-between">
+          {/* commented out, because for simplicity sake, this should be within pages, so that I can better construct endpoints */}
+          {/* <CardFooter className="flex justify-between">
             <Button variant="destructive" onClick={() => router.push("/")}>
               Back
             </Button>
-            <Button onClick={() => router.push("/preferences/next-step")}>
+            <Button onClick={() => router.push("/movie_preferences")}>
               Next
             </Button>
-          </CardFooter>
+          </CardFooter> */}
         </Card>
       </div>
     </div>

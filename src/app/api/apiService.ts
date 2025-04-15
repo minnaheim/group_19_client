@@ -1,9 +1,15 @@
 import { getApiDomain } from "@/app/utils/domain";
 import { ApplicationError } from "@/app/types/error";
 
+// Interface for custom headers option
+export interface ApiRequestOptions {
+  headers?: Record<string, string>;
+  skipAuth?: boolean;
+}
+
 export class ApiService {
   private baseURL: string;
-  private defaultHeaders: HeadersInit;
+  private defaultHeaders: Record<string, string>;
 
   constructor() {
     this.baseURL = getApiDomain();
@@ -23,8 +29,8 @@ export class ApiService {
    * @throws ApplicationError if res.ok is false.
    */
   private async processResponse<T>(
-    res: Response,
-    errorMessage: string,
+      res: Response,
+      errorMessage: string,
   ): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
@@ -40,12 +46,12 @@ export class ApiService {
       }
       const detailedMessage = `${errorMessage} (${res.status}: ${errorDetail})`;
       const error: ApplicationError = new Error(
-        detailedMessage,
+          detailedMessage,
       ) as ApplicationError;
       error.info = JSON.stringify(
-        { status: res.status, statusText: res.statusText },
-        null,
-        2,
+          { status: res.status, statusText: res.statusText },
+          null,
+          2,
       );
       error.status = res.status;
       throw error;
@@ -56,17 +62,18 @@ export class ApiService {
   /**
    * GET request.
    * @param endpoint - The API endpoint (e.g. "/users").
+   * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async get<T>(endpoint: string): Promise<T> {
+  public async get<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
-      headers: this.getHeaders(),
+      headers: this.getHeaders(options),
     });
     return this.processResponse<T>(
-      res,
-      "An error occurred while fetching the data.\n",
+        res,
+        "An error occurred while fetching the data.\n",
     );
   }
 
@@ -74,78 +81,115 @@ export class ApiService {
    * POST request.
    * @param endpoint - The API endpoint (e.g. "/users").
    * @param data - The payload to post.
+   * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown): Promise<[T, Headers]> {
+  public async post<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders(options),
       method: "POST",
       body: JSON.stringify(data),
     });
-    // process response body
-    const responseBody = await this.processResponse<T>(
-      res,
-      "An error occurred while posting the data.\n",
+
+    // Process response body
+    return this.processResponse<T>(
+        res,
+        "An error occurred while posting the data.\n",
     );
-    // return both the response body and headers
+  }
+
+  /**
+   * Version of POST that returns both the response body and headers
+   */
+  public async postWithHeaders<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<[T, Headers]> {
+    const url = `${this.baseURL}${endpoint}`;
+    const res = await fetch(url, {
+      headers: this.getHeaders(options),
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    // Process response body
+    const responseBody = await this.processResponse<T>(
+        res,
+        "An error occurred while posting the data.\n",
+    );
+
+    // Return both the response body and headers
     return [responseBody, res.headers];
-    // // identify how processResponse looks like to see where to get token out of header
-    // return this.processResponse<T>(
-    //   res,
-    //   "An error occurred while posting the data.\n"
-    // );
   }
 
   /**
    * PUT request.
    * @param endpoint - The API endpoint (e.g. "/users/123").
    * @param data - The payload to update.
+   * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async put<T>(endpoint: string, data: unknown): Promise<T> {
+  public async put<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
-      headers: this.getHeaders(),
+      headers: this.getHeaders(options),
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
-      res,
-      "An error occurred while updating the data.\n",
+        res,
+        "An error occurred while updating the data.\n",
     );
   }
 
   /**
    * DELETE request.
    * @param endpoint - The API endpoint (e.g. "/users/123").
+   * @param data - Optional payload for the delete request.
+   * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async delete<T>(endpoint: string, data: unknown): Promise<T> {
+  public async delete<T>(endpoint: string, data?: unknown, options?: ApiRequestOptions): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const res = await fetch(url, {
+    const fetchOptions: RequestInit = {
       method: "DELETE",
-      headers: this.getHeaders(),
-      body: JSON.stringify(data),
-    });
+      headers: this.getHeaders(options),
+    };
+
+    // Only add body if data is provided
+    if (data !== undefined) {
+      fetchOptions.body = JSON.stringify(data);
+    }
+
+    const res = await fetch(url, fetchOptions);
     return this.processResponse<T>(
-      res,
-      "An error occurred while deleting the data.\n",
+        res,
+        "An error occurred while deleting the data.\n",
     );
   }
 
-  /*
-   * E:
-   * globally with every API request, the locally stored token is sent in the header under "Authorization"
-   * this enables the server to authenticate a valid request
-   * headers are now set using this.getHeaders() instead of this.defaultHeaders
+  /**
+   * Get headers for the request, combining default headers, auth token (if not skipped),
+   * and any custom headers provided in options.
+   *
+   * @param options - Optional request configuration with custom headers.
+   * @returns Combined headers for the request.
    */
+  private getHeaders(options?: ApiRequestOptions): Record<string, string> {
+    // Create a new headers object based on the defaults
+    const headers: Record<string, string> = { ...this.defaultHeaders };
 
-  private getHeaders(): HeadersInit {
-    const token = localStorage.getItem("token");
-    return {
-      ...this.defaultHeaders,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
+    // Add authorization token if not explicitly skipped
+    if (!options?.skipAuth) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    // Add any custom headers from options
+    if (options?.headers) {
+      Object.assign(headers, options.headers);
+    }
+
+    return headers;
   }
 }
