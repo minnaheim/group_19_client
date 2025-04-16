@@ -15,7 +15,10 @@ const GenrePreferences: React.FC = () => {
   useEffect(() => {
     const fetchGenres = async () => {
       try {
-        const response = await apiService.get("/movies/genres");
+        const response =
+          await apiService.get<{ id: number; name: string }[]>(
+            "/movies/genres"
+          );
         setGenres(response); // Store the genres in state
       } catch (error) {
         console.error("Failed to fetch genres:", error);
