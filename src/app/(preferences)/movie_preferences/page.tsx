@@ -5,9 +5,8 @@ import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import SearchBar from "@/components/ui/search_bar";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-//  useParams
-// import { useApi } from "@/app/hooks/useApi";
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
 
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
@@ -15,9 +14,9 @@ const MoviePreferences: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<string>("all");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  // const apiService = useApi();
+  const apiService = useApi();
   const router = useRouter();
-  // const { id } = useParams();
+  const { id } = useParams();
 
   // Mock movies for testing
   const mockMovies: Movie[] = [
@@ -237,28 +236,29 @@ const MoviePreferences: React.FC = () => {
       }
     });
   };
-  // const handleNext = async () => {
-  //   if (selectedMovies.length === 0) {
-  //     alert("Please select a movie before proceeding.");
-  //     return;
-  //   }
 
-  //   try {
-  //     // Send the selected movie to the backend
-  //     await apiService.post(`/preferences/${id}`, {
-  //       userId: id,
-  //       favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
-  //     });
+  const handleNext = async () => {
+    if (selectedMovies.length === 0) {
+      alert("Please select a movie before proceeding.");
+      return;
+    }
 
-  //     // Navigate to the profile page
-  //     router.push(`/users/${id}/profile`);
-  //   } catch (error) {
-  //     console.error("Failed to save preferences:", error);
-  //     alert(
-  //       "An error occurred while saving your preferences. Please try again."
-  //     );
-  //   }
-  // };
+    try {
+      // Send the selected movie to the backend
+      await apiService.post(`/preferences/${id}`, {
+        userId: id,
+        favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
+      });
+
+      // Navigate to the profile page
+      router.push(`/users/${id}/profile`);
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert(
+        "An error occurred while saving your preferences. Please try again."
+      );
+    }
+  };
 
   const displayMovies = isSearching ? searchResults : mockMovies;
 
@@ -307,12 +307,7 @@ const MoviePreferences: React.FC = () => {
         >
           Back
         </Button>
-        <Button
-          // onClick={handleNext}
-          onClick={() => router.push("/users/no_token/profile")}
-        >
-          Next
-        </Button>
+        <Button onClick={handleNext}>Next</Button>
       </div>
     </div>
   );
