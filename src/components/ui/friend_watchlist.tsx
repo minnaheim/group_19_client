@@ -45,48 +45,6 @@ const FriendWatchlist: React.FC = () => {
 
     const { value: userId } = useLocalStorage<string>("userId", "");
 
-    // mock data for demo purposes
-    const mockMovies: Movie[] = [
-        {
-            movieId: 1,
-            title: "To All the Boys I've Loved Before",
-            posterURL: "`https://image.tmdb.org/t/p/w92$/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
-            description:
-                "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
-            genres: ["Teen Romance", "Comedy", "Drama"],
-            directors: ["Susan Johnson"],
-            actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
-            trailerURL: "https://www.example.com/to-all-the-boys",
-            year: 2018,
-            originallanguage: "English",
-        },
-        {
-            movieId: 2,
-            title: "The Kissing Booth",
-            posterURL: "`https://image.tmdb.org/t/p/w92$/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
-            description:
-                "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
-            genres: ["Teen Romance", "Comedy"],
-            directors: ["Vince Marcello"],
-            actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
-            trailerURL: "https://www.example.com/kissing-booth",
-            year: 2018,
-            originallanguage: "English",
-        },
-        {
-            movieId: 35,
-            title: "Dune: Part Two",
-            posterURL: "https://image.tmdb.org/t/p/w92$/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-            description:
-                "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-            genres: ["Science Fiction", "Adventure", "Action"],
-            directors: ["Denis Villeneuve"],
-            actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-            trailerURL: "https://www.example.com/dune-part-two",
-            year: 2024,
-            originallanguage: "English",
-        },
-    ];
 
     // fetch friend data
     useEffect(() => {
@@ -124,18 +82,6 @@ const FriendWatchlist: React.FC = () => {
                     setFriend(friendWithWatchlist);
                 } catch (apiError) {
                     console.log("API error, using mock data:", apiError);
-                    // fall back to mock data
-                    setFriend({
-                        userId: parseInt(id as string),
-                        username: "minna",
-                        email: "friend@example.com",
-                        password: "******",
-                        bio: "This is a friend's profile",
-                        favoriteGenres: ["Action", "Comedy"],
-                        favoriteMovie: mockMovies[0],
-                        watchlist: mockMovies,
-                        watchedMovies: [],
-                    });
                 }
             } catch (error) {
                 setError("Failed to load friend data");

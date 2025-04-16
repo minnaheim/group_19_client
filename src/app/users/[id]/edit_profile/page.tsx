@@ -34,34 +34,6 @@ const EditProfile: React.FC = () => {
 
   const { value: userId } = useLocalStorage<string>("userId", "");
 
-  // mock movie for testing
-  const mockMovie: Movie = {
-    movieId: 1,
-    title: "Sample Movie",
-    posterURL: "/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-    description:
-        "A thrilling adventure about a group of friends who embark on a journey.",
-    genres: ["Adventure", "Action"],
-    directors: ["John Doe"],
-    actors: ["Actor 1", "Actor 2", "Actor 3"],
-    trailerURL: "https://www.example.com/trailer",
-    year: 2023,
-    originallanguage: "English",
-  };
-
-  // mock user for testing
-  const mockUser: User = {
-    userId: Number(id),
-    username: "Ella",
-    email: "ella@philippi.com",
-    password: "password1234",
-    bio: "Hi! I love the app Movie Night.",
-    favoriteGenres: ["Sci-Fi", "Drama", "Thriller"],
-    favoriteMovie: mockMovie,
-    watchlist: [],
-    watchedMovies: [],
-  };
-
   const handleSelectFavoriteMovie = () => {
     // Store the current state in localStorage or session before navigating
     sessionStorage.setItem('editProfileState', JSON.stringify({
@@ -103,17 +75,11 @@ const EditProfile: React.FC = () => {
       email,
       password,
       bio,
-      favoriteMovie: favoriteMovie || user.favoriteMovie || mockMovie
+      favoriteMovie: favoriteMovie || user.favoriteMovie
     };
 
     try {
-      try {
-        await apiService.put(`/users/${id}/profile`, updatedUser);
-      } catch (apiError) {
-        console.log("Mock update - no API available:", apiError);
-        // for testing to simulate successful update
-        setUser(updatedUser);
-      }
+      await apiService.put(`/users/${id}/profile`, updatedUser);
       alert("Profile updated successfully!");
       router.push(`/users/${id}/profile`);
     } catch (error: unknown) {
@@ -130,15 +96,7 @@ const EditProfile: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // try to fetch from API
-      let fetchedUser: User;
-      try {
-        fetchedUser = await apiService.get(`/users/${id}/profile`);
-      } catch (apiError) {
-        console.log("Using mock user data instead of API:", apiError);
-        // use mock data if API fails
-        fetchedUser = mockUser;
-      }
+      const fetchedUser = await apiService.get(`/users/${id}/profile`) as User;
 
       setUser(fetchedUser);
 
@@ -147,16 +105,14 @@ const EditProfile: React.FC = () => {
       setEmail(fetchedUser.email || "");
       setPassword(fetchedUser.password || "");
       setBio(fetchedUser.bio || "");
-      setFavoriteMovie(fetchedUser.favoriteMovie !== undefined ? fetchedUser.favoriteMovie : null);
+      setFavoriteMovie(fetchedUser.favoriteMovie || null);
     } catch (error: unknown) {
-      // back to mock data on any error
-      console.log("Using mock user data due to error:", error);
-      setUser(mockUser);
-      setUsername(mockUser.username);
-      setEmail(mockUser.email);
-      setPassword(mockUser.password);
-      setBio(mockUser.bio);
-      setFavoriteMovie(mockUser.favoriteMovie !== undefined ? mockUser.favoriteMovie : null);
+      if (error instanceof Error) {
+        setError(`Failed to load user data: ${error.message}`);
+      } else {
+        setError("Failed to load user data");
+      }
+      console.error("Error loading user:", error);
     } finally {
       setLoading(false);
     }
@@ -299,15 +255,8 @@ const EditProfile: React.FC = () => {
                         <span className="text-sm text-gray-600">{favoriteMovie.title}</span>
                       </div>
                   ) : (
-                      <div className="flex items-center space-x-4">
-                        <MovieCard
-                            movie={mockMovie} // Use mock movie as default
-                            isInWatchlist={false}
-                            isInSeenList={false}
-                            isFavorite={true}
-                            onClick={() => {}} // Empty handler since we don't need modal here
-                        />
-                        <span className="text-sm text-gray-600">{mockMovie.title} (default)</span>
+                      <div className="flex items-center">
+                        <span className="text-sm text-gray-600">No favorite movie selected</span>
                       </div>
                   )}
                   <Button
