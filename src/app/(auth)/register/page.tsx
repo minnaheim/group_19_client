@@ -126,9 +126,9 @@ const Register: React.FC = () => {
           }
         }
       }
-
+      console.log("before pushing");
       // Navigate to preferences page after successful registration
-      router.push("/preferences");
+      router.push("/genre_preferences");
     } catch (error) {
       if (error instanceof Error) {
         alert(`Something went wrong during the registration:\n ${error}`);
