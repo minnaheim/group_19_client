@@ -5,7 +5,7 @@ import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import SearchBar from "@/components/ui/search_bar";
 import { Button } from "@/components/ui/button";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 
 const MoviePreferences: React.FC = () => {
@@ -17,6 +17,7 @@ const MoviePreferences: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const apiService = useApi();
   const router = useRouter();
+  const { id } = useParams();
   const searchParams = useSearchParams();
   const genre = searchParams.get("genre"); // Extract the genre from query parameters
 
