@@ -59,21 +59,13 @@ const GenrePreferences: React.FC = () => {
         favoriteGenres: selectedGenres,
       });
 
-      // passing the selected genre to the next preference page
-      router.push(`/movie_preferences?genre=${selectedGenres[0]}`);
+      router.push("/movie_preferences");
     } catch (error) {
       console.error("Failed to save preferences:", error);
       alert(
         "An error occurred while saving your preferences. Please try again."
       );
     }
-    //   router.push("/movie_preferences");
-    // } catch (error) {
-    //   console.error("Failed to save preferences:", error);
-    //   alert(
-    //     "An error occurred while saving your preferences. Please try again."
-    //   );
-    // }
   };
 
   return (
