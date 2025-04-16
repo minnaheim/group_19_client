@@ -98,15 +98,15 @@ reason).
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ---------------- | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|BeneJung| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ellaruby0| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | AnabelNigsch | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|AnabelNigsch| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|minnaheim| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ivis-ii   | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
 ---
 
@@ -115,15 +115,15 @@ reason).
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ---------------- | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|BeneJung| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ellaruby0| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | AnabelNigsch | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|AnabelNigsch| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|minnaheim| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ivis-ii| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
 ---
 
@@ -132,15 +132,15 @@ reason).
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ---------------- | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|BeneJung| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ellaruby0| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | AnabelNigsch | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|AnabelNigsch| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|minnaheim| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ivis-ii   | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
 ---
 
@@ -149,14 +149,14 @@ reason).
 | **Student**      | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ---------------- | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|BeneJung| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ellaruby0| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | AnabelNigsch | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|AnabelNigsch| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|minnaheim| [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                  | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|ivis-ii   | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
 ---
