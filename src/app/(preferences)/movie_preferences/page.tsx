@@ -7,11 +7,13 @@ import SearchBar from "@/components/ui/search_bar";
 import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-interface Props {
-  searchParams: { [key: string]: string | undefined };
-}
 
-const MoviePreferences: React.FC<Props> = ({ searchParams }) => {
+// adding correct layout for searchParams
+type PageProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+const MoviePreferences: React.FC<PageProps> = ({ searchParams }) => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchCategory, setSearchCategory] = useState<string>("all");
@@ -21,7 +23,8 @@ const MoviePreferences: React.FC<Props> = ({ searchParams }) => {
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
-  const genre = searchParams.genre; // Extract the genre from query parameters
+
+  const genre = searchParams?.genre; // Extract the genre from query parameters
 
   // Fetch movies based on the selected genre from the backend
   useEffect(() => {
