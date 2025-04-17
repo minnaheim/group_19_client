@@ -68,7 +68,7 @@ const MoviePreferences: React.FC = () => {
       }
 
       if (searchCategory === "genre" || searchCategory === "all") {
-        if (movie.genres.some((genre) => genre.toLowerCase().includes(query))) {
+        if (movie.genres.some((g) => g.toLowerCase().includes(query))) {
           return true;
         }
       }
