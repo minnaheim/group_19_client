@@ -24,6 +24,32 @@ interface MoviePoolEntry {
   movie: Movie;
 }
 
+// SortableItem Component
+const SortableItem: React.FC<{
+  id: string;
+  children: React.ReactNode;
+}> = ({ id, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
+    >
+      {children}
+    </div>
+  );
+};
+
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: groupId } = useLocalStorage<string>("groupId", "");
@@ -176,35 +202,13 @@ const Vote: React.FC = () => {
               id="movie-pool"
               className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
             >
-              {availableMovies.map((entry, index) => {
-                const {
-                  attributes,
-                  listeners,
-                  setNodeRef,
-                  transform,
-                  transition,
-                } = useSortable({ id: `pool-${index}` });
-
-                const style = {
-                  transform: CSS.Transform.toString(transform),
-                  transition,
-                };
-
-                return (
-                  <div
-                    key={`pool-${index}`}
-                    ref={setNodeRef}
-                    style={style}
-                    {...attributes}
-                    {...listeners}
-                    className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
-                  >
-                    <p className="text-center text-[#3b3e88] font-bold">
-                      {entry.movie.title}
-                    </p>
-                  </div>
-                );
-              })}
+              {availableMovies.map((entry, index) => (
+                <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
+                  <p className="text-center text-[#3b3e88] font-bold">
+                    {entry.movie.title}
+                  </p>
+                </SortableItem>
+              ))}
               {availableMovies.length === 0 && (
                 <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
                   All movies have been ranked.
@@ -219,43 +223,17 @@ const Vote: React.FC = () => {
               Your Ranking
             </h2>
             <div className="flex flex-wrap gap-4 mt-4">
-              {rankings.map((movie, index) => {
-                const {
-                  attributes,
-                  listeners,
-                  setNodeRef,
-                  transform,
-                  transition,
-                } = useSortable({ id: `rank-${index}` });
-
-                const style = {
-                  transform: CSS.Transform.toString(transform),
-                  transition,
-                };
-
-                return (
-                  <div
-                    key={`rank-${index}`}
-                    ref={setNodeRef}
-                    style={style}
-                    {...attributes}
-                    {...listeners}
-                    className={`w-[120px] h-[180px] flex items-center justify-center ${
-                      movie
-                        ? "bg-[#d9e1ff]"
-                        : "border-2 border-dashed border-[#b9c0de]"
-                    } rounded-lg shadow-md`}
-                  >
-                    {movie ? (
-                      <p className="text-center text-[#3b3e88] font-bold">
-                        {movie.title}
-                      </p>
-                    ) : (
-                      <p className="text-[#b9c0de]">Drop here</p>
-                    )}
-                  </div>
-                );
-              })}
+              {rankings.map((movie, index) => (
+                <SortableItem key={`rank-${index}`} id={`rank-${index}`}>
+                  {movie ? (
+                    <p className="text-center text-[#3b3e88] font-bold">
+                      {movie.title}
+                    </p>
+                  ) : (
+                    <p className="text-[#b9c0de]">Drop here</p>
+                  )}
+                </SortableItem>
+              ))}
             </div>
           </div>
         </DndContext>
