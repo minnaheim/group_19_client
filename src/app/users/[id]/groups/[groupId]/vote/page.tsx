@@ -4,7 +4,7 @@ import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -16,158 +16,25 @@ import {
 import { pointerWithin } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import MovieCard from "@/components/ui/Movie_card"; // Import your existing MovieCard
 import { useRouter } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
 
 interface MoviePoolEntry {
   userId: number;
   movie: Movie;
 }
 
-const mockMoviePool: MoviePoolEntry[] = [
-  {
-    userId: 2,
-    movie: {
-      movieId: 3,
-      title: "Dune: Part Two",
-      posterURL:
-        "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-      description:
-        "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-      genres: ["Science Fiction"],
-      directors: ["Denis Villeneuve"],
-      actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-      trailerURL: "https://www.example.com/dune-part-two",
-      year: 2023,
-      originallanguage: "English",
-    },
-  },
-  {
-    userId: 3,
-    movie: {
-      movieId: 4,
-      title: "Oppenheimer",
-      posterURL:
-        "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      description:
-        "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-      genres: ["Drama"],
-      directors: ["Christopher Nolan"],
-      actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-      trailerURL: "https://www.example.com/oppenheimer",
-      year: 2023,
-      originallanguage: "English",
-    },
-  },
-  {
-    userId: 4,
-    movie: {
-      movieId: 5,
-      title: "Poor Things",
-      posterURL:
-        "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-      description:
-        "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-      genres: ["Science Fiction"],
-      directors: ["Yorgos Lanthimos"],
-      actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
-      trailerURL: "https://www.example.com/poor-things",
-      year: 2023,
-      originallanguage: "English",
-    },
-  },
-];
-
-// DraggableMovieCard component - wrapper for MovieCard that adds drag functionality
-const DraggableMovieCard: React.FC<{
-  id: string;
-  movie: Movie;
-  onClick: (movie: Movie) => void;
-}> = ({ id, movie, onClick }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-    zIndex: isDragging ? 100 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="touch-manipulation"
-    >
-      <MovieCard movie={movie} onClick={() => onClick(movie)} />
-    </div>
-  );
-};
-
-// RankingSlot component
-const RankingSlot: React.FC<{
-  id: string;
-  index: number;
-  movie: Movie | null;
-}> = ({ id, index, movie }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id,
-    disabled: !movie,
-  });
-
-  const isEmpty = !movie;
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className={`
-        w-[120px] h-[180px] 
-        flex items-center justify-center 
-        ${isEmpty ? "border-2 border-dashed border-[#b9c0de] bg-[#d9e1ff]" : ""}
-        rounded-lg shadow-md 
-        ${isDragging ? "opacity-50" : "opacity-100"}
-      `}
-      data-rank-position={index}
-    >
-      {movie ? (
-        <div className="relative w-full h-full">
-          <MovieCard movie={movie} onClick={() => {}} />
-          <div className="absolute top-0 left-0 bg-[#3b3e88] text-white rounded-br-lg px-2 py-1 z-10">
-            #{index + 1}
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center text-[#3b3e88] text-2xl font-bold">
-          <span>{index + 1}</span>
-          <span className="text-sm font-normal mt-2">Drop here</span>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: groupId } = useLocalStorage<string>("groupId", "");
-  const [availableMovies, setAvailableMovies] =
-    useState<MoviePoolEntry[]>(mockMoviePool);
+  const [availableMovies, setAvailableMovies] = useState<MoviePoolEntry[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([
     null,
     null,
     null,
   ]);
   const router = useRouter();
+  const apiService = useApi();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -177,6 +44,24 @@ const Vote: React.FC = () => {
     }),
     useSensor(KeyboardSensor)
   );
+
+  // Fetch movie pool
+  useEffect(() => {
+    const fetchMoviePool = async () => {
+      try {
+        const response = await apiService.get<MoviePoolEntry[]>(
+          `/groups/${groupId}/pool`
+        );
+        setAvailableMovies(response);
+      } catch (error) {
+        console.error("Failed to fetch movie pool:", error);
+        alert(
+          "An error occurred while fetching the movie pool. Please try again."
+        );
+      }
+    };
+    fetchMoviePool();
+  }, [apiService, groupId]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -238,13 +123,30 @@ const Vote: React.FC = () => {
     }
   };
 
-  const handleSubmitRanking = () => {
+  const handleSubmitRanking = async () => {
     if (rankings.some((movie) => movie === null)) {
       alert("Please rank all 3 movies before submitting.");
       return;
     }
-    console.log("Submitted Rankings:", rankings);
-    router.push(`/users/${userId}/groups/${groupId}/results`);
+
+    try {
+      const rankedMovies = rankings.map((movie, index) => ({
+        movieId: movie?.movieId,
+        rank: index + 1,
+      }));
+
+      await apiService.post(`/groups/${groupId}/vote`, {
+        userId,
+        rankings: rankedMovies,
+      });
+
+      router.push(`/users/${userId}/groups/${groupId}/results`);
+    } catch (error) {
+      console.error("Failed to submit rankings:", error);
+      alert(
+        "An error occurred while submitting your rankings. Please try again."
+      );
+    }
   };
 
   return (
@@ -274,14 +176,35 @@ const Vote: React.FC = () => {
               id="movie-pool"
               className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
             >
-              {availableMovies.map((entry, index) => (
-                <DraggableMovieCard
-                  key={`pool-${index}`}
-                  id={`pool-${index}`}
-                  movie={entry.movie}
-                  onClick={() => {}}
-                />
-              ))}
+              {availableMovies.map((entry, index) => {
+                const {
+                  attributes,
+                  listeners,
+                  setNodeRef,
+                  transform,
+                  transition,
+                } = useSortable({ id: `pool-${index}` });
+
+                const style = {
+                  transform: CSS.Transform.toString(transform),
+                  transition,
+                };
+
+                return (
+                  <div
+                    key={`pool-${index}`}
+                    ref={setNodeRef}
+                    style={style}
+                    {...attributes}
+                    {...listeners}
+                    className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
+                  >
+                    <p className="text-center text-[#3b3e88] font-bold">
+                      {entry.movie.title}
+                    </p>
+                  </div>
+                );
+              })}
               {availableMovies.length === 0 && (
                 <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
                   All movies have been ranked.
@@ -296,14 +219,43 @@ const Vote: React.FC = () => {
               Your Ranking
             </h2>
             <div className="flex flex-wrap gap-4 mt-4">
-              {rankings.map((movie, index) => (
-                <RankingSlot
-                  key={`rank-${index}`}
-                  id={`rank-${index}`}
-                  index={index}
-                  movie={movie}
-                />
-              ))}
+              {rankings.map((movie, index) => {
+                const {
+                  attributes,
+                  listeners,
+                  setNodeRef,
+                  transform,
+                  transition,
+                } = useSortable({ id: `rank-${index}` });
+
+                const style = {
+                  transform: CSS.Transform.toString(transform),
+                  transition,
+                };
+
+                return (
+                  <div
+                    key={`rank-${index}`}
+                    ref={setNodeRef}
+                    style={style}
+                    {...attributes}
+                    {...listeners}
+                    className={`w-[120px] h-[180px] flex items-center justify-center ${
+                      movie
+                        ? "bg-[#d9e1ff]"
+                        : "border-2 border-dashed border-[#b9c0de]"
+                    } rounded-lg shadow-md`}
+                  >
+                    {movie ? (
+                      <p className="text-center text-[#3b3e88] font-bold">
+                        {movie.title}
+                      </p>
+                    ) : (
+                      <p className="text-[#b9c0de]">Drop here</p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </DndContext>
