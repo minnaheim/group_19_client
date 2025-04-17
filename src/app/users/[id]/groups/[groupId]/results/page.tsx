@@ -1,5 +1,4 @@
 "use client";
-
 import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
@@ -7,6 +6,21 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
+
+// TODO: for the person finishing this: the endpoint looks different now:
+// GET /groups/{groupId}/rankings/details
+// e.g.
+// [
+//   {
+//     "movie": { "movieId": 1, "title": "Film A", ... },
+//     "averageRank": 1.5
+//   },
+//   {
+//     "movie": { "movieId": 2, "title": "Film B", ... },
+//     "averageRank": 2.0
+//   },
+//   ...
+// ]
 
 const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");

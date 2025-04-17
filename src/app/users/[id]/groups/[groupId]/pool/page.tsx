@@ -5,7 +5,7 @@ import { User } from "@/app/types/user";
 import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { useState, useEffect } from "react";
-// import { useApi } from "@/app/hooks/useApi";
+import { useApi } from "@/app/hooks/useApi";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,211 +25,77 @@ interface MoviePoolEntry {
   movie: Movie;
 }
 
-const mockWatchList: Movie[] = [
-  {
-    movieId: 1,
-    title: "To All the Boys I've Loved Before",
-    posterURL: "/hKHZhUbIyUAjcSrqJThFGYIR6kI.jpg",
-    description:
-      "A teenage girl's secret love letters are exposed and wreak havoc on her love life. To save face, she begins a fake relationship with one of the recipients.",
-    genres: ["Teen Romance"],
-    directors: ["Susan Johnson"],
-    actors: ["Lana Condor", "Noah Centineo", "Janel Parrish"],
-    trailerURL: "https://www.example.com/to-all-the-boys",
-    year: 2002,
-    originallanguage: "English",
-  },
-  {
-    movieId: 2,
-    title: "The Kissing Booth",
-    posterURL: "/7Dktk2ST6aL8h9Oe5rpk903VLhx.jpg",
-    description:
-      "A high school student finds herself face-to-face with her long-term crush when she signs up to run a kissing booth at the spring carnival.",
-    genres: ["Teen Romance"],
-    directors: ["Vince Marcello"],
-    actors: ["Joey King", "Jacob Elordi", "Joel Courtney"],
-    trailerURL: "https://www.example.com/kissing-booth",
-    year: 2018,
-    originallanguage: "English",
-  },
-  {
-    movieId: 3,
-    title: "Dune: Part Two",
-    posterURL: "/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-    description:
-      "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-    genres: ["Science Fiction"],
-    directors: ["Denis Villeneuve"],
-    actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-    trailerURL: "https://www.example.com/dune-part-two",
-    year: 2023,
-    originallanguage: "English",
-  },
-  {
-    movieId: 4,
-    title: "Oppenheimer",
-    posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    description:
-      "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-    genres: ["Drama"],
-    directors: ["Christopher Nolan"],
-    actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-    trailerURL: "https://www.example.com/oppenheimer",
-    year: 2023,
-    originallanguage: "English",
-  },
-  {
-    movieId: 5,
-    title: "Poor Things",
-    posterURL: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
-    description:
-      "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-    genres: ["Science Fiction"],
-    directors: ["Yorgos Lanthimos"],
-    actors: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
-    trailerURL: "https://www.example.com/poor-things",
-    year: 2023,
-    originallanguage: "English",
-  },
-  {
-    movieId: 11,
-    title: "Oppenheimer",
-    posterURL: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    description:
-      "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-    genres: ["Drama"],
-    directors: ["Christopher Nolan"],
-    actors: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
-    trailerURL: "https://www.example.com/oppenheimer",
-    year: 2023,
-    originallanguage: "English",
-  },
-  {
-    movieId: 9,
-    title: "Top Gun: Maverick",
-    posterURL: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-    description:
-      "After more than thirty years of service as one of the Navy's top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.",
-    genres: ["Action"],
-    directors: ["Joseph Kosinski"],
-    actors: ["Tom Cruise", "Miles Teller", "Jennifer Connelly"],
-    trailerURL: "https://www.example.com/top-gun-maverick",
-    year: 2022,
-    originallanguage: "English",
-  },
-  {
-    movieId: 10,
-    title: "Everything Everywhere All at Once",
-    posterURL: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-    description:
-      "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-    genres: ["Science Fiction"],
-    directors: ["Daniel Kwan", "Daniel Scheinert"],
-    actors: ["Michelle Yeoh", "Ke Huy Quan", "Jamie Lee Curtis"],
-    trailerURL: "https://www.example.com/everything-everywhere",
-    year: 2022,
-    originallanguage: "English",
-  },
-];
-
-const mockGroupMembers: User[] = [
-  {
-    userId: 2,
-    username: "alex.np",
-    email: "alex@example.com",
-    bio: "Horror fan with a passion for classic slasher films and psychological thrillers. Always looking for the next scare!",
-    favoriteGenres: ["Horror", "Thriller", "Mystery"],
-    favoriteMovie: mockWatchList[0],
-    watchlist: [mockWatchList[0], mockWatchList[1]],
-    password: "",
-    watchedMovies: [],
-  },
-  {
-    userId: 3,
-    username: "cinematic_soul",
-    email: "cinematic@example.com",
-    bio: "Finding meaning through cinema since 1995.",
-    favoriteGenres: ["Drama", "Independent", "Foreign"],
-    favoriteMovie: mockWatchList[2],
-    watchlist: [mockWatchList[2], mockWatchList[3]],
-    password: "",
-    watchedMovies: [],
-  },
-  {
-    userId: 4,
-    username: "film_buff",
-    email: "buff@movies.com",
-    bio: "Movie enthusiast with a passion for classics.",
-    favoriteGenres: ["Drama", "Classic", "Film Noir"],
-    favoriteMovie: mockWatchList[3],
-    watchlist: [mockWatchList[3], mockWatchList[4]],
-    password: "",
-    watchedMovies: [],
-  },
-];
-
-// Initial mock movie pool entries
-const initialMoviePoolEntries: MoviePoolEntry[] = [
-  {
-    userId: 3, // cinematic_soul
-    movie: mockWatchList[2], // Dune: Part Two
-  },
-  {
-    userId: 4, // film_buff
-    movie: mockWatchList[3], // Oppenheimer
-  },
-];
-
 const MoviePool: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: groupId } = useLocalStorage<string>("groupId", "");
-  // const { value: movieId } = useLocalStorage<string>("movieId", "");
+  const { value: movieId } = useLocalStorage<string>("movieId", "");
   const [group, setGroup] = useState<Group | null>(null);
-  const [moviePoolEntries, setMoviePoolEntries] = useState<MoviePoolEntry[]>(
-    initialMoviePoolEntries
-  );
-  // const apiService = useApi();
+  const [watchList, setWatchList] = useState<Movie[] | null>(null);
+  const [groupMembers, setGroupMembers] = useState<User[] | null>(null);
+  const apiService = useApi();
   const router = useRouter();
 
-  // Initialize group with mock data
+  // get group info
   useEffect(() => {
-    setGroup({
-      groupId: 1,
-      name: "Movie Enthusiasts",
-      description:
-        "A group for movie lovers to share and vote on their favorite films.",
-      creator: {
-        userId: 1,
-        username: "group_creator",
-        email: "creator@example.com",
-        bio: "Lover of all things cinema.",
-        favoriteGenres: ["Drama", "Action", "Comedy"],
-        favoriteMovie: mockWatchList[0],
-        watchlist: [mockWatchList[0], mockWatchList[1]],
-        password: "",
-        watchedMovies: [],
-      },
-      members: mockGroupMembers,
-      createdAt: "2025-04-01T12:00:00Z",
-      moviePool: moviePoolEntries,
-    });
-  }, [moviePoolEntries]);
+    const fetchGroupDetails = async () => {
+      try {
+        const response = await apiService.get<Group>(`/groups/${groupId}`);
+        setGroup(response);
+      } catch (error) {
+        console.error("Failed to fetch group details:", error);
+        alert(
+          "An error occurred while fetching the Group Information. Please try again."
+        );
+      }
+    };
 
-  // with endpoints...
-  //   const fetchGroupDetails = async () => {
-  //     try {
-  //       const response = await apiService.get<Group>(`/groups/${groupId}`);
-  //       setGroup(response);
-  //     } catch (error) {
-  //       console.error("Failed to fetch group details:", error);
-  //     }
-  //   };
+    if (groupId) {
+      fetchGroupDetails();
+    }
+  }, [groupId, apiService]);
 
-  //   if (groupId) {
-  //     fetchGroupDetails();
-  //   }
-  // }, [groupId, apiService]);
+  // get the user's watchlist
+  useEffect(() => {
+    const fetchWatchList = async () => {
+      try {
+        const response = await apiService.get<Movie[]>(`/watchlist/${userId}`);
+        setWatchList(response);
+      } catch (error) {
+        console.error("Failed to fetch Watchlist:", error);
+        alert(
+          "An error occurred while fetching the Watchlist. Please try again."
+        );
+      }
+    };
+
+    if (userId) {
+      fetchWatchList();
+    }
+  }, [userId, apiService]);
+
+  // get group members
+  useEffect(() => {
+    const fetchGroupMembers = async () => {
+      try {
+        const response = await apiService.get<User[]>(
+          `/groups/${groupId}/members`
+        );
+        setGroupMembers(response);
+      } catch (error) {
+        console.error("Failed to fetch Group Members:", error);
+        alert(
+          "An error occurred while fetching the Group Members. Please try again."
+        );
+      }
+    };
+
+    if (userId) {
+      fetchGroupMembers();
+    }
+  }, [userId, apiService]);
+
+  // TODO: based on each group member, get their movie Pool selection, empty if not chosen!!
 
   const handleAddToPool = (movie: Movie) => {
     setSelectedMovies((prev) => {
@@ -252,32 +118,10 @@ const MoviePool: React.FC = () => {
     }
 
     try {
-      // In a real implementation, this would call the API
-      // await apiService.post(`/groups/${groupId}/pool/${movieId}`, {
-      //   userId,
-      //   movie: selectedMovies[0],
-      // });
-
-      // For our mock implementation, we'll update the local state
-      const newEntry: MoviePoolEntry = {
-        userId: 2, // alex.np's user ID
+      await apiService.post(`/groups/${groupId}/pool/${movieId}`, {
+        userId,
         movie: selectedMovies[0],
-      };
-
-      // Check if alex.np already has a movie in the pool
-      const alexIndex = moviePoolEntries.findIndex(
-        (entry) => entry.userId === 2
-      );
-
-      if (alexIndex !== -1) {
-        // Replace existing movie
-        const updatedEntries = [...moviePoolEntries];
-        updatedEntries[alexIndex] = newEntry;
-        setMoviePoolEntries(updatedEntries);
-      } else {
-        // Add new movie
-        setMoviePoolEntries([...moviePoolEntries, newEntry]);
-      }
+      });
 
       alert("Movie added to the pool successfully!");
       setSelectedMovies([]);
@@ -289,7 +133,7 @@ const MoviePool: React.FC = () => {
     }
   };
 
-  const displayMovies = mockWatchList;
+  const displayMovies = watchList;
 
   // Helper function to get complete image URL
   const getFullPosterUrl = (posterPath: string) => {
@@ -320,8 +164,8 @@ const MoviePool: React.FC = () => {
           <MovieListHorizontal
             movies={displayMovies}
             onMovieClick={handleAddToPool}
-            emptyMessage="No movies match your genre"
-            noResultsMessage="No movies match your search"
+            emptyMessage="Your Watchlist is empty"
+            noResultsMessage="Your Watchlist is not available"
             hasOuterContainer={false}
           />
         </div>
@@ -344,6 +188,7 @@ const MoviePool: React.FC = () => {
           </h2>
         </div>
         <div className="flex gap-4 overflow-x-auto">
+          {/* TODO: as soon as group members are found, map their choices for the movie pool */}
           {mockGroupMembers.map((member) => {
             // Find the movie for this user in the pool
             const userMovieEntry = moviePoolEntries.find(
