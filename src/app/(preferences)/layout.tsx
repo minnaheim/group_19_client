@@ -12,7 +12,7 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
       <div className="h-screen w-full md:grid grid-cols-10">
         <div className="max-md:hidden col-span-4 bg-[#AFB3FF]">
           <div className="absolute top-4 left-4 flex items-center space-x-2">
-            <Image src="/projector.png" alt="App Icon" width={50} height={50} />
+            <Image src="/Projector.png" alt="App Icon" width={50} height={50} />
             <h1 className="text-[#3C3F88] text-2xl font-bold">Movie Night</h1>
           </div>
           <img

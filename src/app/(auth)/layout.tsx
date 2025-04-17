@@ -28,13 +28,14 @@ export default function AuthLayout({
   const pathname = usePathname();
   // Extracts the last part of the path (e.g., "login" from "/login")
   // Ensure this logic correctly identifies your routes. If routes are nested, adjust accordingly.
-  const activeTab = pathname.substring(pathname.lastIndexOf('/') + 1) || "login"; // Default if path is "/" or unexpected
+  const activeTab =
+    pathname.substring(pathname.lastIndexOf("/") + 1) || "login"; // Default if path is "/" or unexpected
 
   return (
     <div className="h-screen w-full md:grid grid-cols-10">
       <div className="max-md:hidden col-span-4 bg-[#AFB3FF]">
         <div className="absolute top-4 left-4 flex items-center space-x-2">
-          <Image src="/projector.png" alt="App Icon" width={50} height={50} />
+          <Image src="/Projector.png" alt="App Icon" width={50} height={50} />
           <h1 className="text-[#3C3F88] text-2xl font-bold">Movie Night</h1>
         </div>
         <img
