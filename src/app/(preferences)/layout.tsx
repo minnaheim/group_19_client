@@ -17,7 +17,7 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
           </div>
           <img
             className="absolute top-23 left-30 object-contain"
-            src="/projector.png"
+            src="/Projector.png"
             width={400}
             height={40}
             alt=""
