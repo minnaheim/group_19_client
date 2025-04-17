@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
+import { usePreferences } from "@/app/context/PreferencesContext";
 
 const GenrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -10,6 +11,7 @@ const GenrePreferences: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
+  const { setSelectedGenre } = usePreferences();
 
   // Fetch genres from the backend
   useEffect(() => {
@@ -19,23 +21,20 @@ const GenrePreferences: React.FC = () => {
           await apiService.get<{ id: number; name: string }[]>(
             "/movies/genres"
           );
-        setGenres(response); // Store the genres in state
+        setGenres(response);
       } catch (error) {
         console.error("Failed to fetch genres:", error);
         alert("An error occurred while fetching genres. Please try again.");
       }
     };
-
     fetchGenres();
   }, [apiService]);
-
-  // const genres = await apiService.get("/movies/genres");
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
       console.log(prev);
       if (prev.includes(genre)) {
-        return prev.filter((g) => g !== genre); // return genres which aren't currently selected?
+        return prev.filter((g) => g !== genre);
       } else {
         if (prev.length >= 1) {
           alert("You can only select one favorite genre");
@@ -54,6 +53,9 @@ const GenrePreferences: React.FC = () => {
     }
 
     try {
+      // Save the selected genre to the context so movie_preferences can access it
+      setSelectedGenre(selectedGenres[0]);
+
       await apiService.post(`/preferences/${id}`, {
         userId: id,
         favoriteGenres: selectedGenres,
@@ -74,7 +76,6 @@ const GenrePreferences: React.FC = () => {
         Please select one genre as your favorite genre.
       </h3>
       <div className="flex flex-wrap gap-2 justify-center">
-        {/* TODO: map not mockGenres but genres.title */}
         {genres.map((genre) => (
           <button
             key={genre.id}
@@ -82,7 +83,7 @@ const GenrePreferences: React.FC = () => {
             className={`px-4 py-2 rounded-full border ${
               selectedGenres.includes(genre.name)
                 ? "bg-[#AFB3FF] text-white"
-                : "bg-[#CDD1FF]  text-white"
+                : "bg-[#CDD1FF] text-white"
             }`}
           >
             {genre.name}
