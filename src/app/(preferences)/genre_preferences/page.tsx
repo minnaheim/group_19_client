@@ -1,80 +1,74 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-// import { useApi } from "@/app/hooks/useApi";
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/app/hooks/useApi";
+import { usePreferences } from "@/app/context/PreferencesContext";
 
 const GenrePreferences: React.FC = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  // const apiService = useApi();
+  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
+  const apiService = useApi();
   const router = useRouter();
-  // const { id } = useParams();
+  const { id } = useParams();
+  const { setSelectedGenre } = usePreferences();
 
-  // simulate genre which we would get from backend
-  const mockGenres = [
-    "Crime",
-    "Mystery",
-    "Rom-Com",
-    "Horror",
-    "Comedy",
-    "Thriller",
-    "Fantasy",
-    "Drama",
-    "Sci-Fi",
-    "Western",
-    "Musical",
-    "Mythology",
-    "Adventure",
-    "Romance",
-    "Documentary",
-    "Dystopian",
-    "Time Travel",
-    "Noir",
-    "Action",
-    "Biopic",
-    "Psychological Thriller",
-    "Supernatural",
-  ];
-  // const genres = await apiService.get("/movies/genres");
+  // Fetch genres from the backend
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response =
+          await apiService.get<{ id: number; name: string }[]>(
+            "/movies/genres"
+          );
+        setGenres(response);
+      } catch (error) {
+        console.error("Failed to fetch genres:", error);
+        alert("An error occurred while fetching genres. Please try again.");
+      }
+    };
+    fetchGenres();
+  }, [apiService]);
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
       console.log(prev);
       if (prev.includes(genre)) {
-        return prev.filter((g) => g !== genre); // return genres which aren't currently selected?
+        return prev.filter((g) => g !== genre);
       } else {
         if (prev.length >= 1) {
-          // TODO: find better way to handle error
           alert("You can only select one favorite genre");
           return prev;
         }
         console.log([...prev, genre]);
-        // setSelectedGenre(genre); // update selected genre to layout
         return [...prev, genre];
       }
     });
   };
 
-  // const handleNext = async () => {
-  //   if (selectedGenres.length === 0) {
-  //     alert("Please select a genre before proceeding.");
-  //     return;
-  //   }
+  const handleNext = async () => {
+    if (selectedGenres.length === 0) {
+      alert("Please select a genre before proceeding.");
+      return;
+    }
 
-  //   try {
-  //     await apiService.post(`/preferences/${id}`, {
-  //       userId: id,
-  //       favoriteGenres: selectedGenres,
-  //     });
+    try {
+      // Save the selected genre to the context so movie_preferences can access it
+      setSelectedGenre(selectedGenres[0]);
 
-  //     router.push("/movie_preferences");
-  //   } catch (error) {
-  //     console.error("Failed to save preferences:", error);
-  //     alert(
-  //       "An error occurred while saving your preferences. Please try again."
-  //     );
-  //   }
-  // };
+      await apiService.post(`/preferences/${id}`, {
+        userId: id,
+        favoriteGenres: selectedGenres,
+      });
+
+      router.push("/movie_preferences");
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert(
+        "An error occurred while saving your preferences. Please try again."
+      );
+    }
+  };
 
   return (
     <div>
@@ -82,32 +76,29 @@ const GenrePreferences: React.FC = () => {
         Please select one genre as your favorite genre.
       </h3>
       <div className="flex flex-wrap gap-2 justify-center">
-        {/* TODO: map not mockGenres but genres.title */}
-        {mockGenres.map((genre) => (
+        {genres.map((genre) => (
           <button
-            key={genre}
-            onClick={() => toggleGenre(genre)}
+            key={genre.id}
+            onClick={() => toggleGenre(genre.name)}
             className={`px-4 py-2 rounded-full border ${
-              selectedGenres.includes(genre)
+              selectedGenres.includes(genre.name)
                 ? "bg-[#AFB3FF] text-white"
-                : "bg-[#CDD1FF]  text-white"
+                : "bg-[#CDD1FF] text-white"
             }`}
           >
-            {genre}
+            {genre.name}
           </button>
         ))}
       </div>
       <p className="text-center mt-4 text-sm text-[#3C3F88]">
         {selectedGenres.length} genres selected
       </p>
-      <br></br>
+      <br />
       <div className="flex justify-between">
         <Button variant="destructive" onClick={() => router.push("/")}>
           Back
         </Button>
-        {/* TODO: figure out how to do next, dep on page currently on */}
-        {/* onClick={handleNext} */}
-        <Button onClick={() => router.push("/movie_preferences")}>Next</Button>
+        <Button onClick={handleNext}>Next</Button>
       </div>
     </div>
   );

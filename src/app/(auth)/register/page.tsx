@@ -24,9 +24,9 @@ const Register: React.FC = () => {
 
   // State to manage form inputs
   const [formValues, setFormValues] = useState({
-    email: "",
     username: "",
     password: "",
+    email: "",
   });
 
   // set error if fields are empty
@@ -94,9 +94,9 @@ const Register: React.FC = () => {
       console.log(response);
 
       // Based on your REST specs, the register endpoint returns a User object
-      if (response && typeof response === 'object') {
+      if (response && typeof response === "object") {
         // Handle case where apiService returns a User object
-        if ('userId' in response) {
+        if ("userId" in response) {
           // It's a User object
           const userData = response as User;
           setUserId(userData.userId.toString());
@@ -107,14 +107,14 @@ const Register: React.FC = () => {
           }
         }
         // Handle case where apiService returns {data, headers}
-        else if ('data' in response && 'headers' in response) {
+        else if ("data" in response && "headers" in response) {
           const apiResponse = response as unknown as ApiResponse<User>;
           const userData = apiResponse.data;
           const headers = apiResponse.headers;
 
           // Get token from headers
-          const token = headers?.get("Authorization") ||
-              headers?.get("authorization");
+          const token =
+            headers?.get("Authorization") || headers?.get("authorization");
 
           if (token) {
             setToken(token.replace("Bearer ", ""));
@@ -126,9 +126,9 @@ const Register: React.FC = () => {
           }
         }
       }
-
+      console.log("before pushing");
       // Navigate to preferences page after successful registration
-      router.push("/preferences");
+      router.push("/genre_preferences");
     } catch (error) {
       if (error instanceof Error) {
         alert(`Something went wrong during the registration:\n ${error}`);
@@ -139,56 +139,56 @@ const Register: React.FC = () => {
   };
 
   return (
-      <Card>
-        <CardContent className="space-y-2">
-          <form>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    placeholder="Input your Email"
-                    value={formValues.email} // initially empty unless changed
-                    onChange={handleInputChange}
-                />
-                {errors.email && (
-                    <p className="text-red-500 text-sm">{errors.email}</p>
-                )}
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                    id="username"
-                    placeholder="Input your Username"
-                    value={formValues.username}
-                    onChange={handleInputChange}
-                />
-                {errors.username && (
-                    <p className="text-red-500 text-sm">{errors.username}</p>
-                )}
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                    id="password"
-                    placeholder="Input your password"
-                    value={formValues.password}
-                    onChange={handleInputChange}
-                />
-                {errors.password && (
-                    <p className="text-red-500 text-sm">{errors.password}</p>
-                )}
-              </div>
+    <Card>
+      <CardContent className="space-y-2">
+        <form>
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                placeholder="Input your Email"
+                value={formValues.email} // initially empty unless changed
+                onChange={handleInputChange}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="destructive" onClick={() => router.push("/")}>
-            Back
-          </Button>
-          <Button onClick={handleRegister}>Register</Button>
-        </CardFooter>
-      </Card>
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                placeholder="Input your Username"
+                value={formValues.username}
+                onChange={handleInputChange}
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              )}
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                placeholder="Input your password"
+                value={formValues.password}
+                onChange={handleInputChange}
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
+            </div>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="destructive" onClick={() => router.push("/")}>
+          Back
+        </Button>
+        <Button onClick={handleRegister}>Register</Button>
+      </CardFooter>
+    </Card>
   );
 };
 

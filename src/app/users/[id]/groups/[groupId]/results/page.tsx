@@ -4,39 +4,56 @@ import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-// import MovieCard from "@/components/ui/Movie_card";
 import { useRouter } from "next/navigation";
-
-interface MoviePoolEntry {
-  userId: number;
-  movie: Movie;
-}
-
-const mockMoviePool: MoviePoolEntry[] = [
-  {
-    userId: 2,
-    movie: {
-      movieId: 3,
-      title: "Dune: Part Two",
-      posterURL:
-        "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-      description:
-        "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-      genres: ["Science Fiction"],
-      directors: ["Denis Villeneuve"],
-      actors: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
-      trailerURL: "https://www.example.com/dune-part-two",
-      year: 2023,
-      originallanguage: "English",
-    },
-  },
-];
+import { useEffect, useState } from "react";
+import { useApi } from "@/app/hooks/useApi";
 
 const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
-  const winner = mockMoviePool[0].movie; // Mock winner
-  const averageRank = 1.25; // Mock average rank
+  const { value: groupId } = useLocalStorage<string>("groupId", "");
+  const [results, setResults] = useState<Movie[]>([]);
+  // TODO: find out format of average rank
+  const [averageRank, setAverageRank] = useState<string>("");
+  const apiService = useApi();
+
+  // Fetch results
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const response = await apiService.get<Movie[]>(
+          `/groups/${groupId}/results`
+        );
+        setResults(response);
+      } catch (error) {
+        console.error("Failed to fetch winning movie:", error);
+        alert(
+          "An error occurred while fetching the winning movie. Please try again."
+        );
+      }
+    };
+    fetchResults();
+  }, [apiService, groupId]);
+
+  // get average rank of winning movie
+
+  useEffect(() => {
+    const fetchAverageRank = async () => {
+      try {
+        // TODO: find out accurate endpoint here
+        const response = await apiService.get<string>(
+          `/groups/${groupId}/results`
+        );
+        setAverageRank(response);
+      } catch (error) {
+        console.error("Failed to fetch average rank:", error);
+        alert(
+          "An error occurred while fetching the average rank. Please try again."
+        );
+      }
+    };
+    fetchAverageRank();
+  }, [apiService, groupId]);
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
@@ -52,22 +69,28 @@ const Results: React.FC = () => {
 
         {/* Winner Section */}
         <div className="flex flex-col items-center justify-center text-center">
-          <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-            And the winner is ...
-          </h2>
-          <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden">
-            <img
-              src={winner.posterURL}
-              alt={winner.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <h2 className="font-semibold text-[#3b3e88] text-xl mt-4">
-            {winner.title}
-          </h2>
-          <p className="text-[#b9c0de] text-lg mt-2">
-            ... with an average rank of {averageRank}!
-          </p>
+          {results.length > 0 ? (
+            <>
+              <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                And the winner is ...
+              </h2>
+              <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden">
+                <img
+                  src={results[0].posterURL}
+                  alt={results[0].title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h2 className="font-semibold text-[#3b3e88] text-xl mt-4">
+                {results[0].title}
+              </h2>
+              <p className="text-[#b9c0de] text-lg mt-2">
+                ... with an average rank of {averageRank}!
+              </p>
+            </>
+          ) : (
+            <p className="text-[#b9c0de] text-lg mt-2">Loading results...</p>
+          )}
         </div>
 
         {/* Buttons */}
