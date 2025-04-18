@@ -85,29 +85,11 @@ const Profile: React.FC = () => {
     }
   };
 
-  const fetchWatchedMovies = async () => {
-    try {
-      const fetchedWatchedMovies: Movie[] = await apiService.get(
-          `/watched/${id}`,
-      );
-      setUser((prevUser) =>
-          prevUser ? { ...prevUser, watchedMovies: fetchedWatchedMovies } : null
-      );
-    } catch (error: unknown) {
-      if (error instanceof Error && "status" in error) {
-        const applicationError = error as ApplicationError;
-        // just log the error but don't show a message since this is a secondary fetch
-        console.error(
-            `Error fetching watched movies: ${applicationError.message}`,
-        );
-      }
-    }
-  };
+
 
   useEffect(() => {
     const loadData = async () => {
       await fetchUser();
-      await fetchWatchedMovies();
     };
 
     loadData();
@@ -176,7 +158,7 @@ const Profile: React.FC = () => {
 
                 <div>
                   <p className="font-semibold text-[#3b3e88] text-base">
-                    bio: {user?.bio}
+                    bio: {user?.bio ? user.bio:"click \"edit profile\" to add your bio!"}
                   </p>
                 </div>
 
