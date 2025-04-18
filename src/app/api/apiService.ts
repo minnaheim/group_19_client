@@ -181,7 +181,8 @@ export class ApiService {
     if (!options?.skipAuth) {
       const token = localStorage.getItem("token");
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        const cleanToken = token.startsWith("\"") ? token.slice(1,-1) : token
+        headers["Authorization"] = `Bearer ${cleanToken}`;
       }
     }
 
