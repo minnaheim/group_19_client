@@ -23,12 +23,11 @@ const SeenList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<
-    number[]
+      number[]
   >([]);
 
   // search state
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchCategory, setSearchCategory] = useState<string>("all");
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
@@ -73,7 +72,7 @@ const SeenList: React.FC = () => {
     fetchUserData();
   }, [id, token, apiService]);
 
-  // filter movies based on search query
+  // filter movies based on search query - now only searching by title
   useEffect(() => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
@@ -81,43 +80,15 @@ const SeenList: React.FC = () => {
     }
 
     setIsSearching(true);
-    const movies = user?.watchedMovies || []; // Changed from watchlist to watchedMovies
+    const movies = user?.watchedMovies || [];
     const query = searchQuery.toLowerCase().trim();
 
-    const filtered = movies.filter((movie) => {
-      if (searchCategory === "title" || searchCategory === "all") {
-        if (movie.title.toLowerCase().includes(query)) {
-          return true;
-        }
-      }
-
-      if (searchCategory === "genre" || searchCategory === "all") {
-        if (movie.genres.some((genre) => genre.toLowerCase().includes(query))) {
-          return true;
-        }
-      }
-
-      if (searchCategory === "director" || searchCategory === "all") {
-        if (
-          movie.directors.some((director) =>
-            director.toLowerCase().includes(query)
-          )
-        ) {
-          return true;
-        }
-      }
-
-      if (searchCategory === "actors" || searchCategory === "all") {
-        if (movie.actors.some((actor) => actor.toLowerCase().includes(query))) {
-          return true;
-        }
-      }
-
-      return false;
-    });
+    const filtered = movies.filter((movie) =>
+        movie.title.toLowerCase().includes(query)
+    );
 
     setFilteredMovies(filtered);
-  }, [searchQuery, searchCategory, user?.watchedMovies]);
+  }, [searchQuery, user?.watchedMovies]);
 
   const handleAddMovie = () => {
     if (userId === id) {
@@ -145,7 +116,7 @@ const SeenList: React.FC = () => {
   const handleMovieSelect = (movieId: number) => {
     if (selectedMoviesToRemove.includes(movieId)) {
       setSelectedMoviesToRemove(
-        selectedMoviesToRemove.filter((id) => id !== movieId),
+          selectedMoviesToRemove.filter((id) => id !== movieId),
       );
     } else {
       setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
@@ -179,7 +150,7 @@ const SeenList: React.FC = () => {
       // After all removals, update local state
       if (user) {
         const updatedMovies = user.watchedMovies.filter(
-          (movie) => !selectedMoviesToRemove.includes(movie.movieId),
+            (movie) => !selectedMoviesToRemove.includes(movie.movieId),
         );
 
         setUser({
@@ -189,7 +160,7 @@ const SeenList: React.FC = () => {
       }
 
       showMessage(
-        `Removed ${selectedMoviesToRemove.length} movie(s) from your seen list`,
+          `Removed ${selectedMoviesToRemove.length} movie(s) from your seen list`,
       );
       setIsEditing(false);
       setSelectedMoviesToRemove([]);
@@ -206,13 +177,8 @@ const SeenList: React.FC = () => {
     setSearchQuery(e.target.value);
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchCategory(e.target.value);
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
-    setSearchCategory("all");
     setIsSearching(false);
   };
 
@@ -237,10 +203,10 @@ const SeenList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+          </div>
         </div>
-      </div>
     );
   }
 
@@ -250,119 +216,117 @@ const SeenList: React.FC = () => {
 
   // Determine which movies to display
   const displayMovies = isSearching
-    ? filteredMovies
-    : (user?.watchedMovies || []);
+      ? filteredMovies
+      : (user?.watchedMovies || []);
 
   return (
-    <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
-      {/* Sidebar */}
-      <Navigation userId={userId} activeItem="Profile Page" />
+      <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
+        {/* Sidebar */}
+        <Navigation userId={userId} activeItem="Profile Page" />
 
-      {/* Main content */}
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="mb-8">
-          <h1 className="font-semibold text-[#3b3e88] text-3xl">
-            Already Seen
-          </h1>
-          <p className="text-[#b9c0de] mt-2">
-            these movies will not be recommended to you
-          </p>
-        </div>
-
-        {/* Search bar component */}
-        {!isEditing && (
-          <SearchBar
-            searchQuery={searchQuery}
-            searchCategory={searchCategory}
-            onSearchChange={handleSearchChange}
-            onCategoryChange={handleCategoryChange}
-            onClearSearch={clearSearch}
-            className="mb-6"
-          />
-        )}
-
-        {/* Movie list component */}
-        <MovieList
-          movies={displayMovies}
-          isLoading={loading}
-          isEditing={isEditing}
-          isSearching={isSearching}
-          selectedMovieIds={selectedMoviesToRemove}
-          onMovieClick={handleMovieClick}
-          onMovieSelect={handleMovieSelect}
-          onAddMovieClick={handleAddMovie}
-          onClearSearch={clearSearch}
-          emptyMessage="Your seen list is empty"
-          noResultsMessage="None of the movies on your seen list match your search"
-        />
-
-        {/* Search Results Summary */}
-        {searchQuery && !isEditing && displayMovies.length > 0 && (
-          <div className="mt-4 text-[#3b3e88]">
-            Found {displayMovies.length}{" "}
-            movies matching &#34;{searchQuery}&#34; in{" "}
-            {searchCategory === "all" ? "all categories" : searchCategory}
+        {/* Main content */}
+        <div className="flex-1 p-6 overflow-auto">
+          <div className="mb-8">
+            <h1 className="font-semibold text-[#3b3e88] text-3xl">
+              Already Seen
+            </h1>
+            <p className="text-[#b9c0de] mt-2">
+              these movies will not be recommended to you
+            </p>
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-between">
-          {isEditing
-            ? (
-              <>
-                <Button
-                  variant="destructive"
-                  onClick={handleCancelEdit}
-                >
-                  cancel
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleSaveChanges}
-                  disabled={selectedMoviesToRemove.length === 0}
-                >
-                  remove {selectedMoviesToRemove.length} movie(s)
-                </Button>
-              </>
-            )
-            : (
-              <Button
-                variant="secondary"
-                onClick={handleEdit}
-              >
-                edit
-              </Button>
-            )}
-        </div>
+          {/* Search bar component - simplified version */}
+          {!isEditing && (
+              <SearchBar
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  onClearSearch={clearSearch}
+                  placeholder="Search for movie titles..."
+                  className="mb-6"
+              />
+          )}
 
-        {/* Back button */}
-        <Button
-          variant="destructive"
-          className="mt-4"
-          onClick={() => router.push(`/users/${id}/profile`)}
-        >
-          back to profile page
-        </Button>
-
-        {/* Movie Details Modal */}
-        {selectedMovie && (
-          <MovieDetailsModal
-            movie={selectedMovie}
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            isInSeenList={true}
-            onRemoveFromSeenList={handleRemoveFromSeenlist}
+          {/* Movie list component */}
+          <MovieList
+              movies={displayMovies}
+              isLoading={loading}
+              isEditing={isEditing}
+              isSearching={isSearching}
+              selectedMovieIds={selectedMoviesToRemove}
+              onMovieClick={handleMovieClick}
+              onMovieSelect={handleMovieSelect}
+              onAddMovieClick={handleAddMovie}
+              onClearSearch={clearSearch}
+              emptyMessage="Your seen list is empty"
+              noResultsMessage="None of the movies on your seen list match your search"
           />
-        )}
 
-        {/* Action Message */}
-        <ActionMessage
-          message={actionMessage}
-          isVisible={showActionMessage}
-          onHide={() => setShowActionMessage(false)}
-        />
+          {/* Search Results Summary */}
+          {searchQuery && !isEditing && displayMovies.length > 0 && (
+              <div className="mt-4 text-[#3b3e88]">
+                Found {displayMovies.length}{" "}
+                movies matching &#34;{searchQuery}&#34; in title
+              </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="mt-8 flex justify-between">
+            {isEditing
+                ? (
+                    <>
+                      <Button
+                          variant="destructive"
+                          onClick={handleCancelEdit}
+                      >
+                        cancel
+                      </Button>
+                      <Button
+                          variant="secondary"
+                          onClick={handleSaveChanges}
+                          disabled={selectedMoviesToRemove.length === 0}
+                      >
+                        remove {selectedMoviesToRemove.length} movie(s)
+                      </Button>
+                    </>
+                )
+                : (
+                    <Button
+                        variant="secondary"
+                        onClick={handleEdit}
+                    >
+                      edit
+                    </Button>
+                )}
+          </div>
+
+          {/* Back button */}
+          <Button
+              variant="destructive"
+              className="mt-4"
+              onClick={() => router.push(`/users/${id}/profile`)}
+          >
+            back to profile page
+          </Button>
+
+          {/* Movie Details Modal */}
+          {selectedMovie && (
+              <MovieDetailsModal
+                  movie={selectedMovie}
+                  isOpen={isModalOpen}
+                  onClose={closeModal}
+                  isInSeenList={true}
+                  onRemoveFromSeenList={handleRemoveFromSeenlist}
+              />
+          )}
+
+          {/* Action Message */}
+          <ActionMessage
+              message={actionMessage}
+              isVisible={showActionMessage}
+              onHide={() => setShowActionMessage(false)}
+          />
+        </div>
       </div>
-    </div>
   );
 };
 
