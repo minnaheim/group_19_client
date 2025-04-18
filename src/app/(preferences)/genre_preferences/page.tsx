@@ -1,71 +1,35 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 import { usePreferences } from "@/app/context/PreferencesContext";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
-// Static genre list
-const GENRES = [
-  { id: 28, name: "Action" },
-  { id: 12, name: "Adventure" },
-  { id: 16, name: "Animation" },
-  { id: 35, name: "Comedy" },
-  { id: 80, name: "Crime" },
-  { id: 99, name: "Documentary" },
-  { id: 18, name: "Drama" },
-  { id: 10751, name: "Family" },
-  { id: 14, name: "Fantasy" },
-  { id: 36, name: "History" },
-  { id: 27, name: "Horror" },
-  { id: 10402, name: "Music" },
-  { id: 9648, name: "Mystery" },
-  { id: 10749, name: "Romance" },
-  { id: 878, name: "Science Fiction" },
-  { id: 10770, name: "TV Movie" },
-  { id: 53, name: "Thriller" },
-  { id: 10752, name: "War" },
-  { id: 37, name: "Western" }
-];
-
 const GenrePreferences: React.FC = () => {
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const apiService = useApi();
   const router = useRouter();
-  const { setSelectedGenre } = usePreferences();
+  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
+  const { selectedGenres, setSelectedGenres } = usePreferences();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: token } = useLocalStorage<string>("token", "");
 
+  useEffect(() => {
+    apiService.getGenres().then(setGenres).catch(() => setGenres([]));
+  }, [apiService]);
+
   const toggleGenre = (genreName: string) => {
-    setSelectedGenres((prev) => {
-      // If this genre is already selected, deselect it
-      if (prev.includes(genreName)) {
-        return prev.filter(g => g !== genreName);
-      }
-      // Otherwise, select this genre (replacing any previously selected genre)
-      else {
-        // Return new selection immediately
-        const newSelection = [genreName];
-
-        // Update context after render is complete
-        setTimeout(() => {
-          setSelectedGenre(genreName);
-        }, 0);
-
-        return newSelection;
-      }
-    });
+    if (selectedGenres.includes(genreName)) {
+      setSelectedGenres(selectedGenres.filter((g) => g !== genreName));
+    } else {
+      setSelectedGenres([...selectedGenres, genreName]);
+    }
   };
 
   const handleNext = async () => {
-    if (selectedGenres.length === 0) {
-      setError("Please select a genre before proceeding.");
-      return;
-    }
+
 
     if (!userId) {
       setError("User ID not found. Please log in again.");
@@ -83,35 +47,11 @@ const GenrePreferences: React.FC = () => {
     setError("");
 
     try {
-      // Use the exact endpoint from the UserPreferencesController
-      const endpoint = `/api/users/${userId}/preferences/genres`;
-
-      // Add explicit token in the headers
-      const options = {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      };
-
-      // Format expected by the controller
-      await apiService.post(endpoint, {
-        genreIds: selectedGenres
-      }, options);
-
-      // Navigate to movie preferences page
+      await apiService.saveUserGenres(Number(userId), selectedGenres);
       router.push("/movie_preferences");
     } catch (error) {
-      console.error("Failed to save preferences:", error);
-
       if (error instanceof Error) {
         setError(`Error: ${error.message}`);
-
-        // For authentication errors, redirect to login
-        if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-          setTimeout(() => {
-            router.push("/login");
-          }, 1500);
-        }
       } else {
         setError("An error occurred while saving your preferences. Please try again.");
       }
@@ -123,7 +63,7 @@ const GenrePreferences: React.FC = () => {
   return (
       <div>
         <h3 className="text-center text-[#3C3F88] mb-6">
-          Please select one genre as your favorite genre.
+          Please select your favorite genres.
         </h3>
 
         {error && (
@@ -133,7 +73,7 @@ const GenrePreferences: React.FC = () => {
         )}
 
         <div className="flex flex-wrap gap-2 justify-center">
-          {GENRES.map((genre) => (
+          {genres.map((genre: { id: number; name: string }) => (
               <button
                   key={genre.id}
                   onClick={() => toggleGenre(genre.name)}
@@ -157,7 +97,7 @@ const GenrePreferences: React.FC = () => {
           <Button variant="destructive" onClick={() => router.push("/")} disabled={isLoading}>
             Back
           </Button>
-          <Button onClick={handleNext} disabled={isLoading || selectedGenres.length === 0}>
+          <Button onClick={handleNext} disabled={isLoading}>
             {isLoading ? "Saving..." : "Next"}
           </Button>
         </div>

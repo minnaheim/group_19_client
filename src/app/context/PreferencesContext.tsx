@@ -2,22 +2,39 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-type PreferencesContextType = {
-  selectedGenre: string;
-  setSelectedGenre: (genre: string) => void;
+import { Movie } from "@/app/types/movie";
+
+export type PreferencesContextType = {
+  selectedGenres: string[];
+  setSelectedGenres: (genres: string[]) => void;
+  favoriteMovieId: number | null;
+  setFavoriteMovieId: (id: number | null) => void;
+  favoriteMovie: Movie | null;
+  setFavoriteMovie: (movie: Movie | null) => void;
 };
 
-const PreferencesContext = createContext<PreferencesContextType | undefined>(
+export const PreferencesContext = createContext<PreferencesContextType | undefined>(
   undefined
 );
 
 export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [selectedGenre, setSelectedGenre] = useState<string>("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [favoriteMovieId, setFavoriteMovieId] = useState<number | null>(null);
+  const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
 
   return (
-    <PreferencesContext.Provider value={{ selectedGenre, setSelectedGenre }}>
+    <PreferencesContext.Provider
+      value={{
+        selectedGenres,
+        setSelectedGenres,
+        favoriteMovieId,
+        setFavoriteMovieId,
+        favoriteMovie,
+        setFavoriteMovie,
+      }}
+    >
       {children}
     </PreferencesContext.Provider>
   );

@@ -21,6 +21,10 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // User preferences state
+  const [userGenres, setUserGenres] = useState<string[]>([]);
+  const [userFavoriteMovie, setUserFavoriteMovie] = useState<Movie | null>(null);
+
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -75,6 +79,10 @@ const Profile: React.FC = () => {
     try {
       const fetchedUser: User = await apiService.get(`/users/${id}/profile`);
       setUser(fetchedUser);
+      // Fetch user preferences (genres and favorite movie)
+      const prefs = await apiService.get(`/users/${id}/preferences`) as { genres: string[]; favoriteMovie: Movie | null };
+      setUserGenres(Array.isArray(prefs.genres) ? prefs.genres : []);
+      setUserFavoriteMovie(prefs.favoriteMovie || null);
     } catch (error: unknown) {
       if (error instanceof Error && "status" in error) {
         const applicationError = error as ApplicationError;
@@ -84,6 +92,7 @@ const Profile: React.FC = () => {
       setLoading(false);
     }
   };
+
 
 
 
@@ -164,32 +173,36 @@ const Profile: React.FC = () => {
 
                 <div className="mt-6">
                   <p className="font-semibold text-[#3b3e88] text-base mb-2">
-                    favorite movie:
+                    Preferred Genres:
                   </p>
-                  {user?.favoriteMovie && (
-                      <div className="flex justify-center">
-                        <MovieCard
-                            movie={user.favoriteMovie}
-                            isInWatchlist={false}
-                            isInSeenList={false}
-                            isFavorite={true}
-                            onClick={handleMovieClick}
-                        />
-                      </div>
+                  <p className="text-[#3b3e88] text-base mb-4">
+                    {userGenres.length > 0 ? userGenres.join(", ") : "No genres selected."}
+                  </p>
+                  <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                    Favorite Movie:
+                  </p>
+                  {userFavoriteMovie ? (
+                    <div className="flex justify-center">
+                      <MovieCard
+                        movie={userFavoriteMovie}
+                        isInWatchlist={false}
+                        isInSeenList={false}
+                        isFavorite={true}
+                        onClick={handleMovieClick}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-[#3b3e88] text-base">No favorite movie selected.</p>
                   )}
                   {/* Movie Details Modal */}
                   {selectedMovie && (
-                      <MovieDetailsModal
-                          movie={selectedMovie}
-                          isOpen={isModalOpen}
-                          onClose={closeModal}
-                          isInWatchlist={
-                              user?.watchlist?.some(m => m.movieId === selectedMovie.movieId) || false
-                          }
-                          isInSeenList={
-                              user?.watchedMovies?.some(m => m.movieId === selectedMovie.movieId) || false
-                          }
-                      />
+                    <MovieDetailsModal
+                      movie={selectedMovie}
+                      isOpen={isModalOpen}
+                      onClose={closeModal}
+                      isInWatchlist={user?.watchlist?.some(m => m.movieId === selectedMovie.movieId) || false}
+                      isInSeenList={user?.watchedMovies?.some(m => m.movieId === selectedMovie.movieId) || false}
+                    />
                   )}
                 </div>
 
