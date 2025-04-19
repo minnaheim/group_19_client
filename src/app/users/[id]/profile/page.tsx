@@ -80,8 +80,8 @@ const Profile: React.FC = () => {
       const fetchedUser: User = await apiService.get(`/users/${id}/profile`);
       setUser(fetchedUser);
       // Fetch user preferences (genres and favorite movie)
-      const prefs = await apiService.get(`/users/${id}/preferences`) as { genres: string[]; favoriteMovie: Movie | null };
-      setUserGenres(Array.isArray(prefs.genres) ? prefs.genres : []);
+      const prefs = await apiService.get(`/users/${id}/preferences`) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
+      setUserGenres(Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : []);
       setUserFavoriteMovie(prefs.favoriteMovie || null);
     } catch (error: unknown) {
       if (error instanceof Error && "status" in error) {
