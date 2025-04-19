@@ -7,6 +7,9 @@ export interface ApiRequestOptions {
   skipAuth?: boolean;
 }
 
+import { UserPreferencesGenresDTO, UserPreferencesFavoriteMovieDTO, UserPreferencesDTO } from "@/app/types/userPreferences";
+import { Movie } from "@/app/types/movie";
+
 export class ApiService {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
@@ -192,5 +195,43 @@ export class ApiService {
     }
 
     return headers;
+  }
+
+  // --- User Preferences API ---
+
+  // Get all genres
+  public async getGenres(): Promise<{ id: number; name: string }[]> {
+    return this.get<{ id: number; name: string }[]>(`/movies/genres`, { skipAuth: true });
+  }
+
+  // Save genre preferences for a user
+  public async saveUserGenres(userId: number, genreIds: string[]): Promise<UserPreferencesGenresDTO> {
+    return this.post<UserPreferencesGenresDTO>(
+      `/users/${userId}/preferences/genres`,
+      { genreIds }
+    );
+  }
+
+  // Get genre preferences for a user
+  public async getUserGenres(userId: number): Promise<UserPreferencesGenresDTO> {
+    return this.get<UserPreferencesGenresDTO>(`/users/${userId}/preferences/genres`);
+  }
+
+  // Save favorite movie for a user
+  public async saveFavoriteMovie(userId: number, movieId: number): Promise<UserPreferencesFavoriteMovieDTO> {
+    return this.post<UserPreferencesFavoriteMovieDTO>(
+      `/users/${userId}/preferences/favorite-movie`,
+      { movieId }
+    );
+  }
+
+  // Get favorite movie for a user
+  public async getFavoriteMovie(userId: number): Promise<{ movie: Movie }> {
+    return this.get<{ movie: Movie }>(`/users/${userId}/preferences/favorite-movie`);
+  }
+
+  // Get all preferences for a user (genres + favorite movie)
+  public async getUserPreferences(userId: number): Promise<UserPreferencesDTO> {
+    return this.get<UserPreferencesDTO>(`/users/${userId}/preferences`);
   }
 }

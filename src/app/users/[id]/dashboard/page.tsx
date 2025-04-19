@@ -7,32 +7,35 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
+import {Movie} from "@/app/types/movie";
 
-// Define interfaces for API responses
 interface FriendRequest {
-    id: number;
-    sender: {
-        userId: number;
-        username: string;
-    };
-    receiver: {
-        userId: number;
-        username: string;
-    };
-    status: string;
-    createdAt: string;
+    requestId: number;
+    sender: User;
+    receiver: User;
+    accepted: boolean | null;
+    creationTime: string;
+    responseTime: string | null;
 }
 
-interface GroupInvitation {
-    id: number;
+interface Group {
     groupId: number;
     groupName: string;
-    sender: string;
-    receiver: {
-        userId: number;
-        username: string;
-    };
-    status: string;
+    creator: User;
+    members: User[];
+    moviePool: MoviePool;
+}
+
+interface MoviePool {
+    id: number;
+    movies: Movie[];
+}
+interface GroupInvitation {
+    id: number;
+    sender: User;
+    receiver: User;
+    group: Group;
+    status: "PENDING" | "ACCEPTED" | "REJECTED";
     createdAt: string;
 }
 
@@ -75,51 +78,62 @@ const Dashboard: React.FC = () => {
                 setLoading(true);
 
                 // Fetch user profile
-                const userData = await apiService.get<User>(`/profile/${id}`);
-                setUser(userData);
+                try {
+                    const userData = await apiService.get<User>(`/profile/${id}`);
+                    setUser(userData);
+                } catch (profileError) {
+                    console.error("Error fetching user profile:", profileError);
+                    setError("Failed to load profile data. Please try again later.");
+                    return;
+                }
 
                 // Get friend requests
-                const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+                try {
+                    const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+
+                    // Process friend requests into notifications
+                    if (friendRequests && Array.isArray(friendRequests)) {
+                        const friendNotifications = friendRequests.map((request, index) => ({
+                            id: index + 1,
+                            type: 'friend_request' as const,
+                            message: `${request.sender.username} wants to be your friend`,
+                            actionType: 'accept_decline' as const,
+                            sender: request.sender.username,
+                            requestId: request.requestId
+                        }));
+
+                        setNotifications(prev => [...prev, ...friendNotifications]);
+                    }
+                } catch (friendRequestsError) {
+                    console.error("Error fetching friend requests:", friendRequestsError);
+                    showMessage("Failed to load friend requests. Some data may be incomplete.");
+                }
 
                 // Get group invitations
-                const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+                try {
+                    const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
 
-                // Convert API responses to notification format
-                const notificationsList: Notification[] = [];
-
-                // Add friend requests to notifications
-                if (friendRequests && Array.isArray(friendRequests)) {
-                    friendRequests.forEach((request) => {
-                        notificationsList.push({
-                            id: notificationsList.length + 1,
-                            type: 'friend_request',
-                            message: `${request.sender.username} wants to be your friend`,
-                            actionType: 'accept_decline',
-                            sender: request.sender.username,
-                            requestId: request.id
-                        });
-                    });
-                }
-
-                // Add group invitations to notifications
-                if (groupInvites && Array.isArray(groupInvites)) {
-                    groupInvites.forEach((invite) => {
-                        notificationsList.push({
-                            id: notificationsList.length + 1,
-                            type: 'group_invite',
-                            message: `${invite.sender} invited you to ${invite.groupName}!`,
-                            actionType: 'accept_decline',
-                            sender: invite.sender,
+                    // Process group invitations into notifications
+                    if (groupInvites && Array.isArray(groupInvites)) {
+                        const groupNotifications = groupInvites.map((invite, index) => ({
+                            id: notifications.length + index + 1,
+                            type: 'group_invite' as const,
+                            message: `${invite.sender.username} invited you to ${invite.group.groupName}!`,
+                            actionType: 'accept_decline' as const,
+                            sender: invite.sender.username,
                             invitationId: invite.id,
-                            groupId: invite.groupId
-                        });
-                    });
-                }
+                            groupId: invite.group.groupId
+                        }));
 
-                setNotifications(notificationsList);
+                        setNotifications(prev => [...prev, ...groupNotifications]);
+                    }
+                } catch (groupInvitesError) {
+                    console.error("Error fetching group invitations:", groupInvitesError);
+                    showMessage("Failed to load group invitations. Some data may be incomplete.");
+                }
             } catch (error) {
-                setError("Failed to load user data");
-                console.error("Error loading dashboard:", error);
+                setError("Failed to load user data. Server may be unavailable.");
+                console.error("Critical error loading dashboard:", error);
             } finally {
                 setLoading(false);
             }
@@ -142,26 +156,39 @@ const Dashboard: React.FC = () => {
         e.stopPropagation();
         try {
             if (notification.type === 'friend_request' && notification.requestId) {
-                await apiService.post<FriendRequest>(
-                    `/friends/friendrequest/${notification.requestId}/accept`,
-                    {} // empty data object
-                );
+                try {
+                    await apiService.post(
+                        `/friends/friendrequest/${notification.requestId}/accept`,
+                        {} // empty data object
+                    );
 
-                showMessage(`Friend request from ${notification.sender} accepted!`);
+                    showMessage(`Friend request from ${notification.sender} accepted!`);
+
+                    // Remove this notification
+                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                } catch (acceptError) {
+                    console.error(`Error accepting friend request ID ${notification.requestId}:`, acceptError);
+                    showMessage(`Failed to accept friend request. The request may have expired or been withdrawn.`);
+                }
             } else if (notification.type === 'group_invite' && notification.invitationId) {
-                await apiService.post<GroupInvitation>(
-                    `/groups/invitations/${notification.invitationId}/accept`,
-                    {} // empty data object
-                );
+                try {
+                    await apiService.post(
+                        `/groups/invitations/${notification.invitationId}/accept`,
+                        {} // empty data object
+                    );
 
-                showMessage(`Invitation to join from ${notification.sender} accepted!`);
+                    showMessage(`Group invitation accepted!`);
+
+                    // Remove this notification
+                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                } catch (acceptError) {
+                    console.error(`Error accepting group invitation ID ${notification.invitationId}:`, acceptError);
+                    showMessage(`Failed to accept group invitation. The invitation may have expired.`);
+                }
             }
-
-            // remove the notification
-            setNotifications(notifications.filter(n => n.id !== notification.id));
         } catch (error) {
-            console.error("Error accepting notification:", error);
-            showMessage("Failed to process the request");
+            console.error("Critical error in accept notification process:", error);
+            showMessage("Failed to process the request due to a server error.");
         }
     };
 
@@ -169,26 +196,39 @@ const Dashboard: React.FC = () => {
         e.stopPropagation();
         try {
             if (notification.type === 'friend_request' && notification.requestId) {
-                await apiService.post<FriendRequest>(
-                    `/friends/friendrequest/${notification.requestId}/reject`,
-                    {}
-                );
+                try {
+                    await apiService.post(
+                        `/friends/friendrequest/${notification.requestId}/reject`,
+                        {}
+                    );
 
-                showMessage(`Friend request declined`);
+                    showMessage(`Friend request declined`);
+
+                    // Remove this notification
+                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                } catch (rejectError) {
+                    console.error(`Error rejecting friend request ID ${notification.requestId}:`, rejectError);
+                    showMessage("Failed to reject friend request. The request may have expired or been withdrawn.");
+                }
             } else if (notification.type === 'group_invite' && notification.invitationId) {
-                await apiService.post<GroupInvitation>(
-                    `/groups/invitations/${notification.invitationId}/reject`,
-                    {}
-                );
+                try {
+                    await apiService.post(
+                        `/groups/invitations/${notification.invitationId}/reject`,
+                        {}
+                    );
 
-                showMessage(`Group invitation declined`);
+                    showMessage(`Group invitation declined`);
+
+                    // Remove this notification
+                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                } catch (rejectError) {
+                    console.error(`Error rejecting group invitation ID ${notification.invitationId}:`, rejectError);
+                    showMessage("Failed to reject group invitation. The invitation may have expired.");
+                }
             }
-
-            // Remove the notification
-            setNotifications(notifications.filter(n => n.id !== notification.id));
         } catch (error) {
-            console.error("Error declining notification:", error);
-            showMessage("Failed to process the request");
+            console.error("Critical error in decline notification process:", error);
+            showMessage("Failed to process the request due to a server error.");
         }
     };
 
@@ -201,10 +241,11 @@ const Dashboard: React.FC = () => {
     };
 
     // Navigation handlers
-    const navigateToWatchlist = () => router.push(`/users/${id}/watchlist`);
-    const navigateToGroups = () => router.push(`/users/${id}/groups`);
-    const navigateToSearchMovies = () => router.push(`/users/${id}/movie_search`);
-    const navigateToProfile = () => router.push(`/users/${id}/profile`);
+    const navigateToWatchlist = () => router.push(`/users/${userId}/watchlist`);
+    const navigateToGroups = () => router.push(`/users/${userId}/groups`);
+    const navigateToFriends = () => router.push(`/users/${userId}/friends`);
+    const navigateToSearchMovies = () => router.push(`/users/${userId}/movie_search`);
+    const navigateToProfile = () => router.push(`/users/${userId}/profile`);
 
     if (loading) {
         return (
@@ -252,6 +293,18 @@ const Dashboard: React.FC = () => {
                             <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14"></div>
 
                             <h2 className="text-white text-xl font-medium relative z-10">Movie Groups</h2>
+                        </div>
+
+                        {/* Friends Card */}
+                        <div
+                            onClick={navigateToFriends}
+                            className="bg-indigo-500 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
+                        >
+                            {/* Decorative circles */}
+                            <div className="absolute right-0 bottom-0 w-40 h-40 bg-indigo-400/30 rounded-full -mr-10 -mb-10"></div>
+                            <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14"></div>
+
+                            <h2 className="text-white text-xl font-medium relative z-10">Friends</h2>
                         </div>
 
                         {/* Search Movies Card */}
@@ -362,7 +415,7 @@ const Dashboard: React.FC = () => {
                                                         }`}
                                                         onClick={(e) => handleAction(notification, e)}
                                                     >
-                                                        {notification.actionLabel}
+                                                        {notification.actionLabel || 'View'}
                                                     </Button>
                                                 </div>
                                             )}

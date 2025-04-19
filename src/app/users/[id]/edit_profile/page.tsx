@@ -11,6 +11,29 @@ import { Button } from "@/components/ui/button";
 import { Movie } from "@/app/types/movie";
 import MovieCard from "@/components/ui/Movie_card";
 
+// Static genre list - same as in GenrePreferences component
+const GENRES = [
+  { id: 28, name: "Action" },
+  { id: 12, name: "Adventure" },
+  { id: 16, name: "Animation" },
+  { id: 35, name: "Comedy" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentary" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Family" },
+  { id: 14, name: "Fantasy" },
+  { id: 36, name: "History" },
+  { id: 27, name: "Horror" },
+  { id: 10402, name: "Music" },
+  { id: 9648, name: "Mystery" },
+  { id: 10749, name: "Romance" },
+  { id: 878, name: "Science Fiction" },
+  { id: 10770, name: "TV Movie" },
+  { id: 53, name: "Thriller" },
+  { id: 10752, name: "War" },
+  { id: 37, name: "Western" }
+];
+
 const EditProfile: React.FC = () => {
   const { id } = useParams();
   const apiService = useApi();
@@ -26,6 +49,8 @@ const EditProfile: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
+  const [favoriteGenre, setFavoriteGenre] = useState<string>("");
+  const [isSelectingGenre, setIsSelectingGenre] = useState<boolean>(false);
 
   // authentication
   const {
@@ -41,11 +66,21 @@ const EditProfile: React.FC = () => {
       email,
       password,
       bio,
+      favoriteGenre,
       isSelectingFavoriteMovie: true
     }));
 
     // Use the correct route name
     router.push(`/users/${id}/movie_search?selectFavorite=true`);
+  };
+
+  const handleToggleGenreSelection = () => {
+    setIsSelectingGenre(!isSelectingGenre);
+  };
+
+  const handleSelectGenre = (genreName: string) => {
+    setFavoriteGenre(genreName);
+    setIsSelectingGenre(false);
   };
 
   const handleCancel = () => {
@@ -75,11 +110,25 @@ const EditProfile: React.FC = () => {
       email,
       password,
       bio,
-      favoriteMovie: favoriteMovie || user.favoriteMovie
+      favoriteMovie: favoriteMovie || user.favoriteMovie,
+      favoriteGenres: favoriteGenre ? [favoriteGenre] : user.favoriteGenres
     };
 
     try {
       await apiService.put(`/users/${id}/profile`, updatedUser);
+
+      // If genre changed, also update genre preferences
+      if (favoriteGenre && (!user.favoriteGenres || user.favoriteGenres[0] !== favoriteGenre)) {
+        try {
+          await apiService.post(`/api/users/${id}/preferences/genres`, {
+            genreIds: [favoriteGenre]
+          });
+        } catch (genreError) {
+          console.error("Error updating genre preference:", genreError);
+          // Continue with profile update anyway
+        }
+      }
+
       alert("Profile updated successfully!");
       router.push(`/users/${id}/profile`);
     } catch (error: unknown) {
@@ -106,6 +155,11 @@ const EditProfile: React.FC = () => {
       setPassword(fetchedUser.password || "");
       setBio(fetchedUser.bio || "");
       setFavoriteMovie(fetchedUser.favoriteMovie || null);
+
+      // Set favorite genre (first one from the array)
+      if (fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
+        setFavoriteGenre(fetchedUser.favoriteGenres[0]);
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(`Failed to load user data: ${error.message}`);
@@ -140,6 +194,7 @@ const EditProfile: React.FC = () => {
         if (state.email) setEmail(state.email);
         if (state.password) setPassword(state.password);
         if (state.bio) setBio(state.bio);
+        if (state.favoriteGenre) setFavoriteGenre(state.favoriteGenre);
         sessionStorage.removeItem('editProfileState');
       } catch (e) {
         console.error('Error parsing stored state', e);
@@ -238,6 +293,52 @@ const EditProfile: React.FC = () => {
                 />
               </div>
 
+              {/* Favorite Genre Selection */}
+              <div>
+                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                  Favorite Genre
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-600">
+                      {favoriteGenre || "No favorite genre selected"}
+                    </span>
+                  </div>
+                  <Button
+                      type="button"
+                      variant="outline"
+                      className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
+                      onClick={handleToggleGenreSelection}
+                  >
+                    {favoriteGenre ? "Change" : "Select"} Favorite Genre
+                  </Button>
+                </div>
+
+                {/* Genre Selection Panel */}
+                {isSelectingGenre && (
+                    <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
+                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genre</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {GENRES.map((genre) => (
+                            <button
+                                key={genre.id}
+                                type="button"
+                                onClick={() => handleSelectGenre(genre.name)}
+                                className={`px-4 py-2 rounded-full border ${
+                                    favoriteGenre === genre.name
+                                        ? "bg-[#AFB3FF] text-white"
+                                        : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                                }`}
+                            >
+                              {genre.name}
+                            </button>
+                        ))}
+                      </div>
+                    </div>
+                )}
+              </div>
+
+              {/* Favorite Movie Section */}
               <div>
                 <label className="block text-[#3b3e88] text-sm font-medium mb-2">
                   Favorite Movie
