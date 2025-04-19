@@ -9,11 +9,12 @@ import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
 
 interface FriendRequest {
-  id: number;
+  requestId: number;
   sender: User;
   receiver: User;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-  createdAt: string;
+  accepted: boolean | null;
+  creationTime: string;
+  responseTime: string | null;
 }
 
 interface UserSearchResponse {
@@ -56,23 +57,39 @@ const FriendsManagement: React.FC = () => {
         setLoading(true);
 
         // Get all friends
-        const friendsData = await apiService.get<User[]>('/friends');
-        // Sort friends alphabetically by username
-        const sortedFriends = Array.isArray(friendsData)
-            ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
-            : [];
-        setFriends(sortedFriends);
+        try {
+          const friendsData = await apiService.get<User[]>('/friends');
+          // Sort friends alphabetically by username
+          const sortedFriends = Array.isArray(friendsData)
+              ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
+              : [];
+          setFriends(sortedFriends);
+        } catch (friendsError) {
+          console.error("Error fetching friends list:", friendsError);
+          setError("Failed to load friends list. Please try again later.");
+          return;
+        }
 
         // Get received friend requests
-        const receivedRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-        setReceivedRequests(Array.isArray(receivedRequestsData) ? receivedRequestsData : []);
+        try {
+          const receivedRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          setReceivedRequests(Array.isArray(receivedRequestsData) ? receivedRequestsData : []);
+        } catch (receivedRequestsError) {
+          console.error("Error fetching received friend requests:", receivedRequestsError);
+          showMessage("Failed to load received friend requests. Some data may be incomplete.");
+        }
 
         // Get sent friend requests
-        const sentRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-        setSentRequests(Array.isArray(sentRequestsData) ? sentRequestsData : []);
+        try {
+          const sentRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+          setSentRequests(Array.isArray(sentRequestsData) ? sentRequestsData : []);
+        } catch (sentRequestsError) {
+          console.error("Error fetching sent friend requests:", sentRequestsError);
+          showMessage("Failed to load sent friend requests. Some data may be incomplete.");
+        }
       } catch (error) {
-        setError("Failed to load friends data");
-        console.error("Error loading friends:", error);
+        setError("Failed to load friends data. Server may be unavailable.");
+        console.error("Critical error loading friends data:", error);
       } finally {
         setLoading(false);
       }
@@ -119,36 +136,54 @@ const FriendsManagement: React.FC = () => {
 
     try {
       // First, find the receiverId based on username
-      const searchResults = await apiService.get<UserSearchResponse[]>(
-          `/users/search?username=${encodeURIComponent(friendUsername)}`
-      );
+      try {
+        const searchResults = await apiService.get<UserSearchResponse[]>(
+            `/users/search?username=${encodeURIComponent(friendUsername)}`
+        );
 
-      if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
-        showMessage(`Could not find user with username ${friendUsername}`);
-        setIsSubmitting(false);
-        return;
+        if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
+          showMessage(`User "${friendUsername}" not found. Please check the username and try again.`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Take the first matching user
+        const receiverId = searchResults[0].userId;
+
+        try {
+          await apiService.post(`/friends/add/${receiverId}`, {});
+          showMessage(`Friend request sent to ${friendUsername}`);
+          setFriendUsername("");
+
+          // Refresh sent requests
+          try {
+            const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+            setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
+          } catch (refreshError) {
+            console.error("Error refreshing sent requests after sending new request:", refreshError);
+            showMessage("Friend request was sent, but the list couldn't be refreshed. Please reload the page.");
+          }
+
+          // Switch to requests tab to show the new request
+          setActiveTab('requests');
+        } catch (sendRequestError) {
+          console.error("Error sending friend request to user:", sendRequestError);
+          if (sendRequestError instanceof Error) {
+            showMessage(`Failed to send friend request: ${sendRequestError.message}`);
+          } else {
+            showMessage("Failed to send friend request. The user may already be your friend or have a pending request.");
+          }
+        }
+      } catch (searchError) {
+        console.error("Error searching for user by username:", searchError);
+        showMessage(`Error searching for user "${friendUsername}". The search service may be unavailable.`);
       }
-
-      // Take the first matching user
-      const receiverId = searchResults[0].userId;
-
-      await apiService.post(`/friends/add/${receiverId}`, {});
-
-      showMessage(`Friend request sent to ${friendUsername}`);
-      setFriendUsername("");
-
-      // Refresh
-      const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-      setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
-
-      // Switch to requests tab to show the new request
-      setActiveTab('requests');
     } catch (error) {
-      console.error("Error sending friend request:", error);
+      console.error("Critical error in friend request process:", error);
       if (error instanceof Error) {
-        showMessage(`Failed to send friend request: ${error.message}`);
+        showMessage(`Friend request failed: ${error.message}`);
       } else {
-        showMessage("Failed to send friend request");
+        showMessage("Friend request failed due to an unexpected error");
       }
     } finally {
       setIsSubmitting(false);
@@ -158,78 +193,123 @@ const FriendsManagement: React.FC = () => {
   // Handle accepting a friend request
   const handleAcceptRequest = async (requestId: number) => {
     try {
-      await apiService.post(`/friends/friendrequest/${requestId}/accept`, {});
+      try {
+        await apiService.post(`/friends/friendrequest/${requestId}/accept`, {});
+        showMessage("Friend request accepted successfully");
 
-      showMessage("Friend request accepted");
+        // Refresh friends list
+        try {
+          const updatedFriends = await apiService.get<User[]>('/friends');
+          // Sort friends alphabetically
+          setFriends(Array.isArray(updatedFriends)
+              ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
+              : []);
+        } catch (refreshFriendsError) {
+          console.error("Error refreshing friends list after accepting request:", refreshFriendsError);
+          showMessage("Friend request accepted, but friends list couldn't be refreshed. Please reload the page.");
+        }
 
-      // Refresh data
-      const updatedFriends = await apiService.get<User[]>('/friends');
-      // Sort friends alphabetically
-      setFriends(Array.isArray(updatedFriends)
-          ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
-          : []);
-
-      const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-      setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
+        // Refresh received requests
+        try {
+          const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
+        } catch (refreshRequestsError) {
+          console.error("Error refreshing received requests after accepting:", refreshRequestsError);
+          showMessage("Friend request accepted, but requests list couldn't be refreshed. Please reload the page.");
+        }
+      } catch (acceptError) {
+        console.error(`Error accepting friend request ID ${requestId}:`, acceptError);
+        showMessage(`Failed to accept friend request. The request may have expired or been withdrawn.`);
+      }
     } catch (error) {
-      console.error("Error accepting friend request:", error);
-      showMessage("Failed to accept friend request");
+      console.error("Critical error in accept friend request process:", error);
+      showMessage("Failed to accept friend request due to a server error");
     }
   };
 
   // Handle rejecting a friend request
   const handleRejectRequest = async (requestId: number) => {
     try {
-      await apiService.post(`/friends/friendrequest/${requestId}/reject`, {});
+      try {
+        await apiService.post(`/friends/friendrequest/${requestId}/reject`, {});
+        showMessage("Friend request rejected");
 
-      showMessage("Friend request rejected");
-
-      // Refresh data
-      const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
-      setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
+        // Refresh received requests
+        try {
+          const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
+        } catch (refreshError) {
+          console.error("Error refreshing received requests after rejection:", refreshError);
+          showMessage("Friend request rejected, but the list couldn't be refreshed. Please reload the page.");
+        }
+      } catch (rejectError) {
+        console.error(`Error rejecting friend request ID ${requestId}:`, rejectError);
+        showMessage("Failed to reject friend request. The request may have expired or been withdrawn.");
+      }
     } catch (error) {
-      console.error("Error rejecting friend request:", error);
-      showMessage("Failed to reject friend request");
+      console.error("Critical error in reject friend request process:", error);
+      showMessage("Failed to reject friend request due to a server error");
     }
   };
 
   // Handle canceling a sent friend request
   const handleCancelRequest = async (requestId: number) => {
     try {
-      const request = sentRequests.find(req => req.id === requestId);
-      if (!request) return;
+      const request = sentRequests.find(req => req.requestId === requestId);
+      if (!request) {
+        showMessage("Cannot find the request to cancel");
+        return;
+      }
 
-      // Use remove friend endpoint
-      await apiService.delete(`/friends/remove/${request.receiver.userId}`);
+      try {
+        // Use remove friend endpoint
+        await apiService.delete(`/friends/remove/${request.receiver.userId}`);
+        showMessage("Friend request canceled successfully");
 
-      showMessage("Friend request canceled");
-
-      // Refresh sent requests
-      const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
-      setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
+        // Refresh sent requests
+        try {
+          const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+          setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
+        } catch (refreshError) {
+          console.error("Error refreshing sent requests after cancellation:", refreshError);
+          showMessage("Friend request was canceled, but the list couldn't be refreshed. Please reload the page.");
+        }
+      } catch (cancelError) {
+        console.error(`Error canceling friend request ID ${requestId}:`, cancelError);
+        showMessage("Failed to cancel friend request. The request may have already been accepted or rejected.");
+      }
     } catch (error) {
-      console.error("Error canceling friend request:", error);
-      showMessage("Failed to cancel friend request");
+      console.error("Critical error in cancel friend request process:", error);
+      showMessage("Failed to cancel friend request due to an unexpected error");
     }
   };
 
   // Handle removing a friend
   const handleRemoveFriend = async (friendId: number) => {
     try {
-      // Remove friend
-      await apiService.delete(`/friends/remove/${friendId}`);
+      try {
+        // Remove friend
+        await apiService.delete(`/friends/remove/${friendId}`);
+        showMessage("Friend removed successfully");
 
-      showMessage("Friend removed");
-
-      // Refresh friends list
-      const updatedFriends = await apiService.get<User[]>('/friends');
-      // Sort friends alphabetically
-      setFriends(Array.isArray(updatedFriends)
-          ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
-          : []);
+        // Refresh friends list
+        try {
+          const updatedFriends = await apiService.get<User[]>('/friends');
+          // Sort friends alphabetically
+          setFriends(Array.isArray(updatedFriends)
+              ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
+              : []);
+        } catch (refreshError) {
+          console.error("Error refreshing friends list after removing friend:", refreshError);
+          showMessage("Friend was removed, but the list couldn't be refreshed. Please reload the page.");
+        }
+      } catch (removeError) {
+        console.error(`Error removing friend with ID ${friendId}:`, removeError);
+        showMessage("Failed to remove friend. The friendship may have already been removed on the server.");
+      }
     } catch (error) {
-      console.error("Error removing friend:", error);
-      showMessage("Failed to remove friend");
+      console.error("Critical error in remove friend process:", error);
+      showMessage("Failed to remove friend due to a server error");
     }
   };
 
@@ -460,24 +540,24 @@ const FriendsManagement: React.FC = () => {
                       <h3 className="text-[#3b3e88] font-medium text-lg mb-4">Received Requests</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {receivedRequests.map(request => (
-                            <div key={request.id} className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-rose-400">
+                            <div key={request.requestId} className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-rose-400">
                               <div className="mb-3">
                                 <h4 className="font-semibold text-[#3b3e88]">{request.sender.username}</h4>
                                 <p className="text-[#b9c0de] text-xs">
-                                  Sent {new Date(request.createdAt).toLocaleDateString()}
+                                  Sent {new Date(request.creationTime).toLocaleDateString()}
                                 </p>
                               </div>
                               <div className="flex gap-2">
                                 <Button
                                     className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-xs h-8 rounded-xl flex-1"
-                                    onClick={() => handleAcceptRequest(request.id)}
+                                    onClick={() => handleAcceptRequest(request.requestId)}
                                 >
                                   Accept
                                 </Button>
                                 <Button
                                     variant="outline"
                                     className="border-[#3b3e88] text-[#3b3e88] hover:bg-[#3b3e88]/10 text-xs h-8 rounded-xl flex-1"
-                                    onClick={() => handleRejectRequest(request.id)}
+                                    onClick={() => handleRejectRequest(request.requestId)}
                                 >
                                   Decline
                                 </Button>
@@ -494,17 +574,17 @@ const FriendsManagement: React.FC = () => {
                       <h3 className="text-[#3b3e88] font-medium text-lg mb-4">Sent Requests</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {sentRequests.map(request => (
-                            <div key={request.id} className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-indigo-400">
+                            <div key={request.requestId} className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-indigo-400">
                               <div className="mb-3">
                                 <h4 className="font-semibold text-[#3b3e88]">{request.receiver.username}</h4>
                                 <p className="text-[#b9c0de] text-xs">
-                                  Sent {new Date(request.createdAt).toLocaleDateString()}
+                                  Sent {new Date(request.creationTime).toLocaleDateString()}
                                 </p>
                               </div>
                               <Button
                                   variant="outline"
                                   className="w-full border-rose-500 text-rose-500 hover:bg-rose-50 text-xs h-8 rounded-xl"
-                                  onClick={() => handleCancelRequest(request.id)}
+                                  onClick={() => handleCancelRequest(request.requestId)}
                               >
                                 Cancel Request
                               </Button>

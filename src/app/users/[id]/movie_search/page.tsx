@@ -127,9 +127,9 @@ const SearchMovies: React.FC = () => {
 
   // get recommended movies based on user preferences
   const getRecommendedMovies = async () => {
-    if (!user || !user.favoriteGenres?.length) {
+    /*if (!user || !user.favoriteGenres?.length) {
       return [];
-    }
+    }*/
 
     try {
       const recommendedMovies = await apiService.get(`/movies/suggestions/${id}`);
