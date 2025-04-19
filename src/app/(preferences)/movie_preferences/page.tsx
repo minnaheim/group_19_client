@@ -10,6 +10,19 @@ import { useApi } from "@/app/hooks/useApi";
 import { usePreferences } from "@/app/context/PreferencesContext";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
+// Helper function to remove duplicate movies by movieId
+const removeDuplicateMovies = (movies: Movie[]): Movie[] => {
+  const uniqueMovies = new Map<number, Movie>();
+
+  movies.forEach(movie => {
+    if (!uniqueMovies.has(movie.movieId)) {
+      uniqueMovies.set(movie.movieId, movie);
+    }
+  });
+
+  return Array.from(uniqueMovies.values());
+};
+
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -36,13 +49,15 @@ const MoviePreferences: React.FC = () => {
           const response = await apiService.get<Movie[]>(
               `/movies?genres=${encodeURIComponent(selectedGenre)}`
           );
-          setGenreMovies(response);
+          // Remove duplicates before setting state
+          setGenreMovies(removeDuplicateMovies(response));
         } else {
           // If no genre is selected, we need to provide a default parameter
           // to avoid the "At least one search parameter must be provided" error
           const currentYear = new Date().getFullYear();
           const response = await apiService.get<Movie[]>(`/movies?year=${currentYear}`);
-          setGenreMovies(response);
+          // Remove duplicates before setting state
+          setGenreMovies(removeDuplicateMovies(response));
         }
       } catch (err) {
         console.error("Failed to fetch movies by genre:", err);
@@ -78,7 +93,8 @@ const MoviePreferences: React.FC = () => {
         // make api call with title parameter only
         const results = await apiService.get<Movie[]>(`/movies?${queryString}`);
         if (Array.isArray(results)) {
-          setSearchResults(results);
+          // Remove duplicates before setting state
+          setSearchResults(removeDuplicateMovies(results));
         } else {
           setSearchResults([]);
         }
@@ -177,6 +193,7 @@ const MoviePreferences: React.FC = () => {
     }
   };
 
+  // Get the display movies and ensure no duplicates
   const displayMovies = isSearching ? searchResults : genreMovies;
 
   return (

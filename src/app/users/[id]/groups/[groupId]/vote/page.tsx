@@ -16,8 +16,14 @@ import {
 import { pointerWithin } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useRouter } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
+
+// Define types to match backend DTOs
+interface RankingSubmitDTO {
+  movieId: number; // Must be a number, not a string
+  rank: number;    // Must be a positive integer
+}
 
 // SortableItem Component
 const SortableItem: React.FC<{
@@ -47,13 +53,14 @@ const SortableItem: React.FC<{
 
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
-  const { value: groupId } = useLocalStorage<string>("groupId", "");
+  const {id, groupId} = useParams();
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([
     null,
     null,
     null,
   ]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
   const apiService = useApi();
 
@@ -66,14 +73,21 @@ const Vote: React.FC = () => {
       useSensor(KeyboardSensor)
   );
 
-  // Fetch rankable movies
+  // Fetch rankable movies - updated to match controller endpoint
   useEffect(() => {
+    if (!id) { return; }
     const fetchRankableMovies = async () => {
       try {
-        // Using the endpoint from your backend controller
+        // Convert groupId to a number as the backend expects numeric IDs
+
+        // Log the request to help with debugging
+        console.log(`Fetching rankable movies for group ID: ${groupId}`);
+
+        // Updated to match the endpoint from the controller: '/groups/{groupId}/movies/rankable'
         const response = await apiService.get<Movie[]>(
             `/groups/${groupId}/movies/rankable`
         );
+        console.log("Received movies:", response);
         setAvailableMovies(response);
       } catch (error) {
         console.error("Failed to fetch rankable movies:", error);
@@ -151,23 +165,50 @@ const Vote: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
+      // Validate that userId and groupId are valid numbers
+      if (!userId || !groupId) {
+        alert("Missing user ID or group ID. Please go back to the main page.");
+        return;
+      }
+
       // Convert our client-side ranking format to match the backend DTO format
-      const rankingSubmitDTOs = rankings.map((movie, index) => ({
-        movieId: movie?.movieId,
-        rank: index + 1, // Ranks are 1-based (1, 2, 3)
-      }));
+      // Ensure all values are proper integers
+      const rankingSubmitDTOs: RankingSubmitDTO[] = rankings.map((movie, index) => {
+        // Ensure movieId is a valid integer
+        const movieId = movie && movie.movieId ? parseInt(String(movie.movieId), 10) : null;
 
-      // Use the correct endpoint from your backend controller
-      await apiService.post(`/groups/${groupId}/users/${userId}/rankings`, rankingSubmitDTOs);
+        if (isNaN(movieId as number) || movieId === null) {
+          throw new Error(`Invalid movie ID for rank ${index + 1}`);
+        }
 
-      // Navigate to results page
+        return {
+          movieId: movieId as number,
+          rank: index + 1, // Ranks are 1-based (1, 2, 3)
+        };
+      });
+
+      console.log("Submitting rankings:", JSON.stringify(rankingSubmitDTOs));
+
+      // Make sure the API endpoint is properly formatted
+      const endpoint = `/groups/${groupId}/users/${userId}/rankings`;
+      console.log(`Sending POST request to: ${endpoint}`, rankingSubmitDTOs);
+
+      // Send the request with proper JSON content
+      const response = await apiService.post(endpoint, rankingSubmitDTOs);
+      console.log("Rankings submitted successfully", response);
+
+      // Navigate to results page after successful submission
       router.push(`/users/${userId}/groups/${groupId}/results`);
     } catch (error) {
       console.error("Failed to submit rankings:", error);
       alert(
           "An error occurred while submitting your rankings. Please try again."
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -265,10 +306,16 @@ const Vote: React.FC = () => {
             <Button
                 variant="outline"
                 onClick={() => router.push(`/users/${userId}/groups/${groupId}/pool`)}
+                disabled={isSubmitting}
             >
               Back to Pool
             </Button>
-            <Button onClick={handleSubmitRanking}>Submit Rankings</Button>
+            <Button
+                onClick={handleSubmitRanking}
+                disabled={isSubmitting || rankings.some(movie => movie === null)}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Rankings"}
+            </Button>
           </div>
         </div>
       </div>
