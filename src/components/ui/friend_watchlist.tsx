@@ -12,16 +12,9 @@ import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
 
-interface Friend {
-    userId: number;
-    username: string;
-    email?: string;
-    bio?: string;
-    // other properties as needed
-}
 
 const FriendWatchlist: React.FC = () => {
-    const { id } = useParams();
+    const { id, friendId } = useParams(); // Updated to use friendId param
     const apiService = useApi();
     const router = useRouter();
 
@@ -44,43 +37,37 @@ const FriendWatchlist: React.FC = () => {
 
     const { value: userId } = useLocalStorage<string>("userId", "");
 
-
     // fetch friend data
     useEffect(() => {
         const fetchFriendData = async () => {
-            if (!id) return;
+            // Use friendId instead of id for friend's data
+            const targetFriendId = friendId || id;
+            if (!targetFriendId) return;
 
             try {
                 setLoading(true);
 
                 try {
                     // First check if this user is actually a friend
+                    const friendsResponse = await apiService.get<User[]>('/friends');
 
-                    const friendsResponse = await apiService.get<Friend[]>('/friends');
+                    // Find the friend with the matching ID
+                    const targetFriend = Array.isArray(friendsResponse) ?
+                        friendsResponse.find((friend) => friend.userId.toString() === targetFriendId.toString()) :
+                        undefined;
 
-                    // Check if the user is in the friends list
-                    const isFriend = Array.isArray(friendsResponse) &&
-                        friendsResponse.some((friend) => friend.userId.toString() === id.toString());
-
-                    if (!isFriend) {
+                    // If not found, throw an error
+                    if (!targetFriend) {
                         throw new Error("User is not in your friends list");
                     }
 
-                    // Get the friend's profile data
-                    const userData = await apiService.get<User>(`/profile/${id}`);
-
-                    // Get friend's watchlist according to REST spec: GET /watchlist/{userId}
-                    const watchlistData = await apiService.get<Movie[]>(`/watchlist/${id}`);
-
-                    // Update user with watchlist
-                    const friendWithWatchlist = {
-                        ...userData,
-                        watchlist: watchlistData
-                    };
-
-                    setFriend(friendWithWatchlist);
+                    setFriend(targetFriend);
                 } catch (apiError) {
-                    console.log("API error, using mock data:", apiError);
+                    console.error("API error:", apiError);
+                    setError("Failed to load friend's watchlist data");
+                    if (apiError instanceof Error) {
+                        showMessage(`Error: ${apiError.message}`);
+                    }
                 }
             } catch (error) {
                 setError("Failed to load friend data");
@@ -93,12 +80,13 @@ const FriendWatchlist: React.FC = () => {
         };
 
         fetchFriendData();
-    }, [id, apiService]);
+    }, [id, friendId, apiService]);
 
     // filter movies based on search - now only searching by title
     useEffect(() => {
         if (!searchQuery.trim()) {
             setIsSearching(false);
+            setFilteredMovies([]); // Clear filtered movies when search is empty
             return;
         }
 

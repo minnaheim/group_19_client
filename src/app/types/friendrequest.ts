@@ -1,8 +1,10 @@
-import { User } from "@/app/types/user";
+import {User} from "@/app/types/user";
+
 export interface FriendRequest {
-    id: number;
+    requestId: number;
     sender: User;
     receiver: User;
-    status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-    createdAt: string;
+    accepted: boolean | null;
+    creationTime: string;
+    responseTime: string | null;
 }
