@@ -34,33 +34,32 @@ const MoviePreferences: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
-  const { selectedGenre } = usePreferences();
+  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = usePreferences();
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: token } = useLocalStorage<string>("token", "");
 
-  // Fetch movies based on selected genre
+  // Fetch movies based on selected genres
   useEffect(() => {
-    const fetchMoviesByGenre = async () => {
+    const fetchMoviesByGenres = async () => {
       setIsLoading(true);
       try {
-        if (selectedGenre) {
-          // Pass genres as a query parameter in the URL
-          // The controller expects genres as a List<String>, so we send it as a single element
+        if (selectedGenres && selectedGenres.length > 0) {
+          // Join selected genres for query
+          const genresParam = selectedGenres.map(encodeURIComponent).join(",");
           const response = await apiService.get<Movie[]>(
-              `/movies?genres=${encodeURIComponent(selectedGenre)}`
+            `/movies?genres=${genresParam}`
           );
           // Remove duplicates before setting state
           setGenreMovies(removeDuplicateMovies(response));
         } else {
-          // If no genre is selected, we need to provide a default parameter
-          // to avoid the "At least one search parameter must be provided" error
+          // If no genres are selected, show recent movies
           const currentYear = new Date().getFullYear();
           const response = await apiService.get<Movie[]>(`/movies?year=${currentYear}`);
           // Remove duplicates before setting state
           setGenreMovies(removeDuplicateMovies(response));
         }
       } catch (err) {
-        console.error("Failed to fetch movies by genre:", err);
+        // Log error for debugging if needed
         if (err instanceof Error) {
           setError(err.message);
         } else {
@@ -72,8 +71,8 @@ const MoviePreferences: React.FC = () => {
       }
     };
 
-    fetchMoviesByGenre();
-  }, [selectedGenre, apiService]);
+    fetchMoviesByGenres();
+  }, [selectedGenres, apiService]);
 
   // Search logic - search the entire database by title
   useEffect(() => {
@@ -128,62 +127,29 @@ const MoviePreferences: React.FC = () => {
   };
 
   const toggleMovie = (movie: Movie) => {
-    setSelectedMovies((prev) => {
-      if (prev.some((m) => m.movieId === movie.movieId)) {
-        // If the clicked movie is already selected, deselect it
-        return prev.filter((m) => m.movieId !== movie.movieId);
-      } else {
-        // If another movie was selected before, replace it with the new one
-        return [movie];
-      }
-    });
+    setSelectedMovies([movie]);
+    setFavoriteMovieId(movie.movieId);
   };
 
   const handleNext = async () => {
-    if (selectedMovies.length === 0) {
-      setError("Please select a movie before proceeding.");
-      return;
-    }
 
-    // Make sure we have a valid ID
+
     const effectiveUserId = userId || id;
-    if (!effectiveUserId) {
-      setError("User ID is missing. Please log in again.");
-      return;
-    }
 
     try {
-      // Prepare headers with token
-      const options = token
-          ? { headers: { Authorization: `Bearer ${token}` } }
-          : undefined;
-
-      // Log the request for debugging
-      console.log("Submitting request to:", `/api/users/${effectiveUserId}/preferences/favorite-movie`);
-      console.log("With data:", { movieId: Number(selectedMovies[0].movieId) });
-      console.log("With options:", options);
-
-      // Try to save the favorite movie
-      const response = await apiService.post(`/api/users/${effectiveUserId}/preferences/favorite-movie`, {
-        movieId: Number(selectedMovies[0].movieId)
-      }, options);
-
-      console.log("Response:", response);
-
-      // If successful, navigate to the profile page
+      if (favoriteMovieId !== null) {
+        await apiService.saveFavoriteMovie(Number(effectiveUserId), favoriteMovieId);
+      }
       router.push(`/users/${effectiveUserId}/profile`);
     } catch (err) {
-      console.error("Error saving preferences:", err);
+      // Log error for debugging if needed
 
       if (err instanceof Error) {
-        // Display a more detailed error message
         if (err.message.includes("400") && err.message.includes("not unique")) {
           setError("Error: The user account doesn't seem to be properly registered. Please log out and try registering again.");
         } else if (err.message.includes("409")) {
-          // Handle 409 conflict by still allowing navigation
-          console.log("Conflict error but continuing to profile...");
           router.push(`/users/${effectiveUserId}/profile`);
-          return; // Exit early to avoid showing error
+          return;
         } else {
           setError(`Error: ${err.message}`);
         }
@@ -197,13 +163,13 @@ const MoviePreferences: React.FC = () => {
   const displayMovies = isSearching ? searchResults : genreMovies;
 
   return (
-      <div>
-        {/* Subheading with selected genre */}
-        <h3 className="text-center text-[#3C3F88] mb-6">
-          {selectedGenre
-              ? `Based on your selected "${selectedGenre}" genre, select one favorite movie!`
-              : "Select one favorite movie!"}
-        </h3>
+    <div>
+      {/* Subheading with selected genres */}
+      <h3 className="text-center text-[#3C3F88] mb-6">
+        {selectedGenres && selectedGenres.length > 0
+          ? `Based on your selected genres (${selectedGenres.join(", ")}), select your favorite movie!`
+          : "Select your favorite movie!"}
+      </h3>
 
         {/* Error display */}
         {error && (
@@ -240,7 +206,7 @@ const MoviePreferences: React.FC = () => {
               <MovieListHorizontal
                   movies={displayMovies}
                   onMovieClick={toggleMovie}
-                  emptyMessage={`No movies match your "${selectedGenre}" genre`}
+                  emptyMessage={`No movies match your "${selectedGenres}" genre`}
                   noResultsMessage="No movies match your search"
                   hasOuterContainer={false}
                   selectedMovieIds={selectedMovies.map(m => m.movieId)}
