@@ -20,12 +20,15 @@ import { Label } from "@/components/ui/label";
 
 interface Group {
   groupId: number;
-  name: string;
-  description: string;
+  groupName: string;
   creator: User;
   members: User[];
-  createdAt: string;
-  moviePool: Movie[];
+  moviePool: MoviePool;
+}
+
+interface MoviePool {
+  id: number;
+  movies: Movie[];
 }
 
 interface GroupInvitation {
@@ -66,7 +69,6 @@ const GroupsManagement: React.FC = () => {
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] =
     useState<boolean>(false);
   const [newGroupName, setNewGroupName] = useState<string>("");
-  const [newGroupDescription, setNewGroupDescription] = useState<string>("");
   const [isSubmittingGroup, setIsSubmittingGroup] = useState<boolean>(false);
 
   // Member invitation dialog
@@ -85,6 +87,7 @@ const GroupsManagement: React.FC = () => {
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
 
   const { value: userId } = useLocalStorage<string>("userId", "");
+  const { value: token } = useLocalStorage<string>("token", "");
 
   // Fetch groups data
   useEffect(() => {
@@ -96,27 +99,27 @@ const GroupsManagement: React.FC = () => {
 
         try {
           // Get user's groups
-          const groupsData = await apiService.get<Group[]>("/groups");
+          const groupsData: Group[] = []; //await apiService.get<Group[]>("/groups");
           setGroups(
             Array.isArray(groupsData)
-              ? groupsData.sort((a, b) => a.name.localeCompare(b.name))
+              ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
               : []
           );
 
           // Get received group invitations
           const receivedInvitationsData = await apiService.get<
-            GroupInvitation[]
+              GroupInvitation[]
           >("/groups/invitations/received");
+
           setReceivedInvitations(
-            Array.isArray(receivedInvitationsData)
-              ? receivedInvitationsData
-              : []
+              Array.isArray(receivedInvitationsData)
+                  ? receivedInvitationsData
+                  : []
           );
 
           // Get sent group invitations
           const sentInvitationsData = await apiService.get<GroupInvitation[]>(
-            "/groups/invitations/sent"
-          );
+              "/groups/invitations/sent");
           setSentInvitations(
             Array.isArray(sentInvitationsData) ? sentInvitationsData : []
           );
@@ -133,7 +136,7 @@ const GroupsManagement: React.FC = () => {
     };
 
     fetchGroupsData();
-  }, [id, apiService]);
+  }, [id, apiService, token]);
 
   // Filter groups based on search query
   useEffect(() => {
@@ -145,8 +148,7 @@ const GroupsManagement: React.FC = () => {
     const query = searchQuery.toLowerCase().trim();
     const filtered = groups.filter(
       (group) =>
-        group.name.toLowerCase().includes(query) ||
-        (group.description && group.description.toLowerCase().includes(query))
+          group.groupName.toLowerCase().includes(query)
     );
 
     setFilteredGroups(filtered);
@@ -174,19 +176,18 @@ const GroupsManagement: React.FC = () => {
 
     try {
       const createdGroup = await apiService.post("/groups", {
-        name: newGroupName,
-        description: newGroupDescription,
-      });
+        groupName: newGroupName,
+      }
+      );
 
       // Update groups list with the newly created group
       if (createdGroup) {
         const updatedGroups = [...groups, createdGroup as Group];
-        setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+        setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       }
 
       showMessage(`Group "${newGroupName}" created successfully`);
       setNewGroupName("");
-      setNewGroupDescription("");
       setIsCreateGroupDialogOpen(false);
     } catch (error) {
       console.error("Error creating group:", error);
@@ -214,8 +215,7 @@ const GroupsManagement: React.FC = () => {
     try {
       // First, find the receiverId based on username
       const searchResults = await apiService.get<UserSearchResponse[]>(
-        `/users/search?username=${encodeURIComponent(inviteUsername)}`
-      );
+          `/users/search?username=${encodeURIComponent(inviteUsername)}`);
 
       if (
         !searchResults ||
@@ -229,8 +229,8 @@ const GroupsManagement: React.FC = () => {
 
       const receiverId = searchResults[0].userId;
       const response = await apiService.post(
-        `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
-        {}
+          `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
+          {}
       );
 
       if (response) {
@@ -265,17 +265,22 @@ const GroupsManagement: React.FC = () => {
   // Handle accepting a group invitation
   const handleAcceptInvitation = async (invitationId: number) => {
     try {
-      await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
-
+      await apiService.post(
+          `/groups/invitations/${invitationId}/accept`,
+          {}
+      );
       // Refresh groups and invitations
-      const updatedGroups = await apiService.get<Group[]>("/groups");
+      const updatedGroups = await apiService.get<Group[]>(
+          "/groups"
+      );
       if (Array.isArray(updatedGroups)) {
-        setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+        setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       }
 
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/received"
+          "/groups/invitations/received"
       );
+
       if (Array.isArray(updatedInvitations)) {
         setReceivedInvitations(updatedInvitations);
       }
@@ -290,11 +295,13 @@ const GroupsManagement: React.FC = () => {
   // Handle rejecting a group invitation
   const handleRejectInvitation = async (invitationId: number) => {
     try {
-      await apiService.post(`/groups/invitations/${invitationId}/reject`, {});
-
+      await apiService.post(
+          `/groups/invitations/${invitationId}/reject`,
+          {}
+      );
       // Refresh invitations
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/received"
+          "/groups/invitations/received"
       );
       if (Array.isArray(updatedInvitations)) {
         setReceivedInvitations(updatedInvitations);
@@ -310,11 +317,12 @@ const GroupsManagement: React.FC = () => {
   // Handle canceling a sent group invitation
   const handleCancelInvitation = async (invitationId: number) => {
     try {
-      await apiService.delete(`/groups/invitations/${invitationId}`);
-
+      await apiService.delete(
+          `/groups/invitations/${invitationId}`
+      );
       // Refresh sent invitations
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/sent"
+          "/groups/invitations/sent"
       );
       if (Array.isArray(updatedInvitations)) {
         setSentInvitations(updatedInvitations);
@@ -330,12 +338,15 @@ const GroupsManagement: React.FC = () => {
   // Handle leaving a group
   const handleLeaveGroup = async (groupId: number) => {
     try {
-      await apiService.post(`/groups/${groupId}/leave`, {});
-
+      await apiService.delete(
+          `/groups/${groupId}/leave`
+      );
       // Refresh groups
-      const updatedGroups = await apiService.get<Group[]>("/groups");
+      const updatedGroups = await apiService.get<Group[]>(
+          "/groups"
+      );
       if (Array.isArray(updatedGroups)) {
-        setGroups(updatedGroups.sort((a, b) => a.name.localeCompare(b.name)));
+        setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       }
 
       setIsGroupDetailDialogOpen(false);
@@ -519,7 +530,7 @@ const GroupsManagement: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-[#3b3e88] text-lg">
-                          {group.name}
+                          {group.groupName}
                         </h3>
                         <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
                           {group.members.length}{" "}
@@ -527,20 +538,16 @@ const GroupsManagement: React.FC = () => {
                         </span>
                       </div>
 
-                      {group.description && (
-                        <p className="text-[#838bad] text-sm mb-3">
-                          {group.description}
-                        </p>
-                      )}
+
 
                       {/* Movie pool preview */}
-                      {group.moviePool && group.moviePool.length > 0 ? (
+                      {group.moviePool &&  group.moviePool?.movies?.length > 0 ? (
                         <div className="mb-4">
                           <p className="text-xs text-[#3b3e88]/60 mb-2">
-                            Movie Pool ({group.moviePool.length})
+                            Movie Pool ({ group.moviePool?.movies?.length})
                           </p>
                           <div className="flex gap-2 overflow-x-auto pb-2">
-                            {group.moviePool.slice(0, 4).map((movie) => (
+                            {group.moviePool?.movies?.slice(0, 4).map((movie) => (
                               <div
                                 key={movie.movieId}
                                 className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
@@ -552,10 +559,10 @@ const GroupsManagement: React.FC = () => {
                                 />
                               </div>
                             ))}
-                            {group.moviePool.length > 4 && (
+                            { group.moviePool?.movies?.length > 4 && (
                               <div className="w-10 h-14 bg-indigo-100 flex-shrink-0 flex items-center justify-center rounded">
                                 <span className="text-xs font-medium text-indigo-700">
-                                  +{group.moviePool.length - 4}
+                                  +{ group.moviePool?.movies?.length - 4}
                                 </span>
                               </div>
                             )}
@@ -568,10 +575,6 @@ const GroupsManagement: React.FC = () => {
                       )}
 
                       <div className="flex justify-between items-center text-xs text-[#b9c0de]">
-                        <span>
-                          Created{" "}
-                          {new Date(group.createdAt).toLocaleDateString()}
-                        </span>
                         <span>
                           {group.creator.username === "current_user"
                             ? "Created by you"
@@ -653,17 +656,13 @@ const GroupsManagement: React.FC = () => {
                     >
                       <div className="mb-3">
                         <h4 className="font-semibold text-[#3b3e88]">
-                          {invitation.group.name}
+                          {invitation.group.groupName}
                         </h4>
                         <p className="text-[#b9c0de] text-xs mb-1">
                           Invited by {invitation.sender.username} on{" "}
                           {new Date(invitation.createdAt).toLocaleDateString()}
                         </p>
-                        {invitation.group.description && (
-                          <p className="text-[#838bad] text-xs italic mb-2">
-                            &#34;{invitation.group.description}&#34;
-                          </p>
-                        )}
+
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -700,7 +699,7 @@ const GroupsManagement: React.FC = () => {
                     >
                       <div className="mb-3">
                         <h4 className="font-semibold text-[#3b3e88]">
-                          {invitation.group.name}
+                          {invitation.group.groupName}
                         </h4>
                         <p className="text-[#b9c0de] text-xs mb-1">
                           Invited {invitation.receiver.username} on{" "}
@@ -780,18 +779,7 @@ const GroupsManagement: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="group-description" className="text-[#3b3e88]">
-                    Description (Optional)
-                  </Label>
-                  <Input
-                    id="group-description"
-                    value={newGroupDescription}
-                    onChange={(e) => setNewGroupDescription(e.target.value)}
-                    placeholder="What kind of movies does your group watch?"
-                    className="rounded-xl"
-                  />
-                </div>
+
               </div>
               <DialogFooter>
                 <Button
@@ -869,15 +857,11 @@ const GroupsManagement: React.FC = () => {
               <>
                 <DialogHeader>
                   <DialogTitle className="text-[#3b3e88] text-xl">
-                    {selectedGroup.name}
+                    {selectedGroup.groupName}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="py-4">
-                  {selectedGroup.description && (
-                    <p className="text-[#838bad] mb-4">
-                      {selectedGroup.description}
-                    </p>
-                  )}
+
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -896,14 +880,7 @@ const GroupsManagement: React.FC = () => {
                           </p>
                         </div>
                         <div>
-                          <span className="text-[#838bad] text-sm">
-                            Created on:
-                          </span>
-                          <p className="text-[#3b3e88]">
-                            {new Date(
-                              selectedGroup.createdAt
-                            ).toLocaleDateString()}
-                          </p>
+
                         </div>
                         <div>
                           <span className="text-[#838bad] text-sm">
@@ -951,9 +928,9 @@ const GroupsManagement: React.FC = () => {
                         Movie Pool
                       </h4>
                       {selectedGroup.moviePool &&
-                      selectedGroup.moviePool.length > 0 ? (
+                      selectedGroup.moviePool?.movies?.length > 0 ? (
                         <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                          {selectedGroup.moviePool.map((movie) => (
+                          {selectedGroup.moviePool?.movies?.map((movie) => (
                             <div
                               key={movie.movieId}
                               className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm"

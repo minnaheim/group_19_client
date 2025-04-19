@@ -19,18 +19,13 @@ import { CSS } from "@dnd-kit/utilities";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 
-interface MoviePoolEntry {
-  userId: number;
-  movie: Movie;
-}
-
 // SortableItem Component
 const SortableItem: React.FC<{
   id: string;
   children: React.ReactNode;
 }> = ({ id, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+      useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -38,22 +33,22 @@ const SortableItem: React.FC<{
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
-    >
-      {children}
-    </div>
+      <div
+          ref={setNodeRef}
+          style={style}
+          {...attributes}
+          {...listeners}
+          className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
+      >
+        {children}
+      </div>
   );
 };
 
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { value: groupId } = useLocalStorage<string>("groupId", "");
-  const [availableMovies, setAvailableMovies] = useState<MoviePoolEntry[]>([]);
+  const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([
     null,
     null,
@@ -63,30 +58,34 @@ const Vote: React.FC = () => {
   const apiService = useApi();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, // Minimum dragging distance to activate a drag
-      },
-    }),
-    useSensor(KeyboardSensor)
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 5, // Minimum dragging distance to activate a drag
+        },
+      }),
+      useSensor(KeyboardSensor)
   );
 
-  // Fetch movie pool
+  // Fetch rankable movies
   useEffect(() => {
-    const fetchMoviePool = async () => {
+    const fetchRankableMovies = async () => {
       try {
-        const response = await apiService.get<MoviePoolEntry[]>(
-          `/groups/${groupId}/pool`
+        // Using the endpoint from your backend controller
+        const response = await apiService.get<Movie[]>(
+            `/groups/${groupId}/movies/rankable`
         );
         setAvailableMovies(response);
       } catch (error) {
-        console.error("Failed to fetch movie pool:", error);
+        console.error("Failed to fetch rankable movies:", error);
         alert(
-          "An error occurred while fetching the movie pool. Please try again."
+            "An error occurred while fetching the movies. Please try again."
         );
       }
     };
-    fetchMoviePool();
+
+    if (groupId) {
+      fetchRankableMovies();
+    }
   }, [apiService, groupId]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -105,7 +104,7 @@ const Vote: React.FC = () => {
       if (rankings[rankIndex] === null) {
         // Copy the movie to ranking
         const newRankings = [...rankings];
-        newRankings[rankIndex] = availableMovies[movieIndex].movie;
+        newRankings[rankIndex] = availableMovies[movieIndex];
         setRankings(newRankings);
 
         // Remove from available pool
@@ -122,10 +121,7 @@ const Vote: React.FC = () => {
 
       if (movedMovie) {
         // Add back to pool
-        setAvailableMovies([
-          ...availableMovies,
-          { userId: 1, movie: movedMovie },
-        ]);
+        setAvailableMovies([...availableMovies, movedMovie]);
 
         // Remove from ranking
         const newRankings = [...rankings];
@@ -156,100 +152,126 @@ const Vote: React.FC = () => {
     }
 
     try {
-      const rankedMovies = rankings.map((movie, index) => ({
+      // Convert our client-side ranking format to match the backend DTO format
+      const rankingSubmitDTOs = rankings.map((movie, index) => ({
         movieId: movie?.movieId,
-        rank: index + 1,
+        rank: index + 1, // Ranks are 1-based (1, 2, 3)
       }));
 
-      await apiService.post(`/groups/${groupId}/vote`, {
-        userId,
-        rankings: rankedMovies,
-      });
+      // Use the correct endpoint from your backend controller
+      await apiService.post(`/groups/${groupId}/users/${userId}/rankings`, rankingSubmitDTOs);
 
+      // Navigate to results page
       router.push(`/users/${userId}/groups/${groupId}/results`);
     } catch (error) {
       console.error("Failed to submit rankings:", error);
       alert(
-        "An error occurred while submitting your rankings. Please try again."
+          "An error occurred while submitting your rankings. Please try again."
       );
     }
   };
 
+  // Helper function to get complete image URL
+  const getFullPosterUrl = (posterPath: string) => {
+    return `https://image.tmdb.org/t/p/w500${posterPath}`;
+  };
+
   return (
-    <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
-      {/* Sidebar navigation */}
-      <Navigation userId={userId} activeItem=" Movie Groups" />
+      <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
+        {/* Sidebar navigation */}
+        <Navigation userId={userId} activeItem=" Movie Groups" />
 
-      {/* Main content */}
-      <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-semibold text-[#3b3e88] text-3xl">
-            Vote for the Movie Night
-          </h1>
-          <p className="text-[#b9c0de] mt-2">Drag movies to rank them</p>
-        </div>
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={pointerWithin}
-          onDragEnd={handleDragEnd}
-        >
-          {/* Movie Pool Section */}
+        {/* Main content */}
+        <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
+          {/* Header */}
           <div className="mb-8">
-            <h2 className="font-semibold text-[#3b3e88] text-xl">Movie Pool</h2>
-            <div
-              id="movie-pool"
-              className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
-            >
-              {availableMovies.map((entry, index) => (
-                <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
-                  <p className="text-center text-[#3b3e88] font-bold">
-                    {entry.movie.title}
-                  </p>
-                </SortableItem>
-              ))}
-              {availableMovies.length === 0 && (
-                <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
-                  All movies have been ranked.
-                </div>
-              )}
-            </div>
+            <h1 className="font-semibold text-[#3b3e88] text-3xl">
+              Vote for the Movie Night
+            </h1>
+            <p className="text-[#b9c0de] mt-2">Drag movies to rank them</p>
           </div>
 
-          {/* Ranking Section */}
-          <div className="mb-8">
-            <h2 className="font-semibold text-[#3b3e88] text-xl">
-              Your Ranking
-            </h2>
-            <div className="flex flex-wrap gap-4 mt-4">
-              {rankings.map((movie, index) => (
-                <SortableItem key={`rank-${index}`} id={`rank-${index}`}>
-                  {movie ? (
-                    <p className="text-center text-[#3b3e88] font-bold">
-                      {movie.title}
-                    </p>
-                  ) : (
-                    <p className="text-[#b9c0de]">Drop here</p>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </div>
-        </DndContext>
-
-        {/* Buttons */}
-        <div className="flex justify-between mt-4">
-          <Button
-            variant="destructive"
-            onClick={() => router.push(`/users/${userId}/dashboard`)}
+          <DndContext
+              sensors={sensors}
+              collisionDetection={pointerWithin}
+              onDragEnd={handleDragEnd}
           >
-            Back
-          </Button>
-          <Button onClick={handleSubmitRanking}>Submit</Button>
+            {/* Movie Pool Section */}
+            <div className="mb-8">
+              <h2 className="font-semibold text-[#3b3e88] text-xl">Movie Pool</h2>
+              <div
+                  id="movie-pool"
+                  className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
+              >
+                {availableMovies.map((movie, index) => (
+                    <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
+                      <div className="flex flex-col items-center">
+                        <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                          <img
+                              src={getFullPosterUrl(movie.posterURL)}
+                              alt={movie.title}
+                              className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-center text-[#3b3e88] font-bold text-sm px-2">
+                          {movie.title}
+                        </p>
+                      </div>
+                    </SortableItem>
+                ))}
+                {availableMovies.length === 0 && (
+                    <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
+                      All movies have been ranked or no movies are available.
+                    </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ranking Section */}
+            <div className="mb-8">
+              <h2 className="font-semibold text-[#3b3e88] text-xl">
+                Your Ranking
+              </h2>
+              <div className="flex flex-wrap gap-4 mt-4">
+                {rankings.map((movie, index) => (
+                    <SortableItem key={`rank-${index}`} id={`rank-${index}`}>
+                      {movie ? (
+                          <div className="flex flex-col items-center">
+                            <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                              <img
+                                  src={getFullPosterUrl(movie.posterURL)}
+                                  alt={movie.title}
+                                  className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-center text-[#3b3e88] font-bold text-sm px-2">
+                              {movie.title}
+                            </p>
+                          </div>
+                      ) : (
+                          <div className="flex flex-col items-center justify-center">
+                            <p className="text-[#b9c0de] text-lg font-semibold">Rank #{index + 1}</p>
+                            <p className="text-[#b9c0de] text-sm">Drop a movie here</p>
+                          </div>
+                      )}
+                    </SortableItem>
+                ))}
+              </div>
+            </div>
+          </DndContext>
+
+          {/* Buttons */}
+          <div className="flex justify-between mt-4">
+            <Button
+                variant="outline"
+                onClick={() => router.push(`/users/${userId}/groups/${groupId}/pool`)}
+            >
+              Back to Pool
+            </Button>
+            <Button onClick={handleSubmitRanking}>Submit Rankings</Button>
+          </div>
         </div>
       </div>
-    </div>
   );
 };
 

@@ -158,9 +158,20 @@ const Profile: React.FC = () => {
 
                 <div>
                   <p className="font-semibold text-[#3b3e88] text-base">
-                    bio: {user?.bio ? user.bio:"click \"edit profile\" to add your bio!"}
+                    bio: {user?.bio ? user.bio : "click \"edit profile\" to add your bio!"}
                   </p>
                 </div>
+
+                {/* Added Favorite Genre */}
+                {user?.favoriteGenres && user.favoriteGenres.length > 0 && (
+                    <div className="font-semibold text-[#3b3e88] text-base">
+                      <p>
+                        <span className="font-semibold text-[#3b3e88] text-base">
+                          favorite genre:</span> {user.favoriteGenres[0]}
+                      </p>
+                    </div>
+                )}
+
 
                 <div className="mt-6">
                   <p className="font-semibold text-[#3b3e88] text-base mb-2">
