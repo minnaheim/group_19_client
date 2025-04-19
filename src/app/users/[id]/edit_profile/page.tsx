@@ -52,6 +52,9 @@ const EditProfile: React.FC = () => {
   const [favoriteGenre, setFavoriteGenre] = useState<string>("");
   const [isSelectingGenre, setIsSelectingGenre] = useState<boolean>(false);
 
+  // Track if we've already processed movie from session storage
+  const [hasProcessedStoredMovie, setHasProcessedStoredMovie] = useState(false);
+
   // authentication
   const {
     value: token,
@@ -103,13 +106,16 @@ const EditProfile: React.FC = () => {
       return;
     }
 
+    console.log("Submitting with favorite movie:", favoriteMovie);
+
     // create updated user object
     const updatedUser: User = {
       ...user,
-      username,
-      email,
-      password,
-      bio,
+      username: username,
+      email: email,
+      password: password,
+      bio: bio,
+      // Use the current favorite movie from state
       favoriteMovie: favoriteMovie || user.favoriteMovie,
       favoriteGenres: favoriteGenre ? [favoriteGenre] : user.favoriteGenres
     };
@@ -120,7 +126,7 @@ const EditProfile: React.FC = () => {
       // If genre changed, also update genre preferences
       if (favoriteGenre && (!user.favoriteGenres || user.favoriteGenres[0] !== favoriteGenre)) {
         try {
-          await apiService.post(`/api/users/${id}/preferences/genres`, {
+          await apiService.post(`/users/${id}/preferences/genres`, {
             genreIds: [favoriteGenre]
           });
         } catch (genreError) {
@@ -141,72 +147,86 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  const fetchUser = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const fetchedUser = await apiService.get(`/users/${id}/profile`) as User;
-
-      setUser(fetchedUser);
-
-      // init state with user data
-      setUsername(fetchedUser.username || "");
-      setEmail(fetchedUser.email || "");
-      setPassword(fetchedUser.password || "");
-      setBio(fetchedUser.bio || "");
-      setFavoriteMovie(fetchedUser.favoriteMovie || null);
-
-      // Set favorite genre (first one from the array)
-      if (fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
-        setFavoriteGenre(fetchedUser.favoriteGenres[0]);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(`Failed to load user data: ${error.message}`);
-      } else {
-        setError("Failed to load user data");
-      }
-      console.error("Error loading user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // First useEffect to check for selected favorite movie in session storage
   useEffect(() => {
-    // check if we're returning from search with a favorite movie
-    const favoriteMovieData = sessionStorage.getItem('selectedFavoriteMovie');
-    if (favoriteMovieData) {
-      try {
-        const selectedMovie = JSON.parse(favoriteMovieData);
-        setFavoriteMovie(selectedMovie);
-        sessionStorage.removeItem('selectedFavoriteMovie');
-      } catch (e) {
-        console.error('Error parsing favorite movie data', e);
+    if (!hasProcessedStoredMovie) {
+      const favoriteMovieData = sessionStorage.getItem('selectedFavoriteMovie');
+      if (favoriteMovieData) {
+        try {
+          const selectedMovie = JSON.parse(favoriteMovieData);
+          console.log(`Selected movie from session storage: ${selectedMovie.title || selectedMovie.movieId}`);
+          setFavoriteMovie(selectedMovie);
+          sessionStorage.removeItem('selectedFavoriteMovie');
+        } catch (e) {
+          console.error('Error parsing favorite movie data', e);
+        }
       }
-    }
 
-    // restore other form state if needed
-    const storedState = sessionStorage.getItem('editProfileState');
-    if (storedState) {
-      try {
-        const state = JSON.parse(storedState);
-        if (state.username) setUsername(state.username);
-        if (state.email) setEmail(state.email);
-        if (state.password) setPassword(state.password);
-        if (state.bio) setBio(state.bio);
-        if (state.favoriteGenre) setFavoriteGenre(state.favoriteGenre);
-        sessionStorage.removeItem('editProfileState');
-      } catch (e) {
-        console.error('Error parsing stored state', e);
+      // Restore other form state if needed
+      const storedState = sessionStorage.getItem('editProfileState');
+      if (storedState) {
+        try {
+          const state = JSON.parse(storedState);
+          if (state.username) setUsername(state.username);
+          if (state.email) setEmail(state.email);
+          if (state.password) setPassword(state.password);
+          if (state.bio) setBio(state.bio);
+          if (state.favoriteGenre) setFavoriteGenre(state.favoriteGenre);
+          sessionStorage.removeItem('editProfileState');
+        } catch (e) {
+          console.error('Error parsing stored state', e);
+        }
       }
-    }
-  }, []);
 
+      // Mark as processed regardless of outcome
+      setHasProcessedStoredMovie(true);
+    }
+  }, []); // Run once on mount
+
+  // Second useEffect to fetch user data
   useEffect(() => {
-    fetchUser();
-  }, [id, apiService, token, userId]);
+    // Only proceed if we've already processed any stored movie data
+    if (hasProcessedStoredMovie) {
+      setLoading(true);
+      setError(null);
 
-  if (loading) {
+      const fetchUserData = async () => {
+        try {
+          const fetchedUser = await apiService.get(`/users/${id}/profile`) as User;
+          setUser(fetchedUser);
+
+          // Initialize form fields if not already set from session storage
+          setUsername(prev => prev || fetchedUser.username || "");
+          setEmail(prev => prev || fetchedUser.email || "");
+          setPassword(prev => prev || fetchedUser.password || "");
+          setBio(prev => prev || fetchedUser.bio || "");
+
+          // For favorite movie, only set from API if we don't have one from session storage
+          if (!favoriteMovie) {
+            setFavoriteMovie(fetchedUser.favoriteMovie || null);
+          }
+
+          // Set favorite genre (first one from the array) if not already set
+          if (!favoriteGenre && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
+            setFavoriteGenre(fetchedUser.favoriteGenres[0]);
+          }
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            setError(`Failed to load user data: ${error.message}`);
+          } else {
+            setError("Failed to load user data");
+          }
+          console.error("Error loading user:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchUserData();
+    }
+  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie]); // Include hasProcessedStoredMovie as a dependency
+
+  if (loading && !hasProcessedStoredMovie) {
     return (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
@@ -300,9 +320,9 @@ const EditProfile: React.FC = () => {
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
-                    <span className="text-sm text-gray-600">
-                      {favoriteGenre || "No favorite genre selected"}
-                    </span>
+                  <span className="text-sm text-gray-600">
+                    {favoriteGenre || "No favorite genre selected"}
+                  </span>
                   </div>
                   <Button
                       type="button"
