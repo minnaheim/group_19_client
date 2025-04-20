@@ -36,7 +36,7 @@ const MoviePreferences: React.FC = () => {
   const { id } = useParams();
   const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = usePreferences();
   const { value: userId } = useLocalStorage<string>("userId", "");
-  const { value: token } = useLocalStorage<string>("token", "");
+  //const { value: token } = useLocalStorage<string>("token", "");
 
   // Fetch movies based on selected genres
   useEffect(() => {
