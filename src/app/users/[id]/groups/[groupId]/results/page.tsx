@@ -1,5 +1,4 @@
 "use client";
-
 import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
@@ -21,6 +20,7 @@ interface RankingResultGetDTO {
   winningMovie: Movie;
   numberOfVoters: number;
 }
+
 
 const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");

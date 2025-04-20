@@ -89,6 +89,7 @@ const MoviePool: React.FC = () => {
     fetchMoviePool();
   }, [groupId, apiService]);
 
+
   const handleAddToPool = (movie: Movie) => {
     setSelectedMovies((prev) => {
       // If the movie is already selected, deselect it
@@ -151,6 +152,7 @@ const MoviePool: React.FC = () => {
   };
 
   // Helper function for movie poster URL
+
   const getFullPosterUrl = (posterPath: string) => {
     return `https://image.tmdb.org/t/p/w500${posterPath}`;
   };
