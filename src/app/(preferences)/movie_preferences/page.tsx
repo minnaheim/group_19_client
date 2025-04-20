@@ -8,50 +8,73 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 import { usePreferences } from "@/app/context/PreferencesContext";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
+
+// Helper function to remove duplicate movies by movieId
+const removeDuplicateMovies = (movies: Movie[]): Movie[] => {
+  const uniqueMovies = new Map<number, Movie>();
+
+  movies.forEach(movie => {
+    if (!uniqueMovies.has(movie.movieId)) {
+      uniqueMovies.set(movie.movieId, movie);
+    }
+  });
+
+  return Array.from(uniqueMovies.values());
+};
 
 const MoviePreferences: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchCategory, setSearchCategory] = useState<string>("all");
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [genreMovies, setGenreMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
-  const { selectedGenre } = usePreferences();
+  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = usePreferences();
+  const { value: userId } = useLocalStorage<string>("userId", "");
+  //const { value: token } = useLocalStorage<string>("token", "");
 
-  // Fetch movies based on selected genre
-  // Fetch movies based on selected genre
+  // Fetch movies based on selected genres
   useEffect(() => {
-    const fetchMoviesByGenre = async () => {
+    const fetchMoviesByGenres = async () => {
       setIsLoading(true);
       try {
-        if (selectedGenre) {
-          // Pass genreList as a query parameter in the URL
+        if (selectedGenres && selectedGenres.length > 0) {
+          // Join selected genres for query
+          const genresParam = selectedGenres.map(encodeURIComponent).join(",");
           const response = await apiService.get<Movie[]>(
-            `/movies?genreList=${encodeURIComponent(selectedGenre)}`
+            `/movies?genres=${genresParam}`
           );
-          setGenreMovies(response);
+          // Remove duplicates before setting state
+          setGenreMovies(removeDuplicateMovies(response));
         } else {
-          // If no genre is selected, fetch all movies or handle accordingly
-          const response = await apiService.get<Movie[]>("/movies");
-          setGenreMovies(response);
+          // If no genres are selected, show recent movies
+          const currentYear = new Date().getFullYear();
+          const response = await apiService.get<Movie[]>(`/movies?year=${currentYear}`);
+          // Remove duplicates before setting state
+          setGenreMovies(removeDuplicateMovies(response));
         }
-      } catch (error) {
-        console.error("Failed to fetch movies by genre:", error);
-        alert("An error occurred while fetching movies. Please try again.");
+      } catch (err) {
+        // Log error for debugging if needed
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An error occurred while fetching movies. Please try again.");
+        }
         setGenreMovies([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchMoviesByGenre();
-  }, [selectedGenre, apiService]);
+    fetchMoviesByGenres();
+  }, [selectedGenres, apiService]);
 
-  // Search logic
+  // Search logic - search the entire database by title
   useEffect(() => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
@@ -61,136 +84,154 @@ const MoviePreferences: React.FC = () => {
 
     setIsSearching(true);
 
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = genreMovies.filter((movie) => {
-      if (searchCategory === "title" || searchCategory === "all") {
-        if (movie.title.toLowerCase().includes(query)) return true;
-      }
+    const searchMovies = async () => {
+      try {
+        // only search by title
+        const queryString = `title=${encodeURIComponent(searchQuery.trim())}`;
 
-      if (searchCategory === "genre" || searchCategory === "all") {
-        if (movie.genres.some((g) => g.toLowerCase().includes(query))) {
-          return true;
+        // make api call with title parameter only
+        const results = await apiService.get<Movie[]>(`/movies?${queryString}`);
+        if (Array.isArray(results)) {
+          // Remove duplicates before setting state
+          setSearchResults(removeDuplicateMovies(results));
+        } else {
+          setSearchResults([]);
         }
+      } catch (err) {
+        console.error("Search failed:", err);
+        if (err instanceof Error) {
+          setError(`Search failed: ${err.message}`);
+        } else {
+          setError("Failed to search movies");
+        }
+        setSearchResults([]);
       }
+    };
 
-      return false;
-    });
+    // debounce search to avoid too many api calls
+    const debounceTimer = setTimeout(() => {
+      searchMovies();
+    }, 300);
 
-    setSearchResults(filtered);
-  }, [searchQuery, searchCategory, genreMovies]);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, apiService]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchCategory(e.target.value);
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
-    setSearchCategory("all");
     setIsSearching(false);
     setSearchResults([]);
   };
 
   const toggleMovie = (movie: Movie) => {
-    setSelectedMovies((prev) => {
-      if (prev.some((m) => m.movieId === movie.movieId)) {
-        return prev.filter((m) => m.movieId !== movie.movieId);
-      } else {
-        if (prev.length >= 1) {
-          alert("You can only select one favorite movie");
-          return prev;
-        }
-        return [...prev, movie];
-      }
-    });
+    setSelectedMovies([movie]);
+    setFavoriteMovieId(movie.movieId);
   };
 
   const handleNext = async () => {
-    if (selectedMovies.length === 0) {
-      alert("Please select a movie before proceeding.");
-      return;
-    }
+
+
+    const effectiveUserId = userId || id;
 
     try {
-      // Send the selected movie to the backend
-      await apiService.post(`/preferences/${id}`, {
-        userId: id,
-        favoriteMovies: selectedMovies.map((movie) => movie.title), // Send movie titles
-      });
+      if (favoriteMovieId !== null) {
+        await apiService.saveFavoriteMovie(Number(effectiveUserId), favoriteMovieId);
+      }
+      router.push(`/users/${effectiveUserId}/profile`);
+    } catch (err) {
+      // Log error for debugging if needed
 
-      // Navigate to the profile page
-      router.push(`/users/${id}/profile`);
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      alert(
-        "An error occurred while saving your preferences. Please try again."
-      );
+      if (err instanceof Error) {
+        if (err.message.includes("400") && err.message.includes("not unique")) {
+          setError("Error: The user account doesn't seem to be properly registered. Please log out and try registering again.");
+        } else if (err.message.includes("409")) {
+          router.push(`/users/${effectiveUserId}/profile`);
+          return;
+        } else {
+          setError(`Error: ${err.message}`);
+        }
+      } else {
+        setError("An error occurred while saving your preferences. Please try again.");
+      }
     }
   };
 
+  // Get the display movies and ensure no duplicates
   const displayMovies = isSearching ? searchResults : genreMovies;
 
   return (
     <div>
-      {/* Subheading with selected genre */}
+      {/* Subheading with selected genres */}
       <h3 className="text-center text-[#3C3F88] mb-6">
-        {selectedGenre
-          ? `Based on your selected "${selectedGenre}" genre, select one favorite movie!`
-          : "Select one favorite movie!"}
+        {selectedGenres && selectedGenres.length > 0
+          ? `Based on your selected genres (${selectedGenres.join(", ")}), select your favorite movie!`
+          : "Select your favorite movie!"}
       </h3>
 
-      {/* Search Bar */}
-      <SearchBar
-        searchQuery={searchQuery}
-        searchCategory={searchCategory}
-        onSearchChange={handleSearchChange}
-        onCategoryChange={handleCategoryChange}
-        onClearSearch={clearSearch}
-        placeholder="Search for movies..."
-        className="mb-6"
-      />
+        {/* Error display */}
+        {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+              <p>{error}</p>
+            </div>
+        )}
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="text-center py-8">
-          <p className="text-[#3C3F88]">Loading movies...</p>
+        {genreMovies.length === 0 && !isLoading && !error && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4" role="alert">
+              <p>No movies found for your selected genre. Please go back and select a different genre.</p>
+            </div>
+        )}
+
+        {/* Search Bar - simplified version */}
+        <SearchBar
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onClearSearch={clearSearch}
+            placeholder="Search for movie titles..."
+            className="mb-6"
+        />
+
+        {/* Loading State */}
+        {isLoading && (
+            <div className="text-center py-8">
+              <p className="text-[#3C3F88]">Loading movies...</p>
+            </div>
+        )}
+
+        {/* Movie List */}
+        {!isLoading && (
+            <div className="overflow-x-auto">
+              <MovieListHorizontal
+                  movies={displayMovies}
+                  onMovieClick={toggleMovie}
+                  emptyMessage={`No movies match your "${selectedGenres}" genre`}
+                  noResultsMessage="No movies match your search"
+                  hasOuterContainer={false}
+                  selectedMovieIds={selectedMovies.map(m => m.movieId)}
+              />
+            </div>
+        )}
+
+        {/* Selected Movie Info */}
+        <p className="text-center mt-4 text-sm text-[#3C3F88]">
+          {selectedMovies.length > 0
+              ? `You selected: ${selectedMovies[0].title}`
+              : "No movie selected"}
+        </p>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-4">
+          <Button
+              variant="destructive"
+              onClick={() => router.push("/genre_preferences")}
+          >
+            Back
+          </Button>
+          <Button onClick={handleNext}>Next</Button>
         </div>
-      )}
-
-      {/* Movie List */}
-      {!isLoading && (
-        <div className="overflow-x-auto">
-          <MovieListHorizontal
-            movies={displayMovies}
-            onMovieClick={toggleMovie}
-            emptyMessage={`No movies match your "${selectedGenre}" genre`}
-            noResultsMessage="No movies match your search"
-            hasOuterContainer={false}
-          />
-        </div>
-      )}
-
-      {/* Selected Movie Info */}
-      <p className="text-center mt-4 text-sm text-[#3C3F88]">
-        {selectedMovies.length > 0
-          ? `You selected: ${selectedMovies[0].title}`
-          : "No movie selected"}
-      </p>
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-4">
-        <Button
-          variant="destructive"
-          onClick={() => router.push("/genre_preferences")}
-        >
-          Back
-        </Button>
-        <Button onClick={handleNext}>Next</Button>
       </div>
-    </div>
   );
 };
 

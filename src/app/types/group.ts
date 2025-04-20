@@ -2,7 +2,7 @@ import {User} from "@/app/types/user";
 import {Movie} from "@/app/types/movie";
 
 export interface Group {
-    id: number;
+    groupId: number;
     name: string;
     description?: string;
     creator: User;
@@ -10,3 +10,5 @@ export interface Group {
     moviePool?: Movie[];
     createdAt: string;
 }
+
+

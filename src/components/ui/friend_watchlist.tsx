@@ -12,16 +12,9 @@ import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
 
-interface Friend {
-    userId: number;
-    username: string;
-    email?: string;
-    bio?: string;
-    // other properties as needed
-}
 
 const FriendWatchlist: React.FC = () => {
-    const { id } = useParams();
+    const { id, friendId } = useParams(); // Updated to use friendId param
     const apiService = useApi();
     const router = useRouter();
 
@@ -31,7 +24,6 @@ const FriendWatchlist: React.FC = () => {
 
     // search state
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [searchCategory, setSearchCategory] = useState<string>("all");
     const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
     const [isSearching, setIsSearching] = useState<boolean>(false);
 
@@ -45,43 +37,37 @@ const FriendWatchlist: React.FC = () => {
 
     const { value: userId } = useLocalStorage<string>("userId", "");
 
-
     // fetch friend data
     useEffect(() => {
         const fetchFriendData = async () => {
-            if (!id) return;
+            // Use friendId instead of id for friend's data
+            const targetFriendId = friendId || id;
+            if (!targetFriendId) return;
 
             try {
                 setLoading(true);
 
                 try {
                     // First check if this user is actually a friend
+                    const friendsResponse = await apiService.get<User[]>('/friends');
 
-                    const friendsResponse = await apiService.get<Friend[]>('/friends');
+                    // Find the friend with the matching ID
+                    const targetFriend = Array.isArray(friendsResponse) ?
+                        friendsResponse.find((friend) => friend.userId.toString() === targetFriendId.toString()) :
+                        undefined;
 
-                    // Check if the user is in the friends list
-                    const isFriend = Array.isArray(friendsResponse) &&
-                        friendsResponse.some((friend) => friend.userId.toString() === id.toString());
-
-                    if (!isFriend) {
+                    // If not found, throw an error
+                    if (!targetFriend) {
                         throw new Error("User is not in your friends list");
                     }
 
-                    // Get the friend's profile data
-                    const userData = await apiService.get<User>(`/profile/${id}`);
-
-                    // Get friend's watchlist according to REST spec: GET /watchlist/{userId}
-                    const watchlistData = await apiService.get<Movie[]>(`/watchlist/${id}`);
-
-                    // Update user with watchlist
-                    const friendWithWatchlist = {
-                        ...userData,
-                        watchlist: watchlistData
-                    };
-
-                    setFriend(friendWithWatchlist);
+                    setFriend(targetFriend);
                 } catch (apiError) {
-                    console.log("API error, using mock data:", apiError);
+                    console.error("API error:", apiError);
+                    setError("Failed to load friend's watchlist data");
+                    if (apiError instanceof Error) {
+                        showMessage(`Error: ${apiError.message}`);
+                    }
                 }
             } catch (error) {
                 setError("Failed to load friend data");
@@ -94,12 +80,13 @@ const FriendWatchlist: React.FC = () => {
         };
 
         fetchFriendData();
-    }, [id, apiService]);
+    }, [id, friendId, apiService]);
 
-    // filter movies based on search
+    // filter movies based on search - now only searching by title
     useEffect(() => {
         if (!searchQuery.trim()) {
             setIsSearching(false);
+            setFilteredMovies([]); // Clear filtered movies when search is empty
             return;
         }
 
@@ -107,40 +94,12 @@ const FriendWatchlist: React.FC = () => {
         const movies = friend?.watchlist || [];
         const query = searchQuery.toLowerCase().trim();
 
-        const filtered = movies.filter((movie) => {
-            if (searchCategory === "title" || searchCategory === "all") {
-                if (movie.title.toLowerCase().includes(query)) {
-                    return true;
-                }
-            }
-
-            if (searchCategory === "genre" || searchCategory === "all") {
-                if (movie.genres.some((genre) => genre.toLowerCase().includes(query))) {
-                    return true;
-                }
-            }
-
-            if (searchCategory === "director" || searchCategory === "all") {
-                if (
-                    movie.directors.some((director) =>
-                        director.toLowerCase().includes(query)
-                    )
-                ) {
-                    return true;
-                }
-            }
-
-            if (searchCategory === "actors" || searchCategory === "all") {
-                if (movie.actors.some((actor) => actor.toLowerCase().includes(query))) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
+        const filtered = movies.filter((movie) =>
+            movie.title.toLowerCase().includes(query)
+        );
 
         setFilteredMovies(filtered);
-    }, [searchQuery, searchCategory, friend?.watchlist]);
+    }, [searchQuery, friend?.watchlist]);
 
     const handleMovieClick = (movie: Movie) => {
         // open the details modal
@@ -152,13 +111,8 @@ const FriendWatchlist: React.FC = () => {
         setSearchQuery(e.target.value);
     };
 
-    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSearchCategory(e.target.value);
-    };
-
     const clearSearch = () => {
         setSearchQuery("");
-        setSearchCategory("all");
         setIsSearching(false);
     };
 
@@ -207,13 +161,12 @@ const FriendWatchlist: React.FC = () => {
                     </p>
                 </div>
 
-                {/* search bar component */}
+                {/* search bar component - simplified version */}
                 <SearchBar
                     searchQuery={searchQuery}
-                    searchCategory={searchCategory}
                     onSearchChange={handleSearchChange}
-                    onCategoryChange={handleCategoryChange}
                     onClearSearch={clearSearch}
+                    placeholder="Search for movie titles..."
                     className="mb-6"
                 />
 
@@ -232,8 +185,7 @@ const FriendWatchlist: React.FC = () => {
                 {searchQuery && displayMovies.length > 0 && (
                     <div className="mt-4 text-[#3b3e88]">
                         Found {displayMovies.length}{" "}
-                        movies matching &#34;{searchQuery}&#34; in{" "}
-                        {searchCategory === "all" ? "all categories" : searchCategory}
+                        movies matching &#34;{searchQuery}&#34; in title
                     </div>
                 )}
 

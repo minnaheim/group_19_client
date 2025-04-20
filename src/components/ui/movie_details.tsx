@@ -97,30 +97,33 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                 </div>
                 <div>
                   <span className="font-medium">Director:</span>{" "}
-                  {movie.directors.join(", ")}
+                  {movie.directors && movie.directors.slice(0, 2).join(", ")}
+                  {movie.directors && movie.directors.length > 2 }
                 </div>
                 <div className="col-span-2">
                   <span className="font-medium">Cast:</span>{" "}
-                  {movie.actors.join(", ")}
+                  {movie.actors && movie.actors.slice(0, 4).join(", ")}
+                  {movie.actors && movie.actors.length > 4 }
                 </div>
               </div>
 
+
               <div className="flex flex-wrap gap-2 mt-4">
                 <Button
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                  onClick={handleWatchTrailer}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                    onClick={handleWatchTrailer}
                 >
-                  <Play size={16} /> Watch Trailer
+                  <Play size={16}/> Watch Trailer
                 </Button>
 
                 {/* Conditional buttons based on what actions are available */}
                 {onAddToWatchlist && !isInWatchlist && (
-                  <Button
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                    onClick={() => {
-                      onAddToWatchlist(movie);
+                    <Button
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                        onClick={() => {
+                          onAddToWatchlist(movie);
                       onClose();
                     }}
                   >

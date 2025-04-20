@@ -1,106 +1,107 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 import { usePreferences } from "@/app/context/PreferencesContext";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
 
 const GenrePreferences: React.FC = () => {
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
   const apiService = useApi();
   const router = useRouter();
-  const { id } = useParams();
-  const { setSelectedGenre } = usePreferences();
+  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
+  const { selectedGenres, setSelectedGenres } = usePreferences();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { value: userId } = useLocalStorage<string>("userId", "");
+  const { value: token } = useLocalStorage<string>("token", "");
 
-  // Fetch genres from the backend
   useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        const response =
-          await apiService.get<{ id: number; name: string }[]>(
-            "/movies/genres"
-          );
-        setGenres(response);
-      } catch (error) {
-        console.error("Failed to fetch genres:", error);
-        alert("An error occurred while fetching genres. Please try again.");
-      }
-    };
-    fetchGenres();
+    apiService.getGenres().then(setGenres).catch(() => setGenres([]));
   }, [apiService]);
 
-  const toggleGenre = (genre: string) => {
-    setSelectedGenres((prev) => {
-      console.log(prev);
-      if (prev.includes(genre)) {
-        return prev.filter((g) => g !== genre);
-      } else {
-        if (prev.length >= 1) {
-          alert("You can only select one favorite genre");
-          return prev;
-        }
-        console.log([...prev, genre]);
-        return [...prev, genre];
-      }
-    });
+  const toggleGenre = (genreName: string) => {
+    if (selectedGenres.includes(genreName)) {
+      setSelectedGenres(selectedGenres.filter((g) => g !== genreName));
+    } else {
+      setSelectedGenres([...selectedGenres, genreName]);
+    }
   };
 
   const handleNext = async () => {
-    if (selectedGenres.length === 0) {
-      alert("Please select a genre before proceeding.");
+
+
+    if (!userId) {
+      setError("User ID not found. Please log in again.");
+      router.push("/login");
       return;
     }
 
+    if (!token || token === "no_token") {
+      setError("You need to be logged in. Please log in again.");
+      router.push("/login");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
     try {
-      // Save the selected genre to the context so movie_preferences can access it
-      setSelectedGenre(selectedGenres[0]);
-
-      await apiService.post(`/preferences/${id}`, {
-        userId: id,
-        favoriteGenres: selectedGenres,
-      });
-
+      await apiService.saveUserGenres(Number(userId), selectedGenres);
       router.push("/movie_preferences");
     } catch (error) {
-      console.error("Failed to save preferences:", error);
-      alert(
-        "An error occurred while saving your preferences. Please try again."
-      );
+      if (error instanceof Error) {
+        setError(`Error: ${error.message}`);
+      } else {
+        setError("An error occurred while saving your preferences. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      <h3 className="text-center text-[#3C3F88] mb-6">
-        Please select one genre as your favorite genre.
-      </h3>
-      <div className="flex flex-wrap gap-2 justify-center">
-        {genres.map((genre) => (
-          <button
-            key={genre.id}
-            onClick={() => toggleGenre(genre.name)}
-            className={`px-4 py-2 rounded-full border ${
-              selectedGenres.includes(genre.name)
-                ? "bg-[#AFB3FF] text-white"
-                : "bg-[#CDD1FF] text-white"
-            }`}
-          >
-            {genre.name}
-          </button>
-        ))}
+      <div>
+        <h3 className="text-center text-[#3C3F88] mb-6">
+          Please select your favorite genres.
+        </h3>
+
+        {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+              <p>{error}</p>
+            </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 justify-center">
+          {genres.map((genre: { id: number; name: string }) => (
+              <button
+                  key={genre.id}
+                  onClick={() => toggleGenre(genre.name)}
+                  className={`px-4 py-2 rounded-full border ${
+                      selectedGenres.includes(genre.name)
+                          ? "bg-[#AFB3FF] text-white"
+                          : "bg-[#CDD1FF] text-white"
+                  }`}
+                  disabled={isLoading}
+              >
+                {genre.name}
+              </button>
+          ))}
+        </div>
+
+        <p className="text-center mt-4 text-sm text-[#3C3F88]">
+          {selectedGenres.length} genres selected
+        </p>
+        <br />
+        <div className="flex justify-between">
+          <Button variant="destructive" onClick={() => router.push("/")} disabled={isLoading}>
+            Back
+          </Button>
+          <Button onClick={handleNext} disabled={isLoading}>
+            {isLoading ? "Saving..." : "Next"}
+          </Button>
+        </div>
       </div>
-      <p className="text-center mt-4 text-sm text-[#3C3F88]">
-        {selectedGenres.length} genres selected
-      </p>
-      <br />
-      <div className="flex justify-between">
-        <Button variant="destructive" onClick={() => router.push("/")}>
-          Back
-        </Button>
-        <Button onClick={handleNext}>Next</Button>
-      </div>
-    </div>
   );
 };
 

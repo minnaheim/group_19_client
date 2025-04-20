@@ -24,7 +24,6 @@ const SearchMovies: React.FC = () => {
 
   // search state
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchCategory, setSearchCategory] = useState<string>("all");
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
@@ -49,9 +48,9 @@ const SearchMovies: React.FC = () => {
 
       try {
         setLoading(true);
-        const userData = await apiService.get(`/profile/${id}`) as User;
-        const watchlist = await apiService.get(`/watchlist/${id}`) as Movie[];
-        const watchedMovies = await apiService.get(`/watched/${id}`) as Movie[];
+        const userData = await apiService.get(`/users/${id}/profile`) as User;
+        const watchlist = await apiService.get(`/users/${id}/watchlist`) as Movie[];
+        const watchedMovies = await apiService.get(`/users/${id}/watched`) as Movie[];
 
         setUser({
           ...userData,
@@ -83,7 +82,7 @@ const SearchMovies: React.FC = () => {
     }
   }, []);
 
-  // search movies
+  // search movies - now only searching by title
   useEffect(() => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
@@ -95,31 +94,10 @@ const SearchMovies: React.FC = () => {
 
     const searchMovies = async () => {
       try {
-        // build query parameters based on selected category
-        const queryParams: Record<string, string> = {};
+        // only search by title now
+        const queryString = `title=${encodeURIComponent(searchQuery)}`;
 
-        if (searchCategory === "title" || searchCategory === "all") {
-          queryParams.title = searchQuery;
-        }
-
-        if (searchCategory === "genre" || searchCategory === "all") {
-          queryParams.genre = searchQuery;
-        }
-
-        if (searchCategory === "director" || searchCategory === "all") {
-          queryParams.director = searchQuery;
-        }
-
-        if (searchCategory === "actors" || searchCategory === "all") {
-          queryParams.actor = searchQuery;
-        }
-
-        // construct query string
-        const queryString = Object.entries(queryParams)
-            .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-            .join('&');
-
-        // make api call with query parameters
+        // make api call with title parameter only
         const results = await apiService.get(`/movies?${queryString}`);
         if (Array.isArray(results)) {
           setSearchResults(results as Movie[]);
@@ -145,13 +123,13 @@ const SearchMovies: React.FC = () => {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchQuery, searchCategory, apiService]);
+  }, [searchQuery, apiService]);
 
   // get recommended movies based on user preferences
   const getRecommendedMovies = async () => {
-    if (!user || !user.favoriteGenres?.length) {
+    /*if (!user || !user.favoriteGenres?.length) {
       return [];
-    }
+    }*/
 
     try {
       const recommendedMovies = await apiService.get(`/movies/suggestions/${id}`);
@@ -166,13 +144,8 @@ const SearchMovies: React.FC = () => {
     setSearchQuery(e.target.value);
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchCategory(e.target.value);
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
-    setSearchCategory("all");
     setIsSearching(false);
     setSearchResults([]);
   };
@@ -231,7 +204,7 @@ const SearchMovies: React.FC = () => {
     }
 
     try {
-      await apiService.post(`/watchlist/${id}`, { movieId: movie.movieId });
+      await apiService.post(`/users/${id}/watchlist/${movie.movieId}`, {});
 
       // update local state
       if (user) {
@@ -258,7 +231,7 @@ const SearchMovies: React.FC = () => {
     }
 
     try {
-      await apiService.post(`/watched/${id}`, { movieId: movie.movieId });
+      await apiService.post(`/users/${id}/watched/${movie.movieId}`, {});
 
       // update local state
       if (user) {
@@ -295,7 +268,12 @@ const SearchMovies: React.FC = () => {
     } else {
       const fetchRecommendations = async () => {
         const recommendations = await getRecommendedMovies();
-        setDisplayMovies(recommendations);
+
+        const uniqueRecommendations = Array.from(
+            new Map(recommendations.map(movie => [movie.movieId, movie])).values()
+        );
+
+        setDisplayMovies(uniqueRecommendations);
       };
       fetchRecommendations();
     }
@@ -334,14 +312,12 @@ const SearchMovies: React.FC = () => {
             </p>
           </div>
 
-          {/* search bar component */}
+          {/* search bar component - simplified version */}
           <SearchBar
               searchQuery={searchQuery}
-              searchCategory={searchCategory}
               onSearchChange={handleSearchChange}
-              onCategoryChange={handleCategoryChange}
               onClearSearch={clearSearch}
-              placeholder="Search for movies..."
+              placeholder="Search for movie titles..."
               className="mb-6"
           />
 
