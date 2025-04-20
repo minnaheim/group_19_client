@@ -20,53 +20,30 @@ import { useApi } from "@/app/hooks/useApi";
 //     "averageRank": 2.0
 //   },
 //   ...
-// ]
 
 const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const { value: groupId } = useLocalStorage<string>("groupId", "");
-  const [results, setResults] = useState<Movie[]>([]);
-  // TODO: find out format of average rank
-  const [averageRank, setAverageRank] = useState<string>("");
+  const [results, setResults] = useState<MovieAverageRank[]>([]);
   const apiService = useApi();
 
-  // Fetch results
+  // Fetch ranked results (winner will be first in sorted list)
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await apiService.get<Movie[]>(
-          `/groups/${groupId}/results`
+        const response = await apiService.get<MovieAverageRank[]>(
+          `/groups/${groupId}/rankings/details`
         );
         setResults(response);
       } catch (error) {
-        console.error("Failed to fetch winning movie:", error);
+        console.error("Failed to fetch ranking results:", error);
         alert(
-          "An error occurred while fetching the winning movie. Please try again."
+          "An error occurred while fetching the ranking results. Please try again."
         );
       }
     };
     fetchResults();
-  }, [apiService, groupId]);
-
-  // get average rank of winning movie
-
-  useEffect(() => {
-    const fetchAverageRank = async () => {
-      try {
-        // TODO: find out accurate endpoint here
-        const response = await apiService.get<string>(
-          `/groups/${groupId}/results`
-        );
-        setAverageRank(response);
-      } catch (error) {
-        console.error("Failed to fetch average rank:", error);
-        alert(
-          "An error occurred while fetching the average rank. Please try again."
-        );
-      }
-    };
-    fetchAverageRank();
   }, [apiService, groupId]);
 
   return (
@@ -83,23 +60,23 @@ const Results: React.FC = () => {
 
         {/* Winner Section */}
         <div className="flex flex-col items-center justify-center text-center">
-          {results.length > 0 ? (
+          {results.length > 0 && results[0].movie ? (
             <>
               <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
                 And the winner is ...
               </h2>
               <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden">
                 <img
-                  src={results[0].posterURL}
-                  alt={results[0].title}
+                  src={results[0].movie.posterURL}
+                  alt={results[0].movie.title}
                   className="w-full h-full object-cover"
                 />
               </div>
               <h2 className="font-semibold text-[#3b3e88] text-xl mt-4">
-                {results[0].title}
+                {results[0].movie.title}
               </h2>
               <p className="text-[#b9c0de] text-lg mt-2">
-                ... with an average rank of {averageRank}!
+                ... with an average rank of {results[0].averageRank ?? "N/A"}!
               </p>
             </>
           ) : (
