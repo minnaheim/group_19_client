@@ -87,7 +87,7 @@ const Login: React.FC = () => {
         }
 
         // Navigate to the user profile page
-        router.push(`/users/${userData.userId}/profile`);
+        router.push(`/users/${userData.userId}/dashboard`);
       } else {
         setLoginError("Invalid response received from server");
       }
