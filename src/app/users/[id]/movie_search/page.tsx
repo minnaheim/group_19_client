@@ -268,7 +268,12 @@ const SearchMovies: React.FC = () => {
     } else {
       const fetchRecommendations = async () => {
         const recommendations = await getRecommendedMovies();
-        setDisplayMovies(recommendations);
+
+        const uniqueRecommendations = Array.from(
+            new Map(recommendations.map(movie => [movie.movieId, movie])).values()
+        );
+
+        setDisplayMovies(uniqueRecommendations);
       };
       fetchRecommendations();
     }
