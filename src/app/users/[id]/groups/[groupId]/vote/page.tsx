@@ -16,8 +16,9 @@ import {
 import { pointerWithin } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {useParams, useRouter} from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
+import { Trash2, ArrowLeft, Undo } from "lucide-react"; // Import icons
 
 // Define types to match backend DTOs
 interface RankingSubmitDTO {
@@ -25,11 +26,18 @@ interface RankingSubmitDTO {
   rank: number;    // Must be a positive integer
 }
 
+// History state for undo functionality
+interface HistoryState {
+  availableMovies: Movie[];
+  rankings: (Movie | null)[];
+}
+
 // SortableItem Component
 const SortableItem: React.FC<{
   id: string;
   children: React.ReactNode;
-}> = ({ id, children }) => {
+  onRemove?: () => void;
+}> = ({ id, children, onRemove }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
       useSortable({ id });
 
@@ -44,23 +52,33 @@ const SortableItem: React.FC<{
           style={style}
           {...attributes}
           {...listeners}
-          className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex items-center justify-center"
+          className="w-[120px] h-[180px] bg-white rounded-lg shadow-md flex flex-col items-center justify-center relative"
       >
         {children}
+        {/* Only show remove button if onRemove is provided */}
+        {onRemove && id.startsWith("rank-") && (
+            <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
+                title="Remove from ranking"
+            >
+              <Trash2 size={16} className="text-red-500" />
+            </button>
+        )}
       </div>
   );
 };
 
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
-  const {id, groupId} = useParams();
+  const { id, groupId } = useParams();
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
-  const [rankings, setRankings] = useState<(Movie | null)[]>([
-    null,
-    null,
-    null,
-  ]);
+  const [rankings, setRankings] = useState<(Movie | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [history, setHistory] = useState<HistoryState[]>([]);
   const router = useRouter();
   const apiService = useApi();
 
@@ -78,8 +96,6 @@ const Vote: React.FC = () => {
     if (!id) { return; }
     const fetchRankableMovies = async () => {
       try {
-        // Convert groupId to a number as the backend expects numeric IDs
-
         // Log the request to help with debugging
         console.log(`Fetching rankable movies for group ID: ${groupId}`);
 
@@ -89,6 +105,18 @@ const Vote: React.FC = () => {
         );
         console.log("Received movies:", response);
         setAvailableMovies(response);
+
+        // Initialize ranking slots based on available movies
+        // Create 5 slots or slots equal to available movies count, whichever is greater
+        const slotsCount = Math.min(5, response.length);
+        const initialRankings = Array(slotsCount).fill(null);
+        setRankings(initialRankings);
+
+        // Initialize history with initial state
+        setHistory([{
+          availableMovies: [...response],
+          rankings: [...initialRankings]
+        }]);
       } catch (error) {
         console.error("Failed to fetch rankable movies:", error);
         alert(
@@ -100,7 +128,49 @@ const Vote: React.FC = () => {
     if (groupId) {
       fetchRankableMovies();
     }
-  }, [apiService, groupId]);
+  }, [apiService, groupId, id]);
+
+  // Save current state to history before making changes
+  const saveToHistory = () => {
+    setHistory(prev => [
+      ...prev,
+      {
+        availableMovies: [...availableMovies],
+        rankings: [...rankings]
+      }
+    ]);
+  };
+
+  // Undo to previous state
+  const handleUndo = () => {
+    if (history.length > 1) {
+      // Remove current state and go back to previous state
+      const newHistory = [...history];
+      const previousState = newHistory.pop();
+
+      if (previousState) {
+        setHistory(newHistory);
+        setAvailableMovies([...previousState.availableMovies]);
+        setRankings([...previousState.rankings]);
+      }
+    }
+  };
+
+  // Handle direct removal of a movie from ranking
+  const handleRemoveFromRanking = (rankIndex: number) => {
+    saveToHistory();
+
+    const movedMovie = rankings[rankIndex];
+    if (movedMovie) {
+      // Add back to pool
+      setAvailableMovies([...availableMovies, movedMovie]);
+
+      // Remove from ranking
+      const newRankings = [...rankings];
+      newRankings[rankIndex] = null;
+      setRankings(newRankings);
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -109,6 +179,9 @@ const Vote: React.FC = () => {
 
     const activeIdStr = active.id.toString();
     const overIdStr = over.id.toString();
+
+    // Save current state to history before making changes
+    saveToHistory();
 
     // Movie pool item to ranking slot
     if (activeIdStr.startsWith("pool-") && overIdStr.startsWith("rank-")) {
@@ -124,6 +197,23 @@ const Vote: React.FC = () => {
         // Remove from available pool
         const newAvailableMovies = [...availableMovies];
         newAvailableMovies.splice(movieIndex, 1);
+        setAvailableMovies(newAvailableMovies);
+      } else {
+        // If there's already a movie in the slot, swap with the pool movie
+        const newRankings = [...rankings];
+        const existingMovie = newRankings[rankIndex];
+        newRankings[rankIndex] = availableMovies[movieIndex];
+
+        // Remove the dragged movie from the pool
+        const newAvailableMovies = [...availableMovies];
+        newAvailableMovies.splice(movieIndex, 1);
+
+        // Add the existing movie to the pool
+        if (existingMovie) {
+          newAvailableMovies.push(existingMovie);
+        }
+
+        setRankings(newRankings);
         setAvailableMovies(newAvailableMovies);
       }
     }
@@ -159,9 +249,28 @@ const Vote: React.FC = () => {
     }
   };
 
+  // Check if the user has ranked the minimum required movies
+  const isSubmitEnabled = () => {
+    const filledSlots = rankings.filter(movie => movie !== null).length;
+    const minRequired = Math.min(5, availableMovies.length + filledSlots);
+    return filledSlots >= minRequired && availableMovies.length === 0;
+  };
+
+  // Get the error message for ranking requirements
+  const getRankingRequirementMessage = () => {
+    const filledSlots = rankings.filter(movie => movie !== null).length;
+    const totalMovies = availableMovies.length + filledSlots;
+
+    if (totalMovies < 5) {
+      return `Please rank all ${totalMovies} available movies`;
+    } else {
+      return "Please rank at least 5 movies before submitting";
+    }
+  };
+
   const handleSubmitRanking = async () => {
-    if (rankings.some((movie) => movie === null)) {
-      alert("Please rank all 3 movies before submitting.");
+    if (!isSubmitEnabled()) {
+      alert(getRankingRequirementMessage());
       return;
     }
 
@@ -175,8 +284,10 @@ const Vote: React.FC = () => {
       }
 
       // Convert our client-side ranking format to match the backend DTO format
-      // Ensure all values are proper integers
-      const rankingSubmitDTOs: RankingSubmitDTO[] = rankings.map((movie, index) => {
+      // Only include non-null rankings
+      const validRankings = rankings.filter(movie => movie !== null);
+
+      const rankingSubmitDTOs: RankingSubmitDTO[] = validRankings.map((movie, index) => {
         // Ensure movieId is a valid integer
         const movieId = movie && movie.movieId ? parseInt(String(movie.movieId), 10) : null;
 
@@ -197,9 +308,7 @@ const Vote: React.FC = () => {
       console.log(`Sending POST request to: ${endpoint}`, rankingSubmitDTOs);
 
       // Send the request with proper JSON content
-      const response = await apiService.post(endpoint, rankingSubmitDTOs);
-      console.log("Rankings submitted successfully", response);
-
+      await apiService.post(endpoint, rankingSubmitDTOs);
       // Navigate to results page after successful submission
       router.push(`/users/${userId}/groups/${groupId}/results`);
     } catch (error) {
@@ -229,7 +338,24 @@ const Vote: React.FC = () => {
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
               Vote for the Movie Night
             </h1>
-            <p className="text-[#b9c0de] mt-2">Drag movies to rank them</p>
+            <p className="text-[#b9c0de] mt-2">
+              {availableMovies.length + rankings.filter(m => m !== null).length < 5
+                  ? `Please rank all available movies`
+                  : `Please rank at least 5 movies`}
+            </p>
+          </div>
+
+          {/* Undo button */}
+          <div className="mb-4">
+            <Button
+                variant="outline"
+                onClick={handleUndo}
+                disabled={history.length <= 1}
+                className="flex items-center gap-2"
+            >
+              <Undo size={16} />
+              Undo
+            </Button>
           </div>
 
           <DndContext
@@ -254,9 +380,6 @@ const Vote: React.FC = () => {
                               className="w-full h-full object-cover"
                           />
                         </div>
-                        <p className="text-center text-[#3b3e88] font-bold text-sm px-2">
-                          {movie.title}
-                        </p>
                       </div>
                     </SortableItem>
                 ))}
@@ -275,7 +398,11 @@ const Vote: React.FC = () => {
               </h2>
               <div className="flex flex-wrap gap-4 mt-4">
                 {rankings.map((movie, index) => (
-                    <SortableItem key={`rank-${index}`} id={`rank-${index}`}>
+                    <SortableItem
+                        key={`rank-${index}`}
+                        id={`rank-${index}`}
+                        onRemove={movie ? () => handleRemoveFromRanking(index) : undefined}
+                    >
                       {movie ? (
                           <div className="flex flex-col items-center">
                             <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
@@ -285,9 +412,9 @@ const Vote: React.FC = () => {
                                   className="w-full h-full object-cover"
                               />
                             </div>
-                            <p className="text-center text-[#3b3e88] font-bold text-sm px-2">
-                              {movie.title}
-                            </p>
+                            <span className="badge absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                              {index + 1}
+                            </span>
                           </div>
                       ) : (
                           <div className="flex flex-col items-center justify-center">
@@ -301,22 +428,32 @@ const Vote: React.FC = () => {
             </div>
           </DndContext>
 
+
           {/* Buttons */}
           <div className="flex justify-between mt-4">
             <Button
                 variant="outline"
                 onClick={() => router.push(`/users/${userId}/groups/${groupId}/pool`)}
                 disabled={isSubmitting}
+                className="flex items-center gap-2"
             >
+              <ArrowLeft size={16} />
               Back to Pool
             </Button>
             <Button
                 onClick={handleSubmitRanking}
-                disabled={isSubmitting || rankings.some(movie => movie === null)}
+                disabled={isSubmitting || !isSubmitEnabled()}
             >
               {isSubmitting ? "Submitting..." : "Submit Rankings"}
             </Button>
           </div>
+
+          {/* Ranking requirement message */}
+          {!isSubmitEnabled() && (
+              <p className="text-[#f97274] text-center mt-4">
+                {availableMovies.length > 0 ? getRankingRequirementMessage() : ""}
+              </p>
+          )}
         </div>
       </div>
   );

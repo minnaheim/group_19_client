@@ -140,7 +140,7 @@ const MoviePreferences: React.FC = () => {
       if (favoriteMovieId !== null) {
         await apiService.saveFavoriteMovie(Number(effectiveUserId), favoriteMovieId);
       }
-      router.push(`/users/${effectiveUserId}/profile`);
+      router.push(`/users/${effectiveUserId}/dashboard`);
     } catch (err) {
       // Log error for debugging if needed
 

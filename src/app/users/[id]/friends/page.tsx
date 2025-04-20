@@ -252,6 +252,7 @@ const FriendsManagement: React.FC = () => {
     }
   };
 
+
   // Handle canceling a sent friend request
   const handleCancelRequest = async (requestId: number) => {
     try {
@@ -283,6 +284,7 @@ const FriendsManagement: React.FC = () => {
       showMessage("Failed to cancel friend request due to an unexpected error");
     }
   };
+
 
   // Handle removing a friend
   const handleRemoveFriend = async (friendId: number) => {
@@ -588,6 +590,7 @@ const FriendsManagement: React.FC = () => {
                               >
                                 Cancel Request
                               </Button>
+
                             </div>
                         ))}
                       </div>

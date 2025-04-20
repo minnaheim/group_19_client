@@ -38,13 +38,15 @@ interface GroupWithDetails {
 }
 
 interface GroupInvitation {
-  id: number;
+  invitationId: number;
   sender: User;
   receiver: User;
   group: Group;
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
-  createdAt: string;
+  accepted: boolean;
+  creationTime: string;
+  responseTime: string;
 }
+
 
 interface UserSearchResponse {
   userId: number;
@@ -337,22 +339,27 @@ const GroupsManagement: React.FC = () => {
   // Handle accepting a group invitation
   const handleAcceptInvitation = async (invitationId: number) => {
     try {
+      // Optimistically update UI by removing the invitation from the list immediately
+      setReceivedInvitations(prevInvitations =>
+          prevInvitations.filter(invitation => invitation.invitationId !== invitationId)
+      );
+
+      // Send request to server
       await apiService.post(
           `/groups/invitations/${invitationId}/accept`,
           {}
       );
-      // Refresh groups and invitations
-      const updatedGroups = await apiService.get<Group[]>(
-          "/groups"
-      );
+
+      // Refresh groups since we joined a new one
+      const updatedGroups = await apiService.get<Group[]>("/groups");
       if (Array.isArray(updatedGroups)) {
         setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       }
 
+      // Double-check our received invitations are in sync with server
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
           "/groups/invitations/received"
       );
-
       if (Array.isArray(updatedInvitations)) {
         setReceivedInvitations(updatedInvitations);
       }
@@ -360,18 +367,38 @@ const GroupsManagement: React.FC = () => {
       showMessage("Group invitation accepted");
     } catch (error) {
       console.error("Error accepting invitation:", error);
+
+      // If there was an error, refresh invitations from server to restore correct state
+      try {
+        const currentInvitations = await apiService.get<GroupInvitation[]>(
+            "/groups/invitations/received"
+        );
+        if (Array.isArray(currentInvitations)) {
+          setReceivedInvitations(currentInvitations);
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing invitations:", refreshError);
+      }
+
       showMessage("Failed to accept invitation");
     }
   };
 
-  // Handle rejecting a group invitation
+// Handle rejecting a group invitation
   const handleRejectInvitation = async (invitationId: number) => {
     try {
+      // Optimistically update UI by removing the invitation from the list immediately
+      setReceivedInvitations(prevInvitations =>
+          prevInvitations.filter(invitation => invitation.invitationId !== invitationId)
+      );
+
+      // Send request to server
       await apiService.post(
           `/groups/invitations/${invitationId}/reject`,
           {}
       );
-      // Refresh invitations
+
+      // Double-check our received invitations are in sync with server
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
           "/groups/invitations/received"
       );
@@ -382,17 +409,33 @@ const GroupsManagement: React.FC = () => {
       showMessage("Group invitation rejected");
     } catch (error) {
       console.error("Error rejecting invitation:", error);
+
+      // If there was an error, refresh invitations from server to restore correct state
+      try {
+        const currentInvitations = await apiService.get<GroupInvitation[]>(
+            "/groups/invitations/received"
+        );
+        if (Array.isArray(currentInvitations)) {
+          setReceivedInvitations(currentInvitations);
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing invitations:", refreshError);
+      }
+
       showMessage("Failed to reject invitation");
     }
   };
 
-  // Handle canceling a sent group invitation
+// Apply the same optimistic update approach for canceling invitations
   const handleCancelInvitation = async (invitationId: number) => {
     try {
+
+      // Send request to server
       await apiService.delete(
           `/groups/invitations/${invitationId}`
       );
-      // Refresh sent invitations
+
+      // Refresh sent invitations to ensure sync with server
       const updatedInvitations = await apiService.get<GroupInvitation[]>(
           "/groups/invitations/sent"
       );
@@ -403,6 +446,19 @@ const GroupsManagement: React.FC = () => {
       showMessage("Invitation canceled");
     } catch (error) {
       console.error("Error canceling invitation:", error);
+
+      // If there was an error, refresh invitations from server
+      try {
+        const currentInvitations = await apiService.get<GroupInvitation[]>(
+            "/groups/invitations/sent"
+        );
+        if (Array.isArray(currentInvitations)) {
+          setSentInvitations(currentInvitations);
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing invitations:", refreshError);
+      }
+
       showMessage("Failed to cancel invitation");
     }
   };
@@ -725,7 +781,7 @@ const GroupsManagement: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {receivedInvitations.map((invitation) => (
                             <div
-                                key={invitation.id}
+                                key={invitation.invitationId}
                                 className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-rose-500"
                             >
                               <div className="mb-3">
@@ -734,20 +790,20 @@ const GroupsManagement: React.FC = () => {
                                 </h4>
                                 <p className="text-[#b9c0de] text-xs mb-1">
                                   Invited by {invitation.sender.username} on{" "}
-                                  {new Date(invitation.createdAt).toLocaleDateString()}
+                                  {new Date(invitation.creationTime).toLocaleDateString()}
                                 </p>
                               </div>
                               <div className="flex gap-2">
                                 <Button
                                     className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-xs h-8 rounded-xl flex-1"
-                                    onClick={() => handleAcceptInvitation(invitation.id)}
+                                    onClick={() => handleAcceptInvitation(invitation.invitationId)}
                                 >
                                   Accept
                                 </Button>
                                 <Button
                                     variant="outline"
                                     className="border-violet-600 text-[#3b3e88] hover:bg-[#3b3e88]/10 text-xs h-8 rounded-xl flex-1"
-                                    onClick={() => handleRejectInvitation(invitation.id)}
+                                    onClick={() => handleRejectInvitation(invitation.invitationId)}
                                 >
                                   Decline
                                 </Button>
@@ -767,7 +823,7 @@ const GroupsManagement: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {sentInvitations.map((invitation) => (
                             <div
-                                key={invitation.id}
+                                key={invitation.invitationId}
                                 className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-orange-400"
                             >
                               <div className="mb-3">
@@ -776,7 +832,7 @@ const GroupsManagement: React.FC = () => {
                                 </h4>
                                 <p className="text-[#b9c0de] text-xs mb-1">
                                   Invited {invitation.receiver.username} on{" "}
-                                  {new Date(invitation.createdAt).toLocaleDateString()}
+                                  {new Date(invitation.creationTime).toLocaleDateString()}
                                 </p>
                                 <p className="text-[#838bad] text-xs italic mb-1">
                                   Status: Pending
@@ -785,7 +841,7 @@ const GroupsManagement: React.FC = () => {
                               <Button
                                   variant="outline"
                                   className="w-full border-rose-500 text-rose-500 hover:bg-rose-50 text-xs h-8 rounded-xl"
-                                  onClick={() => handleCancelInvitation(invitation.id)}
+                                  onClick={() => handleCancelInvitation(invitation.invitationId)}
                               >
                                 Cancel Invitation
                               </Button>
