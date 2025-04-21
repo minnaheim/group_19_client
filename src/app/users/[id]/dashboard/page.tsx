@@ -7,7 +7,6 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
-import {Movie} from "@/app/types/movie";
 
 interface FriendRequest {
     requestId: number;
@@ -21,22 +20,19 @@ interface FriendRequest {
 interface Group {
     groupId: number;
     groupName: string;
-    creator: User;
-    members: User[];
-    moviePool: MoviePool;
+    creatorId: number; // Updated to match new DTO
+    memberIds: number[]; // Updated to match new DTO
+    movieIds: number[];
 }
 
-interface MoviePool {
-    id: number;
-    movies: Movie[];
-}
 interface GroupInvitation {
-    id: number;
+    invitationId: number; // Updated field name
     sender: User;
     receiver: User;
     group: Group;
-    status: "PENDING" | "ACCEPTED" | "REJECTED";
-    createdAt: string;
+    accepted: boolean; // Updated field
+    creationTime: string;
+    responseTime: string;
 }
 
 interface Notification {
@@ -79,7 +75,7 @@ const Dashboard: React.FC = () => {
 
                 // Fetch user profile
                 try {
-                    const userData = await apiService.get<User>(`/profile/${id}`);
+                    const userData = await apiService.get<User>(`/users/${id}/profile`);
                     setUser(userData);
                 } catch (profileError) {
                     console.error("Error fetching user profile:", profileError);
@@ -87,22 +83,25 @@ const Dashboard: React.FC = () => {
                     return;
                 }
 
+                // Initialize empty array for all notifications
+                const allNotifications: Notification[] = [];
+
                 // Get friend requests
                 try {
                     const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
 
-                    // Process friend requests into notifications
+                    // Process friend requests into notifications with unique IDs
                     if (friendRequests && Array.isArray(friendRequests)) {
-                        const friendNotifications = friendRequests.map((request, index) => ({
-                            id: index + 1,
-                            type: 'friend_request' as const,
-                            message: `${request.sender.username} wants to be your friend`,
-                            actionType: 'accept_decline' as const,
-                            sender: request.sender.username,
-                            requestId: request.requestId
-                        }));
-
-                        setNotifications(prev => [...prev, ...friendNotifications]);
+                        friendRequests.forEach((request, index) => {
+                            allNotifications.push({
+                                id: index + 1, // Use simple integer IDs
+                                type: 'friend_request',
+                                message: `${request.sender.username} wants to be your friend`,
+                                actionType: 'accept_decline',
+                                sender: request.sender.username,
+                                requestId: request.requestId
+                            });
+                        });
                     }
                 } catch (friendRequestsError) {
                     console.error("Error fetching friend requests:", friendRequestsError);
@@ -113,24 +112,28 @@ const Dashboard: React.FC = () => {
                 try {
                     const groupInvites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
 
-                    // Process group invitations into notifications
+                    // Process group invitations into notifications with unique IDs
                     if (groupInvites && Array.isArray(groupInvites)) {
-                        const groupNotifications = groupInvites.map((invite, index) => ({
-                            id: notifications.length + index + 1,
-                            type: 'group_invite' as const,
-                            message: `${invite.sender.username} invited you to ${invite.group.groupName}!`,
-                            actionType: 'accept_decline' as const,
-                            sender: invite.sender.username,
-                            invitationId: invite.id,
-                            groupId: invite.group.groupId
-                        }));
-
-                        setNotifications(prev => [...prev, ...groupNotifications]);
+                        const startId = allNotifications.length + 1; // Start after friend request IDs
+                        groupInvites.forEach((invite, index) => {
+                            allNotifications.push({
+                                id: startId + index,
+                                type: 'group_invite',
+                                message: `${invite.sender.username} invited you to ${invite.group.groupName}!`,
+                                actionType: 'accept_decline',
+                                sender: invite.sender.username,
+                                invitationId: invite.invitationId,
+                                groupId: invite.group.groupId
+                            });
+                        });
                     }
                 } catch (groupInvitesError) {
                     console.error("Error fetching group invitations:", groupInvitesError);
                     showMessage("Failed to load group invitations. Some data may be incomplete.");
                 }
+
+                // Set all notifications at once
+                setNotifications(allNotifications);
             } catch (error) {
                 setError("Failed to load user data. Server may be unavailable.");
                 console.error("Critical error loading dashboard:", error);
@@ -265,10 +268,10 @@ const Dashboard: React.FC = () => {
             <Navigation userId={userId} activeItem="Dashboard" />
 
             {/* Main content - Two column layout */}
-            <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-hidden">
+            <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
                 <h1 className="text-indigo-900 text-2xl font-semibold mb-6">Dashboard</h1>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-auto md:h-[calc(100vh-140px)]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-auto">
                     {/* Left Column - Navigation Cards */}
                     <div className="space-y-6 mb-6 md:mb-0"> {/* Increased spacing between cards */}
                         {/* Watch List Card */}
@@ -340,10 +343,10 @@ const Dashboard: React.FC = () => {
                     {/* Right Column - Notifications */}
                     <div className="mt-6 md:mt-0">
                         <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 flex flex-col shadow-sm"
-                             style={{ height: 'auto', minHeight: '20rem', maxHeight: 'calc(4 * 8rem + 3 * 1.5rem)' }}>
+                             style={{ height: 'auto', minHeight: '20rem', maxHeight: 'max(calc(100vh - 200px), 600px)' }}>
                             <h2 className="text-indigo-900 text-xl font-medium mb-5">Notifications</h2>
 
-                            {/* Made this container scrollable with exact height matching left cards */}
+                            {/* Made this container scrollable with dynamic height */}
                             <div className="overflow-y-auto pr-2 flex-grow">
                                 <div className="space-y-5">
                                     {notifications.length > 0 ? notifications.map(notification => (

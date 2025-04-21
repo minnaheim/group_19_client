@@ -28,7 +28,7 @@ export class ApiService {
    *
    * @param res - The response from fetch.
    * @param errorMessage - A descriptive error message for this call.
-   * @returns Parsed JSON data.
+   * @returns Parsed JSON data or null for empty responses.
    * @throws ApplicationError if res.ok is false.
    */
   private async processResponse<T>(
@@ -59,6 +59,12 @@ export class ApiService {
       error.status = res.status;
       throw error;
     }
+
+    // Handle NO CONTENT (204) responses
+    if (res.status === 204 || res.headers.get("Content-Length") === "0") {
+      return {} as T; // Return empty object for NO CONTENT
+    }
+
     return res.json() as Promise<T>;
   }
 
@@ -207,8 +213,8 @@ export class ApiService {
   // Save genre preferences for a user
   public async saveUserGenres(userId: number, genreIds: string[]): Promise<UserPreferencesGenresDTO> {
     return this.post<UserPreferencesGenresDTO>(
-      `/users/${userId}/preferences/genres`,
-      { genreIds }
+        `/users/${userId}/preferences/genres`,
+        { genreIds }
     );
   }
 
@@ -220,8 +226,8 @@ export class ApiService {
   // Save favorite movie for a user
   public async saveFavoriteMovie(userId: number, movieId: number): Promise<UserPreferencesFavoriteMovieDTO> {
     return this.post<UserPreferencesFavoriteMovieDTO>(
-      `/users/${userId}/preferences/favorite-movie`,
-      { movieId }
+        `/users/${userId}/preferences/favorite-movie`,
+        { movieId }
     );
   }
 

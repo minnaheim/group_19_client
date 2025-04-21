@@ -12,7 +12,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 
 interface Group {
   groupId: number;
-  name: string;
+  groupName: string;
   description: string;
   creator: User;
   members: User[];
@@ -32,23 +32,33 @@ const MoviePool: React.FC = () => {
   // Fetch group details
   useEffect(() => {
     const fetchGroupDetails = async () => {
-      if (!groupId) return;
+      if (!groupId || !id) return;
 
       try {
-        // Since there's no specific /groups/{groupId} endpoint, we might need to get this from another source
-        // For now, we'll use the members endpoint to get some group info
+        // Fetch group members using the endpoint from GroupController
         const members = await apiService.get<User[]>(`/groups/${groupId}/members`);
 
-        // Create a minimal group object with the info we have
-        // The actual implementation might vary based on how your frontend handles this
-        setGroup({
-          groupId: Number(groupId),
-          name: `Group ${groupId}`, // Default name until we get actual data
-          description: "",
-          creator: members.find(m => m.userId === Number(userId)) || members[0],
-          members: members,
-          createdAt: new Date().toISOString()
-        });
+        // Get all user groups to find the current group data
+        const allGroups = await apiService.get<Group[]>('/groups');
+        const currentGroup = allGroups.find(g => g.groupId === Number(groupId));
+
+        if (currentGroup) {
+          // If we found the group in the list, use its data
+          setGroup({
+            ...currentGroup,
+            members: members // Add members to the group object
+          });
+        } else {
+          // Fallback: create a minimal group object
+          setGroup({
+            groupId: Number(groupId),
+            groupName: `Group ${groupId}`,
+            description: "",
+            creator: members.find(m => m.userId === Number(userId)) || members[0],
+            members: members,
+            createdAt: new Date().toISOString()
+          });
+        }
       } catch (error) {
         console.error("Failed to fetch group details:", error);
       }
@@ -60,7 +70,7 @@ const MoviePool: React.FC = () => {
   // Fetch user's watchlist
   useEffect(() => {
     const fetchWatchlist = async () => {
-      if (!userId || !id) return;
+      if (!userId) return;
 
       try {
         const response = await apiService.get<User>(`/users/${userId}/profile`);
@@ -151,12 +161,6 @@ const MoviePool: React.FC = () => {
     }
   };
 
-  // Helper function for movie poster URL
-
-  const getFullPosterUrl = (posterPath: string) => {
-    return `https://image.tmdb.org/t/p/w500${posterPath}`;
-  };
-
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
@@ -166,7 +170,7 @@ const MoviePool: React.FC = () => {
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           <div className="mb-8">
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
-              {group ? `${group.name}'s Movie Pool` : "Movie Pool"}
+              {group ? `${group.groupName}'s Movie Pool` : "Movie Pool"}
             </h1>
             <p className="text-[#b9c0de] mt-2">Choose Movies to Vote and Watch</p>
           </div>
@@ -206,36 +210,16 @@ const MoviePool: React.FC = () => {
             </h2>
           </div>
 
-          {/* Display all movies in the pool */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {moviePool.map((movie) => (
-                <div key={movie.movieId} className="flex flex-col items-center">
-                  <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56 rounded-lg shadow-md overflow-hidden group">
-                    <img
-                        className="w-full h-full object-cover"
-                        src={getFullPosterUrl(movie.posterURL)}
-                        alt={movie.title}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <button
-                          onClick={() => handleRemoveFromPool(movie.movieId)}
-                          className="p-2 bg-red-500 text-white rounded-full"
-                          title="Remove from pool"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-center text-sm text-[#3C3F88] mt-2">
-                    {movie.title}
-                  </p>
-                </div>
-            ))}
-            {moviePool.length === 0 && (
-                <p className="text-center col-span-full text-sm text-[#b9c0de]">
-                  No movies in the pool yet
-                </p>
-            )}
+          {/* Display movie pool in horizontal list, just like the watchlist */}
+          <div className="overflow-x-auto mb-8">
+            <MovieListHorizontal
+                movies={moviePool}
+                onMovieClick={(movie) => handleRemoveFromPool(movie.movieId)}
+                emptyMessage="No movies in the pool yet"
+                noResultsMessage="No movies match your search"
+                hasOuterContainer={false}
+                selectedMovieIds={[]}
+            />
           </div>
 
           <div className="flex justify-end mt-8">

@@ -3,7 +3,7 @@ import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 
@@ -23,9 +23,9 @@ interface RankingResultGetDTO {
 
 
 const Results: React.FC = () => {
+  const {id, groupId} = useParams();
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
-  const { value: groupId } = useLocalStorage<string>("groupId", "");
   const [rankingResult, setRankingResult] = useState<RankingResultGetDTO | null>(null);
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const Results: React.FC = () => {
   // Fetch ranking result
   useEffect(() => {
     const fetchRankingResult = async () => {
-      if (!groupId) return;
+      if (!groupId || !id) return;
 
       try {
         setLoading(true);
