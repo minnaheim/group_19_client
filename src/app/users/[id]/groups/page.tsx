@@ -426,7 +426,7 @@ const GroupsManagement: React.FC = () => {
     }
   };
 
-// Apply the same optimistic update approach for canceling invitations
+//cancel invitations
   const handleCancelInvitation = async (invitationId: number) => {
     try {
 

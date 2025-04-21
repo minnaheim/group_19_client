@@ -264,7 +264,7 @@ const FriendsManagement: React.FC = () => {
 
       try {
         // Use remove friend endpoint
-        await apiService.delete(`/friends/remove/${request.receiver.userId}`);
+        await apiService.delete(`/friends/friendrequest/${request.requestId}`);
         showMessage("Friend request canceled successfully");
 
         // Refresh sent requests
