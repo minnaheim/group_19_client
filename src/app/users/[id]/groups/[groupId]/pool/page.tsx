@@ -99,6 +99,7 @@ const MoviePool: React.FC = () => {
     fetchMoviePool();
   }, [groupId, apiService]);
 
+
   const handleAddToPool = (movie: Movie) => {
     setSelectedMovies((prev) => {
       // If the movie is already selected, deselect it
