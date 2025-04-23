@@ -285,7 +285,7 @@ const GroupsManagement: React.FC = () => {
           !Array.isArray(searchResults) ||
           searchResults.length === 0
       ) {
-        showMessage(`Could not find user with username ${inviteUsername}`);
+        showMessage(`User '${inviteUsername}' not found`);
         setIsSubmittingInvite(false);
         return;
       }
@@ -453,29 +453,20 @@ const GroupsManagement: React.FC = () => {
   };
 
   // Handle leaving a group
-  // const handleLeaveGroup = async (groupId: number) => {
-//   try {
-//     await apiService.delete(
-//         `/groups/${groupId}/leave`
-//     );
-//     // Refresh groups
-//     const updatedGroups = await apiService.get<Group[]>(
-//         "/groups"
-//     );
-//     if (Array.isArray(updatedGroups)) {
-//       setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
-//     }
-//
-//     setIsGroupDetailDialogOpen(false);
-//     setSelectedGroup(null);
-//
-//     showMessage("You have left the group");
-//   } catch (error) {
-//     console.error("Error leaving group:", error);
-//     showMessage("Failed to leave the group");
-//   }
-// };
-
+  const handleLeaveGroup = async (groupId: number) => {
+    try {
+      await apiService.delete(`/groups/${groupId}/leave`);
+      showMessage("You left the group");
+      setIsGroupDetailDialogOpen(false);
+      // Remove left group from lists immediately
+      setGroups(prev => prev.filter(g => g.groupId !== groupId));
+      setGroupsWithDetails(prev => prev.filter(g => g.groupId !== groupId));
+      setSelectedGroup(null);
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      showMessage("Failed to leave group");
+    }
+  };
 
   // Navigate to group pool
   const navigateToGroupPool = (groupId: number) => {
@@ -935,7 +926,7 @@ const GroupsManagement: React.FC = () => {
               }).catch(() => setFriends([])).finally(() => setLoadingFriends(false));
             }
           }}>
-            <DialogContent className="max-w-md rounded-2xl">
+            <DialogContent className="max-w-md w-full rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-[#3b3e88] text-xl">
                   {selectedGroup
@@ -956,7 +947,7 @@ const GroupsManagement: React.FC = () => {
                         value={inviteUsername}
                         onChange={(e) => setInviteUsername(e.target.value)}
                         placeholder="username"
-                        className="rounded-xl"
+                        className="w-full rounded-xl"
                         required
                     />
                   </div>
@@ -1000,51 +991,71 @@ const GroupsManagement: React.FC = () => {
                             Current Phase: {selectedGroup.phase.toUpperCase()}
                           </p>
                         </div>
-                        {selectedGroup.creatorId === parseInt(id as string) && (
+                        {selectedGroup.creatorId === parseInt(id as string) ? (
                           <div className="flex items-center gap-2">
                             <input
                               id="editGroupName"
                               defaultValue={selectedGroup.groupName}
                               className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200"
                             />
-                            <Button size="sm" onClick={async () => {
-                              const input = document.getElementById('editGroupName') as HTMLInputElement;
-                              const newName = input.value.trim();
-                              if (!newName || newName === selectedGroup.groupName) return;
-                              try {
-                                await apiService.put(`/groups/${selectedGroup.groupId}`, { groupName: newName });
-                                showMessage('Group name updated.');
-                                // Refresh groups overview
-                                await fetchGroupsData();
-                                await enhanceGroupsWithDetails();
-                                // Refresh selected group details
-                                const refreshed = await loadGroupDetails(selectedGroup.groupId);
-                                setSelectedGroup(refreshed);
-                              } catch (error: any) {
-                                alert(error.message || 'Failed to update group name.');
-                              }
-                            }}>
-                              Save
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={async () => {
-                              if (!confirm('Are you sure you want to delete this group?')) return;
-                              try {
-                                await apiService.delete(`/groups/${selectedGroup.groupId}`);
-                                // Close dialog and optimistically remove group from lists
-                                setIsGroupDetailDialogOpen(false);
-                                showMessage('Group deleted.');
-                                if (selectedGroup) {
-                                  setGroups(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
-                                  setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                const input = document.getElementById('editGroupName') as HTMLInputElement;
+                                const newName = input.value.trim();
+                                if (!newName || newName === selectedGroup.groupName) return;
+                                try {
+                                  await apiService.put(`/groups/${selectedGroup.groupId}`, { groupName: newName });
+                                  showMessage('Group name updated.');
+                                  // Refresh groups overview
+                                  await fetchGroupsData();
+                                  await enhanceGroupsWithDetails();
+                                  // Refresh selected group details
+                                  const refreshed = await loadGroupDetails(selectedGroup.groupId);
+                                  setSelectedGroup(refreshed);
+                                } catch (error: any) {
+                                  if (error instanceof Error) {
+                                    setActionMessage(error.message);
+                                  } else {
+                                    setActionMessage(`Failed to update group name.`);
+                                  }
+                                  setShowActionMessage(true);
                                 }
-                                setSelectedGroup(null);
-                              } catch (error) {
-                                alert('Failed to delete group.');
-                              }
-                            }}>
-                              Delete
+                              }}
+                            >
+                              Rename
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={async () => {
+                                if (!confirm('Are you sure you want to delete this group?')) return;
+                                try {
+                                  await apiService.delete(`/groups/${selectedGroup.groupId}`);
+                                  // Close dialog and optimistically remove group from lists
+                                  setIsGroupDetailDialogOpen(false);
+                                  showMessage('Group deleted.');
+                                  if (selectedGroup) {
+                                    setGroups(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                                    setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                                  }
+                                  setSelectedGroup(null);
+                                } catch (error) {
+                                  alert('Failed to delete group.');
+                                }
+                              }}
+                            >
+                              Delete Group
                             </Button>
                           </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleLeaveGroup(selectedGroup.groupId)}
+                          >
+                            Leave Group
+                          </Button>
                         )}
                     </div>
                     </DialogHeader>
@@ -1085,13 +1096,13 @@ const GroupsManagement: React.FC = () => {
                                             const refreshed = await loadGroupDetails(Number(selectedGroup.groupId));
                                             setSelectedGroup(refreshed);
                                           } catch (error: unknown) {
-                                             if (error instanceof Error) {
-   setActionMessage(error.message);
- } else {
-   setActionMessage(`Failed to remove ${member.username}.`);
-}
-                                             setShowActionMessage(true);
-                                           }
+                                            if (error instanceof Error) {
+                                              setActionMessage(error.message);
+                                            } else {
+                                              setActionMessage(`Failed to remove ${member.username}.`);
+                                            }
+                                            setShowActionMessage(true);
+                                          }
                                         }}
                                       >
                                         Remove
@@ -1100,20 +1111,18 @@ const GroupsManagement: React.FC = () => {
                                   </li>
                                 ))}
                               </ul>
-                              {/* Add Member button for group creator */}
-                              {selectedGroup.creatorId === parseInt(id as string) && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-2 border-violet-600 text-[#3b3e88] hover:bg-violet-50 rounded-xl"
-                                  onClick={() => {
-                                    setSelectedGroupId(selectedGroup.groupId);
-                                    setIsInviteDialogOpen(true);
-                                  }}
-                                >
-                                  Add Member
-                                </Button>
-                              )}
+                              {/* Add Member button */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-2 w-full border-violet-600 text-[#3b3e88] hover:bg-violet-50 rounded-xl"
+                                onClick={() => {
+                                  setSelectedGroupId(selectedGroup.groupId);
+                                  setIsInviteDialogOpen(true);
+                                }}
+                              >
+                                Add Member
+                              </Button>
                             </div>
                           </div>
                         </div>
