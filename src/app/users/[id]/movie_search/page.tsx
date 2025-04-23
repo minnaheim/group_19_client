@@ -12,6 +12,7 @@ import ActionMessage from "@/components/ui/action_message";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import MovieList from "@/components/ui/movie_list";
 import SearchBar from "@/components/ui/search_bar";
+import { retry } from 'src/utils/retry';
 
 const SearchMovies: React.FC = () => {
   const { id } = useParams();
@@ -48,9 +49,9 @@ const SearchMovies: React.FC = () => {
 
       try {
         setLoading(true);
-        const userData = await apiService.get(`/users/${id}/profile`) as User;
-        const watchlist = await apiService.get(`/users/${id}/watchlist`) as Movie[];
-        const watchedMovies = await apiService.get(`/users/${id}/watched`) as Movie[];
+        const userData = await retry(() => apiService.get(`/users/${id}/profile`)) as User;
+        const watchlist = await retry(() => apiService.get(`/users/${id}/watchlist`)) as Movie[];
+        const watchedMovies = await retry(() => apiService.get(`/users/${id}/watched`)) as Movie[];
 
         setUser({
           ...userData,
@@ -98,7 +99,7 @@ const SearchMovies: React.FC = () => {
         const queryString = `title=${encodeURIComponent(searchQuery)}`;
 
         // make api call with title parameter only
-        const results = await apiService.get(`/movies?${queryString}`);
+        const results = await retry(() => apiService.get(`/movies?${queryString}`));
         if (Array.isArray(results)) {
           setSearchResults(results as Movie[]);
         } else {
@@ -132,7 +133,7 @@ const SearchMovies: React.FC = () => {
     }*/
 
     try {
-      const recommendedMovies = await apiService.get(`/movies/suggestions/${id}`);
+      const recommendedMovies = await retry(() => apiService.get(`/movies/suggestions/${id}`));
       return Array.isArray(recommendedMovies) ? recommendedMovies as Movie[] : [];
     } catch (error) {
       console.error("Failed to fetch recommended movies:", error);
@@ -165,7 +166,7 @@ const SearchMovies: React.FC = () => {
     }
 
     try {
-      const detailedMovie = await apiService.get(`/movies/${movie.movieId}`);
+      const detailedMovie = await retry(() => apiService.get(`/movies/${movie.movieId}`));
       if (detailedMovie && typeof detailedMovie === 'object') {
         setSelectedMovie(detailedMovie as Movie);
       } else {

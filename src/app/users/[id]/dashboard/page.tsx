@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
 import { useApi } from "@/app/hooks/useApi";
+import { retry } from 'src/utils/retry';
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
@@ -23,6 +24,7 @@ interface Group {
     creatorId: number; // Updated to match new DTO
     memberIds: number[]; // Updated to match new DTO
     movieIds: number[];
+    phase?: string; // Add phase property for backend compatibility
 }
 
 interface GroupInvitation {
@@ -69,13 +71,12 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             if (!id) return;
-
             try {
                 setLoading(true);
 
-                // Fetch user profile
+                // Fetch user profile with retry
                 try {
-                    const userData = await apiService.get<User>(`/users/${id}/profile`);
+                    const userData = await retry(() => apiService.get<User>(`/users/${id}/profile`));
                     setUser(userData);
                 } catch (profileError) {
                     console.error("Error fetching user profile:", profileError);
@@ -86,6 +87,7 @@ const Dashboard: React.FC = () => {
                 // Initialize empty array for all notifications
                 const allNotifications: Notification[] = [];
 
+                // Get friend requests with retry
                 // Get friend requests
                 try {
                     const friendRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');

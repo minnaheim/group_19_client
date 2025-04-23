@@ -3,14 +3,9 @@
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Movie } from "@/app/types/movie";
-import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { useState, useEffect } from "react";
 import {
   DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
 import { pointerWithin } from "@dnd-kit/core";
@@ -18,7 +13,11 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { Trash2, ArrowLeft, Undo } from "lucide-react"; // Import icons
+import { Trash2, ArrowLeft } from "lucide-react"; // Import icons
+import { retry } from 'src/utils/retry';
+import { useGroupPhase } from "@/app/hooks/useGroupPhase";
+import useLocalStorage from "@/app/hooks/useLocalStorage";
+import { VoteStateDTO } from "@/app/types/vote";
 
 // Define types to match backend DTOs
 interface RankingSubmitDTO {
@@ -56,8 +55,9 @@ const SortableItem: React.FC<{
       >
         {children}
         {/* Only show remove button if onRemove is provided */}
-        {onRemove && id.startsWith("rank-") && (
+        {onRemove && (
             <button
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove();
@@ -75,60 +75,57 @@ const SortableItem: React.FC<{
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const { id, groupId } = useParams();
+  const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
+  const router = useRouter();
+  const apiService = useApi();
+  // PHASE GUARD: fetch and check phase
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [history, setHistory] = useState<HistoryState[]>([]);
-  const router = useRouter();
-  const apiService = useApi();
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 
-  const sensors = useSensors(
-      useSensor(PointerSensor, {
-        activationConstraint: {
-          distance: 5, // Minimum dragging distance to activate a drag
-        },
-      }),
-      useSensor(KeyboardSensor)
-  );
-
-  // Fetch rankable movies - updated to match controller endpoint
   useEffect(() => {
-    if (!id) { return; }
-    const fetchRankableMovies = async () => {
-      try {
-        // Log the request to help with debugging
-        console.log(`Fetching rankable movies for group ID: ${groupId}`);
-
-        // Updated to match the endpoint from the controller: '/groups/{groupId}/movies/rankable'
-        const response = await apiService.get<Movie[]>(
-            `/groups/${groupId}/movies/rankable`
-        );
-        console.log("Received movies:", response);
-        setAvailableMovies(response);
-
-        // Initialize ranking slots based on available movies
-        // Create 5 slots or slots equal to available movies count, whichever is greater
-        const slotsCount = Math.min(5, response.length);
-        const initialRankings = Array(slotsCount).fill(null);
-        setRankings(initialRankings);
-
-        // Initialize history with initial state
-        setHistory([{
-          availableMovies: [...response],
-          rankings: [...initialRankings]
-        }]);
-      } catch (error) {
-        console.error("Failed to fetch rankable movies:", error);
-        alert(
-            "An error occurred while fetching the movies. Please try again."
-        );
-      }
-    };
-
-    if (groupId) {
-      fetchRankableMovies();
+    if (phaseLoading) return;
+    if (phaseError) { alert(phaseError); return; }
+    if (phase && phase !== "VOTING") {
+      if (phase === "POOL") router.replace(`/users/${userId}/groups/${groupId}/pool`);
+      if (phase === "RESULTS") router.replace(`/users/${userId}/groups/${groupId}/results`);
     }
-  }, [apiService, groupId, id]);
+  }, [phase, phaseLoading, phaseError, router, userId, groupId]);
+
+  // Load vote state (pool + existing rankings)
+  useEffect(() => {
+    if (phase !== "VOTING" || !groupId || !userId) return;
+    (async () => {
+      let state: VoteStateDTO;
+      try {
+        state = await apiService.get<VoteStateDTO>(`/groups/${groupId}/vote-state`);
+      } catch (err) {
+        console.error('Failed to load vote state:', err);
+        alert('Could not load voting data.');
+        return;
+      }
+      const movies = state.pool;
+      const slots = Math.min(5, movies.length);
+      const initial: (Movie | null)[] = Array(slots).fill(null);
+      let pool = [...movies];
+      if (state.rankings?.length) {
+        state.rankings.forEach(({ movieId, rank }) => {
+          const i = rank - 1;
+          const found = movies.find(m => m.movieId === movieId);
+          if (found && i >= 0 && i < slots) {
+            initial[i] = found;
+            pool = pool.filter(m => m.movieId !== movieId);
+          }
+        });
+        setHasSubmitted(true);
+      }
+      setAvailableMovies(pool);
+      setRankings(initial);
+      setHistory([{ availableMovies: pool, rankings: initial }]);
+    })();
+  }, [phase, groupId, userId]);
 
   // Save current state to history before making changes
   const saveToHistory = () => {
@@ -158,18 +155,15 @@ const Vote: React.FC = () => {
 
   // Handle direct removal of a movie from ranking
   const handleRemoveFromRanking = (rankIndex: number) => {
+    console.log('remove from ranking slot', rankIndex, rankings[rankIndex]);
     saveToHistory();
 
     const movedMovie = rankings[rankIndex];
-    if (movedMovie) {
-      // Add back to pool
-      setAvailableMovies([...availableMovies, movedMovie]);
-
-      // Remove from ranking
-      const newRankings = [...rankings];
-      newRankings[rankIndex] = null;
-      setRankings(newRankings);
-    }
+    if (!movedMovie) return;
+    // Add back to pool using functional update
+    setAvailableMovies(prev => [...prev, movedMovie]);
+    // Remove from ranking using functional update
+    setRankings(prev => prev.map((m, i) => (i === rankIndex ? null : m)));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -309,13 +303,15 @@ const Vote: React.FC = () => {
 
       // Send the request with proper JSON content
       await apiService.post(endpoint, rankingSubmitDTOs);
-      // Navigate to results page after successful submission
-      router.push(`/users/${userId}/groups/${groupId}/results`);
-    } catch (error) {
-      console.error("Failed to submit rankings:", error);
-      alert(
-          "An error occurred while submitting your rankings. Please try again."
-      );
+      // Acknowledge submission and lock further edits
+      alert("Ranking submitted successfully! Please wait for results.");
+      setHasSubmitted(true);
+    } catch (error: unknown) {
+      let message = "Failed to submit rankings.";
+      if (error && typeof error === 'object' && 'message' in error) {
+        message = (error as { message?: string }).message || message;
+      }
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -326,40 +322,32 @@ const Vote: React.FC = () => {
     return `https://image.tmdb.org/t/p/w500${posterPath}`;
   };
 
+  // Show remove icon only if ranking submitted = false
+  const showRemove = (movie: Movie | null) => !!movie && !hasSubmitted;
+
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
-        <Navigation userId={userId} activeItem=" Movie Groups" />
+        <Navigation userId={userId} activeItem="Movie Groups" />
 
         {/* Main content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
-              Vote for the Movie Night
+              {phaseGroup
+                ? `${phaseGroup.groupName} - Vote for the Movie Night`
+                : "Vote for the Movie Night"}
             </h1>
             <p className="text-[#b9c0de] mt-2">
               {availableMovies.length + rankings.filter(m => m !== null).length < 5
-                  ? `Please rank all available movies`
+                  ? `Please rank all ${availableMovies.length + rankings.filter(m => m !== null).length} available movies`
                   : `Please rank at least 5 movies`}
             </p>
           </div>
 
-          {/* Undo button */}
-          <div className="mb-4">
-            <Button
-                variant="outline"
-                onClick={handleUndo}
-                disabled={history.length <= 1}
-                className="flex items-center gap-2"
-            >
-              <Undo size={16} />
-              Undo
-            </Button>
-          </div>
-
           <DndContext
-              sensors={sensors}
+              // sensors={sensors}
               collisionDetection={pointerWithin}
               onDragEnd={handleDragEnd}
           >
@@ -401,7 +389,7 @@ const Vote: React.FC = () => {
                     <SortableItem
                         key={`rank-${index}`}
                         id={`rank-${index}`}
-                        onRemove={movie ? () => handleRemoveFromRanking(index) : undefined}
+                        onRemove={showRemove(movie) ? () => handleRemoveFromRanking(index) : undefined}
                     >
                       {movie ? (
                           <div className="flex flex-col items-center">
@@ -430,22 +418,37 @@ const Vote: React.FC = () => {
 
 
           {/* Buttons */}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between items-center mt-4">
             <Button
-                variant="outline"
-                onClick={() => router.push(`/users/${userId}/groups/${groupId}/pool`)}
-                disabled={isSubmitting}
-                className="flex items-center gap-2"
+              variant="outline"
+              onClick={() => router.push(`/users/${userId}/groups`)}
             >
-              <ArrowLeft size={16} />
-              Back to Pool
+              Back to group overview
             </Button>
-            <Button
-                onClick={handleSubmitRanking}
-                disabled={isSubmitting || !isSubmitEnabled()}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Rankings"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                  onClick={handleSubmitRanking}
+                  disabled={isSubmitting || phase !== "VOTING" || !isSubmitEnabled() || hasSubmitted}
+              >
+                {hasSubmitted ? "Submitted" : isSubmitting ? "Submitting..." : "Submit Rankings"}
+              </Button>
+              {phase === "VOTING" && phaseGroup && String(phaseGroup.creatorId) === String(userId) && (
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    try {
+                      await apiService.post(`/groups/${groupId}/show-results`, {});
+                    } catch (err: any) {
+                      alert(err.message || 'Failed to end voting.');
+                      return;
+                    }
+                    router.replace(`/users/${userId}/groups/${groupId}/results`);
+                  }}
+                >
+                  End Voting & Show Results
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Ranking requirement message */}

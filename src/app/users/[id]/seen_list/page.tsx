@@ -12,6 +12,7 @@ import SearchBar from "@/components/ui/search_bar";
 import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
+import { retry } from "@/utils/retry";
 
 const SeenList: React.FC = () => {
   const { id } = useParams();
@@ -47,13 +48,11 @@ const SeenList: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!id) return;
-
       try {
         setLoading(true);
-
-        // Try to get the user data from the profile endpoint
+        // Try to get the user data from the profile endpoint with retry
         try {
-          const userData = await apiService.get(`/users/${id}/profile`);
+          const userData = await retry(() => apiService.get(`/users/${id}/profile`));
           setUser(userData as User);
         } catch (apiError) {
           console.log("API error, using mock data:", apiError);
