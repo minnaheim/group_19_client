@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { retry } from 'src/utils/retry';
 
 // Updated Group interface to match the new DTO
 interface Group {
@@ -25,6 +26,7 @@ interface Group {
   creatorId: number;
   memberIds: number[];
   movieIds: number[];
+  phase: string;
 }
 
 // Extended Group data with user and movie details
@@ -35,6 +37,7 @@ interface GroupWithDetails {
   creator: User;
   members: User[];
   movies: Movie[];
+  phase: string;
 }
 
 interface GroupInvitation {
@@ -54,7 +57,7 @@ interface UserSearchResponse {
 }
 
 const GroupsManagement: React.FC = () => {
-  const {id} = useParams();
+  const { id } = useParams();
   const apiService = useApi();
   const router = useRouter();
 
@@ -101,14 +104,14 @@ const GroupsManagement: React.FC = () => {
   const {value: token} = useLocalStorage<string>("token", "");
 
   // Helper function to load group details (members and movie pool)
-  const loadGroupDetails = async (group: Group) => {
+  const loadGroupDetails = React.useCallback(async (groupId: number) => {
     try {
+      // Fetch group base info
+      const group: Group = await retry(() => apiService.get<Group>(`/groups/${groupId}`));
       // Fetch group members
-      const members: User[] = await apiService.get<User[]>(`/groups/${group.groupId}/members`);
-
+      const members: User[] = await retry(() => apiService.get<User[]>(`/groups/${groupId}/members`));
       // Fetch group movie pool
-      const movies: Movie[] = await apiService.get<Movie[]>(`/groups/${group.groupId}/pool`);
-
+      const movies: Movie[] = await retry(() => apiService.get<Movie[]>(`/groups/${groupId}/pool`));
       // Return enhanced group with details
       return {
         ...group,
@@ -119,18 +122,21 @@ const GroupsManagement: React.FC = () => {
     } catch (error) {
       console.error("Error loading group details:", error);
       return {
-        ...group,
-        creator: await fetchUserById(group.creatorId),
+        groupId,
+        groupName: "Unknown",
+        creatorId: -1,
+        creator: { userId: -1, username: "Unknown", email: "", password: "", bio: "", watchlist: [], watchedMovies: [] },
         members: [],
-        movies: []
+        movies: [],
+        phase: "UNKNOWN"
       };
     }
-  };
+  }, [apiService]);
 
   // Helper function to fetch user by ID
   const fetchUserById = async (userId: number): Promise<User> => {
     try {
-      return await apiService.get<User>(`/users/${userId}/profile`);
+      return await retry(() => apiService.get<User>(`/users/${userId}/profile`));
     } catch (error) {
       console.error("Error fetching user:", error);
       // Return a placeholder user if we can't fetch the real one
@@ -142,72 +148,37 @@ const GroupsManagement: React.FC = () => {
   };
 
   // Fetch groups data
-  useEffect(() => {
-    const fetchGroupsData = async () => {
-      if (!id) return;
-
-      try {
-        setLoading(true);
-
-        try {
-          // Get user's groups
-          const groupsData: Group[] = await apiService.get<Group[]>("/groups");
-          setGroups(
-              Array.isArray(groupsData)
-                  ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
-                  : []
-          );
-
-          // Get received group invitations
-          const receivedInvitationsData = await apiService.get<
-              GroupInvitation[]
-          >("/groups/invitations/received");
-
-          setReceivedInvitations(
-              Array.isArray(receivedInvitationsData)
-                  ? receivedInvitationsData
-                  : []
-          );
-
-          // Get sent group invitations
-          const sentInvitationsData = await apiService.get<GroupInvitation[]>(
-              "/groups/invitations/sent");
-          setSentInvitations(
-              Array.isArray(sentInvitationsData) ? sentInvitationsData : []
-          );
-        } catch (apiError) {
-          console.log("API error:", apiError);
-          setError("Failed to connect to the server");
-        }
-      } catch (error) {
-        setError("Failed to load groups data");
-        console.error("Error loading groups:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGroupsData();
-  }, [id, apiService, token]);
+  const fetchGroupsData = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const groupsData: Group[] = await retry(() => apiService.get<Group[]>('/groups'));
+      setGroups(Array.isArray(groupsData) ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName)) : []);
+      const receivedData = await retry(() => apiService.get<GroupInvitation[]>('/groups/invitations/received'));
+      setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
+      const sentData = await retry(() => apiService.get<GroupInvitation[]>('/groups/invitations/sent'));
+      setSentInvitations(Array.isArray(sentData) ? sentData : []);
+    } catch (error) {
+      console.error('Error fetching groups data:', error);
+      setError('Failed to connect to the server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load detailed information for each group
-  useEffect(() => {
-    const enhanceGroupsWithDetails = async () => {
-      if (groups.length === 0) return;
+  const enhanceGroupsWithDetails = async () => {
+    if (groups.length === 0) return;
+    try {
+      const enhanced = await Promise.all(groups.map(g => loadGroupDetails(g.groupId)));
+      setGroupsWithDetails(enhanced);
+    } catch (error) {
+      console.error('Error enhancing groups:', error);
+    }
+  };
 
-      try {
-        const enhancedGroups = await Promise.all(
-            groups.map(group => loadGroupDetails(group))
-        );
-
-        setGroupsWithDetails(enhancedGroups);
-      } catch (error) {
-        console.error("Error enhancing groups with details:", error);
-      }
-    };
-
-    enhanceGroupsWithDetails();
-  }, [groups]);
+  useEffect(() => { fetchGroupsData(); }, [id, apiService, token]);
+  useEffect(() => { enhanceGroupsWithDetails(); }, [groups, loadGroupDetails]);
 
   // Filter groups based on search query
   useEffect(() => {
@@ -246,13 +217,13 @@ const GroupsManagement: React.FC = () => {
     setIsSubmittingGroup(true);
 
     try {
-      const createdGroup = await apiService.post("/groups", {
+      const createdGroup = await retry(() => apiService.post("/groups", {
         groupName: newGroupName,
-      });
+      }));
 
       // Update groups list by fetching all groups again
       if (createdGroup) {
-        const updatedGroups = await apiService.get<Group[]>("/groups");
+        const updatedGroups = await retry(() => apiService.get<Group[]>("/groups"));
         setGroups(
             Array.isArray(updatedGroups)
                 ? updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName))
@@ -288,30 +259,30 @@ const GroupsManagement: React.FC = () => {
 
     try {
       // First, find the receiverId based on username
-      const searchResults = await apiService.get<UserSearchResponse[]>(
-          `/users/search?username=${encodeURIComponent(inviteUsername)}`);
+      const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(
+          `/users/search?username=${encodeURIComponent(inviteUsername)}`));
 
       if (
           !searchResults ||
           !Array.isArray(searchResults) ||
           searchResults.length === 0
       ) {
-        showMessage(`Could not find user with username ${inviteUsername}`);
+        showMessage(`User '${inviteUsername}' not found`);
         setIsSubmittingInvite(false);
         return;
       }
 
       const receiverId = searchResults[0].userId;
-      const response = await apiService.post(
+      const response = await retry(() => apiService.post(
           `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
           {}
-      );
+      ));
 
       if (response) {
         // Refresh sent invitations
-        const updatedSentInvitations = await apiService.get<GroupInvitation[]>(
+        const updatedSentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
             "/groups/invitations/sent"
-        );
+        ));
         if (Array.isArray(updatedSentInvitations)) {
           setSentInvitations(updatedSentInvitations);
         }
@@ -345,21 +316,21 @@ const GroupsManagement: React.FC = () => {
       );
 
       // Send request to server
-      await apiService.post(
+      await retry(() => apiService.post(
           `/groups/invitations/${invitationId}/accept`,
           {}
-      );
+      ));
 
       // Refresh groups since we joined a new one
-      const updatedGroups = await apiService.get<Group[]>("/groups");
+      const updatedGroups = await retry(() => apiService.get<Group[]>("/groups"));
       if (Array.isArray(updatedGroups)) {
         setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       }
 
       // Double-check our received invitations are in sync with server
-      const updatedInvitations = await apiService.get<GroupInvitation[]>(
+      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
           "/groups/invitations/received"
-      );
+      ));
       if (Array.isArray(updatedInvitations)) {
         setReceivedInvitations(updatedInvitations);
       }
@@ -370,9 +341,9 @@ const GroupsManagement: React.FC = () => {
 
       // If there was an error, refresh invitations from server to restore correct state
       try {
-        const currentInvitations = await apiService.get<GroupInvitation[]>(
+        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
             "/groups/invitations/received"
-        );
+        ));
         if (Array.isArray(currentInvitations)) {
           setReceivedInvitations(currentInvitations);
         }
@@ -393,15 +364,15 @@ const GroupsManagement: React.FC = () => {
       );
 
       // Send request to server
-      await apiService.post(
+      await retry(() => apiService.post(
           `/groups/invitations/${invitationId}/reject`,
           {}
-      );
+      ));
 
       // Double-check our received invitations are in sync with server
-      const updatedInvitations = await apiService.get<GroupInvitation[]>(
+      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
           "/groups/invitations/received"
-      );
+      ));
       if (Array.isArray(updatedInvitations)) {
         setReceivedInvitations(updatedInvitations);
       }
@@ -412,9 +383,9 @@ const GroupsManagement: React.FC = () => {
 
       // If there was an error, refresh invitations from server to restore correct state
       try {
-        const currentInvitations = await apiService.get<GroupInvitation[]>(
+        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
             "/groups/invitations/received"
-        );
+        ));
         if (Array.isArray(currentInvitations)) {
           setReceivedInvitations(currentInvitations);
         }
@@ -436,9 +407,9 @@ const GroupsManagement: React.FC = () => {
       );
 
       // Refresh sent invitations to ensure sync with server
-      const updatedInvitations = await apiService.get<GroupInvitation[]>(
+      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
           "/groups/invitations/sent"
-      );
+      ));
       if (Array.isArray(updatedInvitations)) {
         setSentInvitations(updatedInvitations);
       }
@@ -449,9 +420,9 @@ const GroupsManagement: React.FC = () => {
 
       // If there was an error, refresh invitations from server
       try {
-        const currentInvitations = await apiService.get<GroupInvitation[]>(
+        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
             "/groups/invitations/sent"
-        );
+        ));
         if (Array.isArray(currentInvitations)) {
           setSentInvitations(currentInvitations);
         }
@@ -466,24 +437,15 @@ const GroupsManagement: React.FC = () => {
   // Handle leaving a group
   const handleLeaveGroup = async (groupId: number) => {
     try {
-      await apiService.delete(
-          `/groups/${groupId}/leave`
-      );
-      // Refresh groups
-      const updatedGroups = await apiService.get<Group[]>(
-          "/groups"
-      );
-      if (Array.isArray(updatedGroups)) {
-        setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
-      }
-
+      await apiService.delete(`/groups/${groupId}/leave`);
+      showMessage("You left the group");
       setIsGroupDetailDialogOpen(false);
+      // Remove left group from lists immediately
+      setGroups(prev => prev.filter(g => g.groupId !== groupId));
+      setGroupsWithDetails(prev => prev.filter(g => g.groupId !== groupId));
       setSelectedGroup(null);
-
-      showMessage("You have left the group");
-    } catch (error) {
-      console.error("Error leaving group:", error);
-      showMessage("Failed to leave the group");
+    } catch {
+      alert('Failed to leave group.');
     }
   };
 
@@ -514,11 +476,11 @@ const GroupsManagement: React.FC = () => {
   };
 
   // Format member list for display
-  const formatMembersList = (members: User[]) => {
-    if (!members || members.length === 0) return "No members";
+  // const formatMembersList = (members: User[]) => {
+//   if (!members || members.length === 0) return "No members";
+//   return members.map((member) => member.username).join(", ");
+// };
 
-    return members.map((member) => member.username).join(", ");
-  };
 
   if (loading) {
     return (
@@ -665,51 +627,56 @@ const GroupsManagement: React.FC = () => {
                           {group.members.length}{" "}
                                   {group.members.length === 1 ? "member" : "members"}
                         </span>
+
                               </div>
 
-                              {/* Movie pool preview */}
-                              {group.movies && group.movies.length > 0 ? (
-                                  <div className="mb-4">
+                              {/* Movie pool preview: fixed height and bottom-aligned */}
+                              <div className="mb-4 min-h-[80px] flex flex-col justify-end">
+                                {group.movies && group.movies.length > 0 ? (
+                                  <>
                                     <p className="text-xs text-[#3b3e88]/60 mb-2">
                                       Movie Pool ({group.movies.length})
                                     </p>
                                     <div className="flex gap-2 overflow-x-auto pb-2">
                                       {group.movies.slice(0, 4).map((movie) => (
-                                          <div
-                                              key={movie.movieId}
-                                              className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
-                                          >
-                                            <img
-                                                src={movie.posterURL}
-                                                alt={movie.title}
-                                                className="w-full h-full object-cover"
-                                            />
-                                          </div>
+                                        <div
+                                          key={movie.movieId}
+                                          className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
+                                        >
+                                          <img
+                                            src={movie.posterURL}
+                                            alt={movie.title}
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
                                       ))}
                                       {group.movies.length > 4 && (
-                                          <div
-                                              className="w-10 h-14 bg-indigo-100 flex-shrink-0 flex items-center justify-center rounded">
-                                <span className="text-xs font-medium text-indigo-700">
-                                  +{group.movies.length - 4}
-                                </span>
-                                          </div>
+                                        <div className="w-10 h-14 bg-indigo-100 flex-shrink-0 flex items-center justify-center rounded">
+                                          <span className="text-xs font-medium text-indigo-700">
+                                            +{group.movies.length - 4}
+                                          </span>
+                                        </div>
                                       )}
                                     </div>
-                                  </div>
-                              ) : (
-                                  <p className="text-[#b9c0de] text-xs mb-4">
+                                  </>
+                                ) : (
+                                  <p className="text-[#b9c0de] text-xs">
                                     No movies in pool yet
                                   </p>
-                              )}
+                                )}
+                              </div>
 
                               <div className="flex justify-between items-center text-xs text-[#b9c0de]">
-                        <span>
-                          {group.creator && (group.creator.userId.toString() === id)
-                              ? "Created by you"
-                              : group.creator
-                                  ? `Created by ${group.creator.username}`
-                                  : "Loading creator..."}
-                        </span>
+                                <span>
+                                  {group.creator && (group.creator.userId.toString() === id)
+                                      ? "Created by you"
+                                      : group.creator
+                                          ? `Created by ${group.creator.username}`
+                                          : "Loading creator..."}
+                                </span>
+                                <span>
+                                  {`Phase: ${group.phase.toUpperCase()}`}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -745,7 +712,7 @@ const GroupsManagement: React.FC = () => {
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                       strokeWidth="2"
-                                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"
                                   ></path>
                                 </svg>
                               </div>
@@ -930,26 +897,39 @@ const GroupsManagement: React.FC = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Invite Member Dialog */}
-          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-            <DialogContent className="max-w-md rounded-2xl">
+           {/* Invite Member Dialog */}
+          <Dialog open={isInviteDialogOpen} onOpenChange={(open) => {
+            setIsInviteDialogOpen(open);
+            if (open) {
+              apiService.get<User[]>(`/users/${id}/friends`).then(() => {
+                // handle friends data if needed
+              }).catch(() => {
+                // handle error
+              });
+            }
+          }}>
+            <DialogContent className="max-w-md w-full rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-[#3b3e88] text-xl">
-                  Invite to Group
+                  {selectedGroup
+                    ? `Invite to ${selectedGroup.groupName}`
+                    : "Invite to Group"}
                 </DialogTitle>
               </DialogHeader>
+
               <form onSubmit={handleInviteMember}>
+
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="invite-username" className="text-[#3b3e88]">
-                      Friend&#39;s Username
+                      Invite by Username
                     </Label>
                     <Input
                         id="invite-username"
                         value={inviteUsername}
                         onChange={(e) => setInviteUsername(e.target.value)}
                         placeholder="username"
-                        className="rounded-xl"
+                        className="w-full rounded-xl"
                         required
                     />
                   </div>
@@ -984,9 +964,78 @@ const GroupsManagement: React.FC = () => {
               {selectedGroup && (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="text-[#3b3e88] text-xl">
-                        {selectedGroup.groupName}
-                      </DialogTitle>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <DialogTitle className="text-[#3b3e88] text-xl">
+                            {selectedGroup.groupName}
+                          </DialogTitle>
+                          <p className="text-sm text-[#838bad] mt-1">
+                            Current Phase: {selectedGroup.phase.toUpperCase()}
+                          </p>
+                        </div>
+                        {selectedGroup.creatorId === parseInt(id as string) ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              id="editGroupName"
+                              defaultValue={selectedGroup.groupName}
+                              className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                const input = document.getElementById('editGroupName') as HTMLInputElement;
+                                const newName = input.value.trim();
+                                if (!newName || newName === selectedGroup.groupName) return;
+                                try {
+                                  await apiService.put(`/groups/${selectedGroup.groupId}`, { groupName: newName });
+                                  showMessage('Group name updated.');
+                                  // Refresh groups overview
+                                  await fetchGroupsData();
+                                  await enhanceGroupsWithDetails();
+                                  // Refresh selected group details
+                                  const refreshed = await loadGroupDetails(selectedGroup.groupId);
+                                  setSelectedGroup(refreshed);
+                                } catch {
+                                  setActionMessage(`Failed to update group name.`);
+                                  setShowActionMessage(true);
+                                }
+                              }}
+                            >
+                              Rename
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={async () => {
+                                if (!confirm('Are you sure you want to delete this group?')) return;
+                                try {
+                                  await apiService.delete(`/groups/${selectedGroup.groupId}`);
+                                  // Close dialog and optimistically remove group from lists
+                                  setIsGroupDetailDialogOpen(false);
+                                  showMessage('Group deleted.');
+                                  if (selectedGroup) {
+                                    setGroups(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                                    setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                                  }
+                                  setSelectedGroup(null);
+                                } catch {
+                                  alert('Failed to delete group.');
+                                }
+                              }}
+                            >
+                              Delete Group
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleLeaveGroup(selectedGroup.groupId)}
+                          >
+                            Leave Group
+                          </Button>
+                        )}
+                    </div>
                     </DialogHeader>
                     <div className="py-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -996,50 +1045,58 @@ const GroupsManagement: React.FC = () => {
                           </h4>
                           <div className="bg-indigo-50 rounded-xl p-4 space-y-2">
                             <div>
-                          <span className="text-[#838bad] text-sm">
-                            Created by:
-                          </span>
+                              <span className="text-[#838bad] text-sm">
+                                Created by:
+                              </span>
                               <p className="text-[#3b3e88] font-medium">
-                                {selectedGroup.creator?.username || "Unknown"}{" "}
-                                {selectedGroup.creatorId === parseInt(id as string) && "(You)"}
+                                {selectedGroup.creator?.username || "Unknown"} {selectedGroup.creatorId === parseInt(id as string) && "(You)"}
                               </p>
                             </div>
                             <div>
-                          <span className="text-[#838bad] text-sm">
-                            Members ({selectedGroup.members?.length || 0}):
-                          </span>
-                              <p className="text-[#3b3e88]">
-                                {formatMembersList(selectedGroup.members || [])}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-6">
-                            <h4 className="font-medium text-[#3b3e88] mb-2">
-                              Actions
-                            </h4>
-                            <div className="space-y-2">
+                              <span className="text-[#838bad] text-sm">
+                                Members ({selectedGroup.members?.length || 0}):
+                              </span>
+                              <ul className="text-[#3b3e88] space-y-1">
+                                {selectedGroup.members.map((member) => (
+                                  <li key={member.userId} className="flex items-center justify-between">
+                                    <span>{member.username}{member.userId === selectedGroup.creatorId && ' (Creator)'}</span>
+                                    {selectedGroup.creatorId === parseInt(id as string) && member.userId !== selectedGroup.creatorId && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-rose-500 text-rose-500 hover:bg-rose-50 rounded-xl ml-2"
+                                        onClick={async () => {
+                                          try {
+                                            await retry(() => apiService.delete(`/groups/${selectedGroup.groupId}/members/${member.userId}`));
+                                            setActionMessage(`Removed ${member.username} from the group.`);
+                                            setShowActionMessage(true);
+                                            // Refresh group details
+                                            const refreshed = await loadGroupDetails(Number(selectedGroup.groupId));
+                                            setSelectedGroup(refreshed);
+                                          } catch {
+                                            setActionMessage(`Failed to remove ${member.username}.`);
+                                            setShowActionMessage(true);
+                                          }
+                                        }}
+                                      >
+                                        Remove
+                                      </Button>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                              {/* Add Member button */}
                               <Button
-                                  onClick={() => {
-                                    setSelectedGroupId(selectedGroup.groupId);
-                                    setIsInviteDialogOpen(true);
-                                  }}
-                                  className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
+                                size="sm"
+                                variant="outline"
+                                className="mt-2 w-full border-violet-600 text-[#3b3e88] hover:bg-violet-50 rounded-xl"
+                                onClick={() => {
+                                  setSelectedGroupId(selectedGroup.groupId);
+                                  setIsInviteDialogOpen(true);
+                                }}
                               >
-                                Invite Friends
+                                Add Member
                               </Button>
-
-                              {selectedGroup.creatorId !== parseInt(id as string) && (
-                                  <Button
-                                      onClick={() =>
-                                          handleLeaveGroup(selectedGroup.groupId)
-                                      }
-                                      variant="outline"
-                                      className="w-full border-rose-500 text-rose-500 hover:bg-rose-50 rounded-xl text-sm"
-                                  >
-                                    Leave Group
-                                  </Button>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -1085,31 +1142,50 @@ const GroupsManagement: React.FC = () => {
                               </div>
                           )}
 
-                          <div className="grid grid-cols-2 gap-3 mt-4">
+                          <div className="flex flex-col gap-3 mt-4">
+                            {/* Member action button based on phase */}
                             <Button
-                                onClick={() =>
-                                    navigateToGroupPool(selectedGroup.groupId)
-                                }
-                                className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl text-sm"
+                              className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
+                              onClick={() => {
+                                const phase = selectedGroup.phase;
+                                if (phase === "POOL") navigateToGroupPool(selectedGroup.groupId);
+                                else if (phase === "VOTING") navigateToGroupVoting(selectedGroup.groupId);
+                                else navigateToGroupResults(selectedGroup.groupId);
+                              }}
                             >
-                              Manage Pool
+                              {selectedGroup.phase === "POOL"
+                                ? "Add movies to the movie pool"
+                                : selectedGroup.phase === "VOTING"
+                                ? "Vote on the movies"
+                                : "See the final ranking"}
                             </Button>
-                            <Button
-                                onClick={() =>
-                                    navigateToGroupVoting(selectedGroup.groupId)
-                                }
+                            {/* Admin-only next-phase button */}
+                            {selectedGroup.creatorId === parseInt(id as string) && selectedGroup.phase !== "RESULTS" && (
+                              <Button
                                 className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
-                            >
-                              Vote
-                            </Button>
-                            <Button
-                                onClick={() =>
-                                    navigateToGroupResults(selectedGroup.groupId)
-                                }
-                                className="bg-purple-600 hover:bg-purple-700 rounded-xl text-sm col-span-2"
-                            >
-                              View Results
-                            </Button>
+                                onClick={async () => {
+                                  try {
+                                    if (selectedGroup.phase === "POOL") {
+                                      await apiService.post(`/groups/${selectedGroup.groupId}/start-voting`, {});
+                                      router.replace(`/users/${id}/groups/${selectedGroup.groupId}/vote`);
+                                    } else if (selectedGroup.phase === "VOTING") {
+                                      await apiService.post(`/groups/${selectedGroup.groupId}/show-results`, {});
+                                      router.replace(`/users/${id}/groups/${selectedGroup.groupId}/results`);
+                                    }
+                                  } catch {
+                                    // Only admin can advance; ignore errors
+                                  }
+                                  // Redirect regardless
+                                  const nextPath = selectedGroup.phase === "POOL"
+                                    ? `vote` : `results`;
+                                  router.replace(`/users/${id}/groups/${selectedGroup.groupId}/${nextPath}`);
+                                }}
+                              >
+                                {selectedGroup.phase === "POOL"
+                                  ? "Start voting phase"
+                                  : "Calculate final ranking"}
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>

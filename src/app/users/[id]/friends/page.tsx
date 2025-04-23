@@ -7,6 +7,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
+import { retry } from 'src/utils/retry';
 
 interface FriendRequest {
   requestId: number;
@@ -58,7 +59,7 @@ const FriendsManagement: React.FC = () => {
 
         // Get all friends
         try {
-          const friendsData = await apiService.get<User[]>('/friends');
+          const friendsData = await retry(() => apiService.get<User[]>('/friends'));
           // Sort friends alphabetically by username
           const sortedFriends = Array.isArray(friendsData)
               ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
@@ -72,7 +73,7 @@ const FriendsManagement: React.FC = () => {
 
         // Get received friend requests
         try {
-          const receivedRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          const receivedRequestsData = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/received'));
           setReceivedRequests(Array.isArray(receivedRequestsData) ? receivedRequestsData : []);
         } catch (receivedRequestsError) {
           console.error("Error fetching received friend requests:", receivedRequestsError);
@@ -81,7 +82,7 @@ const FriendsManagement: React.FC = () => {
 
         // Get sent friend requests
         try {
-          const sentRequestsData = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+          const sentRequestsData = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/sent'));
           setSentRequests(Array.isArray(sentRequestsData) ? sentRequestsData : []);
         } catch (sentRequestsError) {
           console.error("Error fetching sent friend requests:", sentRequestsError);
@@ -137,10 +138,7 @@ const FriendsManagement: React.FC = () => {
     try {
       // First, find the receiverId based on username
       try {
-        const searchResults = await apiService.get<UserSearchResponse[]>(
-            `/users/search?username=${encodeURIComponent(friendUsername)}`
-        );
-
+        const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(`/users/search?username=${encodeURIComponent(friendUsername)}`));
         if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
           showMessage(`User "${friendUsername}" not found. Please check the username and try again.`);
           setIsSubmitting(false);
@@ -157,7 +155,7 @@ const FriendsManagement: React.FC = () => {
 
           // Refresh sent requests
           try {
-            const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+            const updatedSentRequests = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/sent'));
             setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
           } catch (refreshError) {
             console.error("Error refreshing sent requests after sending new request:", refreshError);
@@ -199,7 +197,7 @@ const FriendsManagement: React.FC = () => {
 
         // Refresh friends list
         try {
-          const updatedFriends = await apiService.get<User[]>('/friends');
+          const updatedFriends = await retry(() => apiService.get<User[]>('/friends'));
           // Sort friends alphabetically
           setFriends(Array.isArray(updatedFriends)
               ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))
@@ -211,7 +209,7 @@ const FriendsManagement: React.FC = () => {
 
         // Refresh received requests
         try {
-          const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          const updatedRequests = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/received'));
           setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
         } catch (refreshRequestsError) {
           console.error("Error refreshing received requests after accepting:", refreshRequestsError);
@@ -236,7 +234,7 @@ const FriendsManagement: React.FC = () => {
 
         // Refresh received requests
         try {
-          const updatedRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/received');
+          const updatedRequests = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/received'));
           setReceivedRequests(Array.isArray(updatedRequests) ? updatedRequests : []);
         } catch (refreshError) {
           console.error("Error refreshing received requests after rejection:", refreshError);
@@ -269,7 +267,7 @@ const FriendsManagement: React.FC = () => {
 
         // Refresh sent requests
         try {
-          const updatedSentRequests = await apiService.get<FriendRequest[]>('/friends/friendrequests/sent');
+          const updatedSentRequests = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/sent'));
           setSentRequests(Array.isArray(updatedSentRequests) ? updatedSentRequests : []);
         } catch (refreshError) {
           console.error("Error refreshing sent requests after cancellation:", refreshError);
@@ -296,7 +294,7 @@ const FriendsManagement: React.FC = () => {
 
         // Refresh friends list
         try {
-          const updatedFriends = await apiService.get<User[]>('/friends');
+          const updatedFriends = await retry(() => apiService.get<User[]>('/friends'));
           // Sort friends alphabetically
           setFriends(Array.isArray(updatedFriends)
               ? [...updatedFriends].sort((a, b) => a.username.localeCompare(b.username))

@@ -8,6 +8,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import { ApplicationError } from "@/app/types/error";
+import { retry } from "@/utils/retry";
 import ActionMessage from "@/components/ui/action_message";
 import MovieCard from "@/components/ui/Movie_card";
 import MovieDetailsModal from "@/components/ui/movie_details";
@@ -77,10 +78,10 @@ const Profile: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedUser: User = await apiService.get(`/users/${id}/profile`);
+      const fetchedUser: User = await retry(() => apiService.get(`/users/${id}/profile`));
       setUser(fetchedUser);
-      // Fetch user preferences (genres and favorite movie)
-      const prefs = await apiService.get(`/users/${id}/preferences`) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
+      // Fetch user preferences (genres and favorite movie) with retry
+      const prefs = await retry(() => apiService.get(`/users/${id}/preferences`)) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
       setUserGenres(Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : []);
       setUserFavoriteMovie(prefs.favoriteMovie || null);
     } catch (error: unknown) {

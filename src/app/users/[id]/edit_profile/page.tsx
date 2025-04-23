@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
+import { retry } from "@/utils/retry";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { ApplicationError } from "@/app/types/error";
 import { useApi } from "@/app/hooks/useApi";
@@ -181,7 +182,7 @@ const EditProfile: React.FC = () => {
       // Mark as processed regardless of outcome
       setHasProcessedStoredMovie(true);
     }
-  }, []); // Run once on mount
+  }, [hasProcessedStoredMovie]);
 
   // Second useEffect to fetch user data
   useEffect(() => {
@@ -192,7 +193,7 @@ const EditProfile: React.FC = () => {
 
       const fetchUserData = async () => {
         try {
-          const fetchedUser = await apiService.get(`/users/${id}/profile`) as User;
+          const fetchedUser = await retry(() => apiService.get(`/users/${id}/profile`)) as User;
           setUser(fetchedUser);
 
           // Initialize form fields if not already set from session storage
@@ -224,7 +225,7 @@ const EditProfile: React.FC = () => {
 
       fetchUserData();
     }
-  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie]); // Include hasProcessedStoredMovie as a dependency
+  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenre]); // Include hasProcessedStoredMovie and favoriteGenre as dependencies
 
   if (loading && !hasProcessedStoredMovie) {
     return (

@@ -1,71 +1,46 @@
 "use client";
 
+import { useApi } from "@/app/hooks/useApi";
 import Navigation from "@/components/ui/navigation";
 import { User } from "@/app/types/user";
 import { Movie } from "@/app/types/movie";
+
+import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import { useState, useEffect } from "react";
-import { useApi } from "@/app/hooks/useApi";
+
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
-interface Group {
-  groupId: number;
-  groupName: string;
-  description: string;
-  creator: User;
-  members: User[];
-  createdAt: string;
-}
+
 
 const MoviePool: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
-  const {id, groupId} = useParams();
-  const [group, setGroup] = useState<Group | null>(null);
+  const params = useParams();
+  let groupId = params.groupId;
+  if (Array.isArray(groupId)) groupId = groupId[0];
+  const { value: userId } = useLocalStorage<string>("userId", "");
+  const router = useRouter();
+  const apiService = useApi();
   const [moviePool, setMoviePool] = useState<Movie[]>([]);
   const [userWatchlist, setUserWatchlist] = useState<Movie[]>([]);
-  const {value: userId} = useLocalStorage<string>("userId", "");
-  const apiService = useApi();
-  const router = useRouter();
+  const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
 
-  // Fetch group details
   useEffect(() => {
-    const fetchGroupDetails = async () => {
-      if (!groupId || !id) return;
-
-      try {
-        // Fetch group members using the endpoint from GroupController
-        const members = await apiService.get<User[]>(`/groups/${groupId}/members`);
-
-        // Get all user groups to find the current group data
-        const allGroups = await apiService.get<Group[]>('/groups');
-        const currentGroup = allGroups.find(g => g.groupId === Number(groupId));
-
-        if (currentGroup) {
-          // If we found the group in the list, use its data
-          setGroup({
-            ...currentGroup,
-            members: members // Add members to the group object
-          });
-        } else {
-          // Fallback: create a minimal group object
-          setGroup({
-            groupId: Number(groupId),
-            groupName: `Group ${groupId}`,
-            description: "",
-            creator: members.find(m => m.userId === Number(userId)) || members[0],
-            members: members,
-            createdAt: new Date().toISOString()
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch group details:", error);
+    if (phaseLoading) return;
+    if (phaseError) {
+      alert(phaseError as string);
+      return;
+    }
+    if (phase && phase !== "POOL") {
+      if (phase === "VOTING") {
+        router.replace(`/users/${userId}/groups/${groupId}/vote`);
+      } else if (phase === "RESULTS") {
+        router.replace(`/users/${userId}/groups/${groupId}/results`);
       }
-    };
-
-    fetchGroupDetails();
-  }, [groupId, userId, apiService]);
+    }
+  }, [phase, phaseLoading, phaseError, router, userId, groupId]);
 
   // Fetch user's watchlist
   useEffect(() => {
@@ -74,8 +49,12 @@ const MoviePool: React.FC = () => {
 
       try {
         const response = await apiService.get<User>(`/users/${userId}/profile`);
-        setUserWatchlist(response.watchlist);
-      } catch (error) {
+        if (response && typeof response === 'object' && 'watchlist' in response) {
+          setUserWatchlist((response as User).watchlist);
+        } else {
+          setUserWatchlist([]);
+        }
+      } catch (error: unknown) {
         console.error("Failed to fetch watchlist:", error);
       }
     };
@@ -90,8 +69,12 @@ const MoviePool: React.FC = () => {
 
       try {
         const movies = await apiService.get<Movie[]>(`/groups/${groupId}/pool`);
-        setMoviePool(movies);
-      } catch (error) {
+        if (Array.isArray(movies)) {
+          setMoviePool(movies as Movie[]);
+        } else {
+          setMoviePool([]);
+        }
+      } catch (error: unknown) {
         console.error("Failed to fetch movie pool:", error);
       }
     };
@@ -118,45 +101,50 @@ const MoviePool: React.FC = () => {
       alert("Please select a movie before adding it to the pool.");
       return;
     }
-
     try {
       const selectedMovie = selectedMovies[0];
-
-      // Using the exact endpoint defined in the GroupController
-      // The backend expects a POST to /groups/{groupId}/pool/{movieId}
       await apiService.post(`/groups/${groupId}/pool/${selectedMovie.movieId.valueOf()}`, {});
-      console.log(`posted successfully : ${selectedMovie.movieId}`);
       // Refresh the movie pool after adding
       const updatedPool = await apiService.get<Movie[]>(`/groups/${groupId}/pool`);
-      console.log(`got new movies`);
       setMoviePool(updatedPool);
-
-      // Clear selection after successful addition
       setSelectedMovies([]);
-
       alert("Movie added to the pool successfully!");
-    } catch (error) {
-      console.error("Failed to add movie to the pool:", error);
-      alert("An error occurred while adding the movie to the pool. Please try again.");
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const err = error as { status?: number; message?: string };
+        if (err.status === 409) {
+          alert(err.message || "You can only add movies during the POOL phase.");
+        } else if (err.status === 401) {
+          alert("Session expired. Please log in again.");
+        } else {
+          alert("An error occurred while adding the movie to the pool. Please try again.");
+        }
+      } else {
+        alert("An unknown error occurred while adding the movie to the pool. Please try again.");
+      }
     }
   };
 
   // Function to remove movie from pool
   const handleRemoveFromPool = async (movieId: number) => {
     try {
-      // Using the exact endpoint defined in the GroupController
       await apiService.delete(`/groups/${groupId}/pool/${movieId}`);
-
-      // Refresh the movie pool after removing
       const updatedPool = await apiService.get<Movie[]>(`/groups/${groupId}/pool`);
       setMoviePool(updatedPool);
-
       alert("Movie removed from the pool successfully!");
-    } catch (error) {
-      console.error("Failed to remove movie from the pool:", error);
-      alert(
-          "An error occurred while removing the movie from the pool. Please try again."
-      );
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const err = error as { status?: number; message?: string };
+        if (err.status === 409) {
+          alert(err.message || "You can only remove movies during the POOL phase, and only movies you added.");
+        } else if (err.status === 401) {
+          alert("Session expired. Please log in again.");
+        } else {
+          alert("An error occurred while removing the movie from the pool. Please try again.");
+        }
+      } else {
+        alert("An unknown error occurred while removing the movie from the pool. Please try again.");
+      }
     }
   };
 
@@ -169,7 +157,7 @@ const MoviePool: React.FC = () => {
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           <div className="mb-8">
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
-              {group ? `${group.groupName}'s Movie Pool` : "Movie Pool"}
+              {phaseGroup ? `${phaseGroup.groupName} - Movie Pool` : "Movie Pool"}
             </h1>
             <p className="text-[#b9c0de] mt-2">Choose Movies to Vote and Watch</p>
           </div>
@@ -199,7 +187,12 @@ const MoviePool: React.FC = () => {
 
           {/* Add to Pool Button */}
           <div className="flex justify-end mt-4">
-            <Button onClick={handleAddMovieToPool}>Add to Pool</Button>
+            <Button
+                className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
+                onClick={handleAddMovieToPool} disabled={phase !== "POOL"}>Add to Pool</Button>
+            {phase !== "POOL" && (
+              <p className="text-center text-sm text-[#f97274] mt-2">You can only add movies during the POOL phase.</p>
+            )}
           </div>
 
           {/* Movie Pool */}
@@ -213,22 +206,45 @@ const MoviePool: React.FC = () => {
           <div className="overflow-x-auto mb-8">
             <MovieListHorizontal
                 movies={moviePool}
-                onMovieClick={(movie) => handleRemoveFromPool(movie.movieId)}
+                onMovieClick={(movie) => {
+                  if (phase === "POOL") {
+                    handleRemoveFromPool(movie.movieId);
+                  }
+                }}
                 emptyMessage="No movies in the pool yet"
                 noResultsMessage="No movies match your search"
                 hasOuterContainer={false}
                 selectedMovieIds={[]}
             />
+            {phase !== "POOL" && (
+              <p className="text-center text-sm text-[#f97274] mt-2">You can only remove movies during the POOL phase.</p>
+            )}
           </div>
 
-          <div className="flex justify-end mt-8">
+          <div className="flex justify-between items-center mt-8 gap-2">
             <Button
-                onClick={() =>
-                    router.push(`/users/${userId}/groups/${groupId}/vote`)
-                }
+              variant="outline"
+              onClick={() => router.push(`/users/${userId}/groups`)}
             >
-              Vote
+              Back to group overview
             </Button>
+            {/* Start Voting button for group creator */}
+            {phase === "POOL" && phaseGroup && String(phaseGroup.creatorId) === String(userId) && (
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm mt-2"
+                onClick={async () => {
+                  // Attempt to start voting, but always redirect to voting page
+                  try {
+                    await apiService.post(`/groups/${groupId}/start-voting`, {});
+                  } catch {
+                    // Ignore errors (e.g., 409 conflict) since phase may already have advanced
+                  }
+                  router.replace(`/users/${userId}/groups/${groupId}/vote`);
+                }}
+              >
+                Start Voting
+              </Button>
+            )}
           </div>
         </div>
       </div>
