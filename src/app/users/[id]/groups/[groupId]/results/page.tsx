@@ -1,7 +1,6 @@
 "use client";
 
 import { Movie } from "@/app/types/movie";
-import { Group, GroupPhase } from "@/app/types/group";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 import { retry } from 'src/utils/retry';
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
+
+// Removed unused Group and GroupPhase imports
 
 // Define interfaces for the data coming from the backend
 interface MovieAverageRankDTO {
@@ -26,36 +27,17 @@ interface RankingResultGetDTO {
 }
 
 const Results: React.FC = () => {
-  const [phase, setPhase] = useState<GroupPhase | null>(null);
   const params = useParams();
   let { id, groupId } = params as { id?: string | string[]; groupId?: string | string[] };
   if (Array.isArray(id)) id = id[0];
   if (Array.isArray(groupId)) groupId = groupId[0];
-  const { group: phaseGroup, phase: phaseFromHook, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
+  const { phase: phaseFromHook, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<RankingResultGetDTO | null>(null);
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const apiService = useApi();
-
-  // Group details state
-  const [group, setGroup] = useState<Group | null>(null);
-
-  // Fetch group details and phase
-  useEffect(() => {
-    const fetchGroupDetails = async () => {
-      if (!groupId) return;
-      try {
-        const groupData = await retry(() => apiService.get<Group>(`/groups/${groupId}`));
-        setGroup(groupData);
-        setPhase(groupData.phase);
-      } catch (error) {
-        console.error("Failed to fetch group details:", error);
-      }
-    };
-    fetchGroupDetails();
-  }, [groupId, apiService]);
 
   // Fetch ranking result
   useEffect(() => {
@@ -126,9 +108,7 @@ const Results: React.FC = () => {
           <div className="mb-8 flex items-center">
             <div>
               <h1 className="font-semibold text-[#3b3e88] text-3xl">
-                {phaseGroup
-                  ? `${phaseGroup.groupName} - Movie Ranking Results`
-                  : "Movie Ranking Results"}
+                Movie Ranking Results
               </h1>
               <p className="text-[#b9c0de] mt-2">See what your group has chosen to watch</p>
             </div>

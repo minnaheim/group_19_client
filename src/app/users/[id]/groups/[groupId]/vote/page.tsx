@@ -13,8 +13,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { Trash2, ArrowLeft } from "lucide-react"; // Import icons
-import { retry } from 'src/utils/retry';
+import { Trash2 } from "lucide-react"; // Import icons
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { VoteStateDTO } from "@/app/types/vote";
@@ -74,7 +73,7 @@ const SortableItem: React.FC<{
 
 const Vote: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
-  const { id, groupId } = useParams();
+  const { groupId } = useParams();
   const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
   const router = useRouter();
   const apiService = useApi();
@@ -82,7 +81,6 @@ const Vote: React.FC = () => {
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [history, setHistory] = useState<HistoryState[]>([]);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 
   useEffect(() => {
@@ -136,21 +134,6 @@ const Vote: React.FC = () => {
         rankings: [...rankings]
       }
     ]);
-  };
-
-  // Undo to previous state
-  const handleUndo = () => {
-    if (history.length > 1) {
-      // Remove current state and go back to previous state
-      const newHistory = [...history];
-      const previousState = newHistory.pop();
-
-      if (previousState) {
-        setHistory(newHistory);
-        setAvailableMovies([...previousState.availableMovies]);
-        setRankings([...previousState.rankings]);
-      }
-    }
   };
 
   // Handle direct removal of a movie from ranking
@@ -325,6 +308,8 @@ const Vote: React.FC = () => {
   // Show remove icon only if ranking submitted = false
   const showRemove = (movie: Movie | null) => !!movie && !hasSubmitted;
 
+  const [, setHistory] = useState<HistoryState[]>([]);
+
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
@@ -438,8 +423,9 @@ const Vote: React.FC = () => {
                   onClick={async () => {
                     try {
                       await apiService.post(`/groups/${groupId}/show-results`, {});
-                    } catch (err: any) {
-                      alert(err.message || 'Failed to end voting.');
+                    } catch (err: unknown) {
+                      const message = err instanceof Error ? err.message : String(err);
+                      alert(message || 'Failed to end voting.');
                       return;
                     }
                     router.replace(`/users/${userId}/groups/${groupId}/results`);

@@ -61,24 +61,6 @@ const GroupsManagement: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
 
-  // Friends state for invite dialog
-  const [friends, setFriends] = useState<User[]>([]);
-  const [loadingFriends, setLoadingFriends] = useState(false);
-
-  // ... (existing state and logic)
-
-  // Invite a friend by username (from friends list)
-  const handleInviteMemberFriend = async (username: string) => {
-    setIsSubmittingInvite(true);
-    setInviteUsername(username);
-    try {
-      await handleInviteMember({ preventDefault: () => {} } as React.FormEvent);
-    } finally {
-      setIsSubmittingInvite(false);
-    }
-  };
-
-
   // Basic groups data from initial endpoint
   const [groups, setGroups] = useState<Group[]>([]);
   // Enhanced groups with member and movie details
@@ -462,9 +444,8 @@ const GroupsManagement: React.FC = () => {
       setGroups(prev => prev.filter(g => g.groupId !== groupId));
       setGroupsWithDetails(prev => prev.filter(g => g.groupId !== groupId));
       setSelectedGroup(null);
-    } catch (error) {
-      console.error("Error leaving group:", error);
-      showMessage("Failed to leave group");
+    } catch {
+      alert('Failed to leave group.');
     }
   };
 
@@ -920,10 +901,11 @@ const GroupsManagement: React.FC = () => {
           <Dialog open={isInviteDialogOpen} onOpenChange={(open) => {
             setIsInviteDialogOpen(open);
             if (open) {
-              setLoadingFriends(true);
-              apiService.get<User[]>(`/users/${id}/friends`).then((data) => {
-                setFriends(Array.isArray(data) ? data : []);
-              }).catch(() => setFriends([])).finally(() => setLoadingFriends(false));
+              apiService.get<User[]>(`/users/${id}/friends`).then(() => {
+                // handle friends data if needed
+              }).catch(() => {
+                // handle error
+              });
             }
           }}>
             <DialogContent className="max-w-md w-full rounded-2xl">
@@ -1013,12 +995,8 @@ const GroupsManagement: React.FC = () => {
                                   // Refresh selected group details
                                   const refreshed = await loadGroupDetails(selectedGroup.groupId);
                                   setSelectedGroup(refreshed);
-                                } catch (error: any) {
-                                  if (error instanceof Error) {
-                                    setActionMessage(error.message);
-                                  } else {
-                                    setActionMessage(`Failed to update group name.`);
-                                  }
+                                } catch {
+                                  setActionMessage(`Failed to update group name.`);
                                   setShowActionMessage(true);
                                 }
                               }}
@@ -1040,7 +1018,7 @@ const GroupsManagement: React.FC = () => {
                                     setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
                                   }
                                   setSelectedGroup(null);
-                                } catch (error) {
+                                } catch {
                                   alert('Failed to delete group.');
                                 }
                               }}
@@ -1095,12 +1073,8 @@ const GroupsManagement: React.FC = () => {
                                             // Refresh group details
                                             const refreshed = await loadGroupDetails(Number(selectedGroup.groupId));
                                             setSelectedGroup(refreshed);
-                                          } catch (error: unknown) {
-                                            if (error instanceof Error) {
-                                              setActionMessage(error.message);
-                                            } else {
-                                              setActionMessage(`Failed to remove ${member.username}.`);
-                                            }
+                                          } catch {
+                                            setActionMessage(`Failed to remove ${member.username}.`);
                                             setShowActionMessage(true);
                                           }
                                         }}
@@ -1198,16 +1172,13 @@ const GroupsManagement: React.FC = () => {
                                       await apiService.post(`/groups/${selectedGroup.groupId}/show-results`, {});
                                       router.replace(`/users/${id}/groups/${selectedGroup.groupId}/results`);
                                     }
-                                  } catch (error: any) {
-                                    // Only admin can advance; otherwise ignore and redirect
-                                    if (error.status === 403) {
-                                      alert("Only the group creator can perform this action.");
-                                    }
-                                    // Redirect regardless
-                                    const nextPath = selectedGroup.phase === "POOL"
-                                      ? `vote` : `results`;
-                                    router.replace(`/users/${id}/groups/${selectedGroup.groupId}/${nextPath}`);
+                                  } catch {
+                                    // Only admin can advance; ignore errors
                                   }
+                                  // Redirect regardless
+                                  const nextPath = selectedGroup.phase === "POOL"
+                                    ? `vote` : `results`;
+                                  router.replace(`/users/${id}/groups/${selectedGroup.groupId}/${nextPath}`);
                                 }}
                               >
                                 {selectedGroup.phase === "POOL"

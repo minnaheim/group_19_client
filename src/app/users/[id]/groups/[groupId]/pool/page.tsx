@@ -236,7 +236,7 @@ const MoviePool: React.FC = () => {
                   // Attempt to start voting, but always redirect to voting page
                   try {
                     await apiService.post(`/groups/${groupId}/start-voting`, {});
-                  } catch (_error: any) {
+                  } catch {
                     // Ignore errors (e.g., 409 conflict) since phase may already have advanced
                   }
                   router.replace(`/users/${userId}/groups/${groupId}/vote`);
