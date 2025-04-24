@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import type { ApplicationError } from "@/app/types/error";
 import { useParams, useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
 import { useApi } from "@/app/hooks/useApi";
@@ -8,6 +9,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 interface FriendRequest {
     requestId: number;
@@ -78,9 +80,14 @@ const Dashboard: React.FC = () => {
                 try {
                     const userData = await retry(() => apiService.get<User>(`/users/${id}/profile`));
                     setUser(userData);
-                } catch (profileError) {
-                    console.error("Error fetching user profile:", profileError);
-                    setError("Failed to load profile data. Please try again later.");
+                    showMessage('User profile loaded');
+                } catch (err: unknown) {
+                    console.error("Error fetching user profile:", err);
+                    if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
+                        showMessage("Welcome! We couldn't fetch your profile details right now.");
+                    } else {
+                        setError("Failed to load profile data. Please try again later.");
+                    }
                     return;
                 }
 
@@ -105,9 +112,14 @@ const Dashboard: React.FC = () => {
                             });
                         });
                     }
-                } catch (friendRequestsError) {
-                    console.error("Error fetching friend requests:", friendRequestsError);
-                    showMessage("Failed to load friend requests. Some data may be incomplete.");
+                    showMessage('Received friend requests loaded');
+                } catch (err: unknown) {
+                    console.error("Error fetching friend requests:", err);
+                    if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+                        showMessage('Your session has expired. Please log in again to see friend requests.');
+                    } else {
+                        showMessage('Failed to load friend requests. Please try again later.');
+                    }
                 }
 
                 // Get group invitations
@@ -129,9 +141,14 @@ const Dashboard: React.FC = () => {
                             });
                         });
                     }
-                } catch (groupInvitesError) {
-                    console.error("Error fetching group invitations:", groupInvitesError);
-                    showMessage("Failed to load group invitations. Some data may be incomplete.");
+                    showMessage('Received group invitations loaded');
+                } catch (err: unknown) {
+                    console.error("Error fetching group invitations:", err);
+                    if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+                        showMessage('Your session has expired. Please log in again to see group invitations.');
+                    } else {
+                        showMessage('Failed to load group invitations. Please try again later.');
+                    }
                 }
 
                 // Set all notifications at once
@@ -166,30 +183,61 @@ const Dashboard: React.FC = () => {
                         `/friends/friendrequest/${notification.requestId}/accept`,
                         {} // empty data object
                     );
-
-                    showMessage(`Friend request from ${notification.sender} accepted!`);
-
-                    // Remove this notification
-                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
-                } catch (acceptError) {
-                    console.error(`Error accepting friend request ID ${notification.requestId}:`, acceptError);
-                    showMessage(`Failed to accept friend request. The request may have expired or been withdrawn.`);
+                    showMessage('Friend request accepted');
+                } catch (err: unknown) {
+                    console.error(`Error accepting friend request ID ${notification.requestId}:`, err);
+                    if (err instanceof Error && 'status' in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                            case 400:
+                                showMessage('This friend request appears to be invalid.');
+                                break;
+                            case 401:
+                                showMessage('Your session has expired. Please log in again to accept requests.');
+                                break;
+                            case 404:
+                                showMessage('This friend request could not be found. It might have been cancelled.');
+                                break;
+                            default:
+                                showMessage('An error occurred while accepting the friend request. Please try again.');
+                        }
+                    } else {
+                        showMessage('An error occurred while accepting the friend request. Please try again.');
+                    }
                 }
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
             } else if (notification.type === 'group_invite' && notification.invitationId) {
                 try {
                     await apiService.post(
                         `/groups/invitations/${notification.invitationId}/accept`,
                         {} // empty data object
                     );
-
-                    showMessage(`Group invitation accepted!`);
-
-                    // Remove this notification
-                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
-                } catch (acceptError) {
-                    console.error(`Error accepting group invitation ID ${notification.invitationId}:`, acceptError);
-                    showMessage(`Failed to accept group invitation. The invitation may have expired.`);
+                    showMessage('Group invitation accepted');
+                } catch (err: unknown) {
+                    console.error(`Error accepting group invitation ID ${notification.invitationId}:`, err);
+                    if (err instanceof Error && 'status' in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                            case 400:
+                                showMessage('This group invitation appears to be invalid.');
+                                break;
+                            case 401:
+                                showMessage('Your session has expired. Please log in again to accept invitations.');
+                                break;
+                            case 403:
+                                showMessage('You cannot accept this invitation.');
+                                break;
+                            case 404:
+                                showMessage('This group invitation could not be found. It might have been cancelled.');
+                                break;
+                            default:
+                                showMessage('An error occurred while accepting the group invitation. Please try again.');
+                        }
+                    } else {
+                        showMessage('An error occurred while accepting the group invitation. Please try again.');
+                    }
                 }
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
             }
         } catch (error) {
             console.error("Critical error in accept notification process:", error);
@@ -206,30 +254,61 @@ const Dashboard: React.FC = () => {
                         `/friends/friendrequest/${notification.requestId}/reject`,
                         {}
                     );
-
-                    showMessage(`Friend request declined`);
-
-                    // Remove this notification
-                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
-                } catch (rejectError) {
-                    console.error(`Error rejecting friend request ID ${notification.requestId}:`, rejectError);
-                    showMessage("Failed to reject friend request. The request may have expired or been withdrawn.");
+                    showMessage('Friend request rejected');
+                } catch (err: unknown) {
+                    console.error(`Error rejecting friend request ID ${notification.requestId}:`, err);
+                    if (err instanceof Error && 'status' in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                            case 400:
+                                showMessage('This friend request appears to be invalid.');
+                                break;
+                            case 401:
+                                showMessage('Your session has expired. Please log in again to reject requests.');
+                                break;
+                            case 404:
+                                showMessage('This friend request could not be found. It might have been cancelled.');
+                                break;
+                            default:
+                                showMessage('An error occurred while rejecting the friend request. Please try again.');
+                        }
+                    } else {
+                        showMessage('An error occurred while rejecting the friend request. Please try again.');
+                    }
                 }
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
             } else if (notification.type === 'group_invite' && notification.invitationId) {
                 try {
                     await apiService.post(
                         `/groups/invitations/${notification.invitationId}/reject`,
                         {}
                     );
-
-                    showMessage(`Group invitation declined`);
-
-                    // Remove this notification
-                    setNotifications(prev => prev.filter(n => n.id !== notification.id));
-                } catch (rejectError) {
-                    console.error(`Error rejecting group invitation ID ${notification.invitationId}:`, rejectError);
-                    showMessage("Failed to reject group invitation. The invitation may have expired.");
+                    showMessage('Group invitation rejected');
+                } catch (err: unknown) {
+                    console.error(`Error rejecting group invitation ID ${notification.invitationId}:`, err);
+                    if (err instanceof Error && 'status' in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                            case 400:
+                                showMessage('This group invitation appears to be invalid.');
+                                break;
+                            case 401:
+                                showMessage('Your session has expired. Please log in again to reject invitations.');
+                                break;
+                            case 403:
+                                showMessage('You cannot reject this invitation.');
+                                break;
+                            case 404:
+                                showMessage('This group invitation could not be found. It might have been cancelled.');
+                                break;
+                            default:
+                                showMessage('An error occurred while rejecting the group invitation. Please try again.');
+                        }
+                    } else {
+                        showMessage('An error occurred while rejecting the group invitation. Please try again.');
+                    }
                 }
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
             }
         } catch (error) {
             console.error("Critical error in decline notification process:", error);
@@ -261,7 +340,7 @@ const Dashboard: React.FC = () => {
     }
 
     if (error) {
-        return <div className="text-red-500 text-center py-8">{error}</div>;
+        return <ErrorMessage message={error} onClose={() => setError(null)} />;
     }
 
     return (

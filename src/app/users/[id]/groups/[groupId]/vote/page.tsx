@@ -17,6 +17,9 @@ import { Trash2 } from "lucide-react"; // Import icons
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { VoteStateDTO } from "@/app/types/vote";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
+import type { ApplicationError } from "@/app/types/error";
 
 // Define types to match backend DTOs
 interface RankingSubmitDTO {
@@ -82,10 +85,13 @@ const Vote: React.FC = () => {
   const [rankings, setRankings] = useState<(Movie | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
 
   useEffect(() => {
     if (phaseLoading) return;
-    if (phaseError) { alert(phaseError); return; }
+    if (phaseError) { setError(phaseError); return; }
     if (phase && phase !== "VOTING") {
       if (phase === "POOL") router.replace(`/users/${userId}/groups/${groupId}/pool`);
       if (phase === "RESULTS") router.replace(`/users/${userId}/groups/${groupId}/results`);
@@ -99,9 +105,25 @@ const Vote: React.FC = () => {
       let state: VoteStateDTO;
       try {
         state = await apiService.get<VoteStateDTO>(`/groups/${groupId}/vote-state`);
-      } catch (err) {
-        console.error('Failed to load vote state:', err);
-        alert('Could not load voting data.');
+      } catch (err: unknown) {
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          switch (appErr.status) {
+            case 401:
+              setError("Your session has expired. Please log in again to view the vote state.");
+              break;
+            case 404:
+              setError("Could not find the group or you are not a member.");
+              break;
+            case 409:
+              setError("Voting is not currently active for this group.");
+              break;
+            default:
+              setError("An error occurred while loading vote state. Please try again.");
+          }
+        } else {
+          setError("An error occurred while loading vote state. Please try again.");
+        }
         return;
       }
       const movies = state.pool;
@@ -247,7 +269,7 @@ const Vote: React.FC = () => {
 
   const handleSubmitRanking = async () => {
     if (!isSubmitEnabled()) {
-      alert(getRankingRequirementMessage());
+      setError(getRankingRequirementMessage());
       return;
     }
 
@@ -256,7 +278,7 @@ const Vote: React.FC = () => {
     try {
       // Validate that userId and groupId are valid numbers
       if (!userId || !groupId) {
-        alert("Missing user ID or group ID. Please go back to the main page.");
+        setError("Missing user ID or group ID. Please go back to the main page.");
         return;
       }
 
@@ -286,15 +308,29 @@ const Vote: React.FC = () => {
 
       // Send the request with proper JSON content
       await apiService.post(endpoint, rankingSubmitDTOs);
-      // Acknowledge submission and lock further edits
-      alert("Ranking submitted successfully! Please wait for results.");
+      // Acknowledge submission visually
+      setSuccessMessage("Rankings submitted successfully! Please wait for results.");
+      setShowSuccessMessage(true);
       setHasSubmitted(true);
-    } catch (error: unknown) {
-      let message = "Failed to submit rankings.";
-      if (error && typeof error === 'object' && 'message' in error) {
-        message = (error as { message?: string }).message || message;
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch (appErr.status) {
+          case 400:
+            setError("There was an issue with your submitted ranks. Please check and try again.");
+            break;
+          case 404:
+            setError("We couldn't find the user or group for submitting ranks.");
+            break;
+          case 409:
+            setError("Voting is not currently open for this group. Rankings cannot be submitted.");
+            break;
+          default:
+            setError("An error occurred while submitting your rankings. Please try again.");
+        }
+      } else {
+        setError("An error occurred while submitting your rankings. Please try again.");
       }
-      alert(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -314,6 +350,9 @@ const Vote: React.FC = () => {
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
         <Navigation userId={userId} activeItem="Movie Groups" />
+        {/* Error display */}
+        {error && <ErrorMessage message={error} onClose={() => setError("")} />}
+        <ActionMessage message={successMessage} isVisible={showSuccessMessage} onHide={() => setShowSuccessMessage(false)} className="bg-green-500" />
 
         {/* Main content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
@@ -423,9 +462,27 @@ const Vote: React.FC = () => {
                   onClick={async () => {
                     try {
                       await apiService.post(`/groups/${groupId}/show-results`, {});
+                      setSuccessMessage("Voting ended, results are now available.");
+                      setShowSuccessMessage(true);
                     } catch (err: unknown) {
-                      const message = err instanceof Error ? err.message : String(err);
-                      alert(message || 'Failed to end voting.');
+                      if (err instanceof Error && 'status' in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                          case 403:
+                            setError("Only the group creator can end voting and show results.");
+                            break;
+                          case 404:
+                            setError("The specified group could not be found.");
+                            break;
+                          case 409:
+                            setError("This action can only be performed when voting is active for this group.");
+                            break;
+                          default:
+                            setError("An error occurred while ending voting. Please try again.");
+                        }
+                      } else {
+                        setError("An error occurred while ending voting. Please try again.");
+                      }
                       return;
                     }
                     router.replace(`/users/${userId}/groups/${groupId}/results`);

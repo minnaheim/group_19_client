@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import SearchBar from "@/components/ui/search_bar";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import type { ApplicationError } from "@/app/types/error";
 import { Button } from "@/components/ui/button";
+import ActionMessage from "@/components/ui/action_message";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
 import { usePreferences } from "@/app/context/PreferencesContext";
@@ -30,7 +33,9 @@ const MoviePreferences: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [genreMovies, setGenreMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>(""); // error for all contexts
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
@@ -58,10 +63,25 @@ const MoviePreferences: React.FC = () => {
           // Remove duplicates before setting state
           setGenreMovies(removeDuplicateMovies(response));
         }
-      } catch (err) {
-        // Log error for debugging if needed
-        if (err instanceof Error) {
-          setError(err.message);
+      } catch (err: unknown) {
+        // Map errors for movie fetch by genres or recent fetch
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (selectedGenres && selectedGenres.length > 0) {
+            // fetching by genres
+            if (appErr.status === 400) {
+              setError("We couldn't find movies for the selected genres. Try different genres.");
+            } else {
+              setError("An error occurred while fetching movies. Please try again.");
+            }
+          } else {
+            // fetching recent movies
+            if (appErr.status === 400) {
+              setError("We couldn't fetch recent movies at this time.");
+            } else {
+              setError("An error occurred while fetching movies. Please try again.");
+            }
+          }
         } else {
           setError("An error occurred while fetching movies. Please try again.");
         }
@@ -97,14 +117,18 @@ const MoviePreferences: React.FC = () => {
         } else {
           setSearchResults([]);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Search failed:", err);
-        if (err instanceof Error) {
-          setError(`Search failed: ${err.message}`);
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (appErr.status === 400) {
+            setError("No movies found matching your search term. Try searching for something else.");
+          } else {
+            setError("Failed to search movies");
+          }
         } else {
           setError("Failed to search movies");
         }
-        setSearchResults([]);
       }
     };
 
@@ -132,26 +156,30 @@ const MoviePreferences: React.FC = () => {
   };
 
   const handleNext = async () => {
-
-
     const effectiveUserId = userId || id;
 
     try {
       if (favoriteMovieId !== null) {
         await apiService.saveFavoriteMovie(Number(effectiveUserId), favoriteMovieId);
+        setSuccessMessage("Favorite movie saved successfully");
+        setShowSuccessMessage(true);
       }
       router.push(`/users/${effectiveUserId}/dashboard`);
     } catch (err) {
-      // Log error for debugging if needed
-
-      if (err instanceof Error) {
-        if (err.message.includes("400") && err.message.includes("not unique")) {
-          setError("Error: The user account doesn't seem to be properly registered. Please log out and try registering again.");
-        } else if (err.message.includes("409")) {
-          router.push(`/users/${effectiveUserId}/profile`);
-          return;
-        } else {
-          setError(`Error: ${err.message}`);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch (appErr.status) {
+          case 401:
+            setError("Your session has expired. Please log in again to save your favorite movie.");
+            break;
+          case 403:
+            setError("You don't have permission to change this favorite movie preference.");
+            break;
+          case 404:
+            setError("We couldn't find your user account to save your favorite movie.");
+            break;
+          default:
+            setError("An error occurred while saving your preferences. Please try again.");
         }
       } else {
         setError("An error occurred while saving your preferences. Please try again.");
@@ -172,12 +200,13 @@ const MoviePreferences: React.FC = () => {
       </h3>
 
         {/* Error display */}
-        {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-              <p>{error}</p>
-            </div>
-        )}
-
+        <ErrorMessage message={error} onClose={() => setError("")} />
+        <ActionMessage
+          message={successMessage}
+          isVisible={showSuccessMessage}
+          onHide={() => setShowSuccessMessage(false)}
+          className="bg-green-500"
+        />
         {genreMovies.length === 0 && !isLoading && !error && (
             <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4" role="alert">
               <p>No movies found for your selected genre. Please go back and select a different genre.</p>

@@ -109,10 +109,10 @@ const Login: React.FC = () => {
         const errResp = (error as ErrorWithResponse).response;
         switch (errResp.status) {
           case 400:
-            userMessage = "Please check your input. Some information is missing or incorrect.";
+            userMessage = "Please enter both username/email and password.";
             break;
           case 404:
-            userMessage = "No account found with these credentials.";
+            userMessage = "We couldn't find an account with that username/email. Do you want to register?";
             break;
           case 401:
             userMessage = "Incorrect password. Please try again.";
@@ -124,9 +124,9 @@ const Login: React.FC = () => {
         if (error.message.includes("401") || error.message.includes("Unauthorized")) {
           userMessage = "Incorrect password. Please try again.";
         } else if (error.message.includes("404")) {
-          userMessage = "No account found with these credentials.";
+          userMessage = "We couldn't find an account with that username/email. Do you want to register?";
         } else if (error.message.includes("400")) {
-          userMessage = "Please check your input. Some information is missing or incorrect.";
+          userMessage = "Please enter both username/email and password.";
         } else if (error.message.includes("Network Error") || error.message.includes("Failed to fetch")) {
           userMessage = "Network error. Please check your connection and try again.";
         } else {
@@ -159,7 +159,7 @@ const Login: React.FC = () => {
                     autoComplete="username"
                 />
                 {errors.username && (
-                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  <ErrorMessage message={errors.username} onClose={() => setErrors(prev => ({...prev, username: ""}))} />
                 )}
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -173,7 +173,7 @@ const Login: React.FC = () => {
                     autoComplete="current-password"
                 />
                 {errors.password && (
-                    <p className="text-red-500 text-sm">{errors.password}</p>
+                  <ErrorMessage message={errors.password} onClose={() => setErrors(prev => ({...prev, password: ""}))} />
                 )}
               </div>
             </div>

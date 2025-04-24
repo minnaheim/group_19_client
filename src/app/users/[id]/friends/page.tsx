@@ -7,7 +7,9 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import { retry } from 'src/utils/retry';
+import { ApplicationError } from "@/app/types/error";
 
 interface FriendRequest {
   requestId: number;
@@ -57,17 +59,28 @@ const FriendsManagement: React.FC = () => {
       try {
         setLoading(true);
 
-        // Get all friends
+        // Fetch friends list
         try {
           const friendsData = await retry(() => apiService.get<User[]>('/friends'));
-          // Sort friends alphabetically by username
           const sortedFriends = Array.isArray(friendsData)
               ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
               : [];
           setFriends(sortedFriends);
-        } catch (friendsError) {
+          showMessage('Friends list loaded');
+        } catch (friendsError: unknown) {
           console.error("Error fetching friends list:", friendsError);
-          setError("Failed to load friends list. Please try again later.");
+          if (friendsError instanceof Error && 'status' in friendsError) {
+            const status = (friendsError as ApplicationError).status;
+            if (status === 401) {
+              showMessage('Your session has expired. Please log in again to see your friends.');
+            } else if (status === 404) {
+              showMessage('Could not find your user account.');
+            } else {
+              setError('Failed to load friends list. Please try again later.');
+            }
+          } else {
+            setError('Failed to load friends list. Please try again later.');
+          }
           return;
         }
 
@@ -75,18 +88,28 @@ const FriendsManagement: React.FC = () => {
         try {
           const receivedRequestsData = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/received'));
           setReceivedRequests(Array.isArray(receivedRequestsData) ? receivedRequestsData : []);
-        } catch (receivedRequestsError) {
+          showMessage('Received requests loaded');
+        } catch (receivedRequestsError: unknown) {
           console.error("Error fetching received friend requests:", receivedRequestsError);
-          showMessage("Failed to load received friend requests. Some data may be incomplete.");
+          if (receivedRequestsError instanceof Error && 'status' in receivedRequestsError && (receivedRequestsError as ApplicationError).status === 401) {
+            showMessage('Your session has expired. Please log in again to see friend requests.');
+          } else {
+            showMessage('Failed to load received friend requests. Some data may be incomplete.');
+          }
         }
 
         // Get sent friend requests
         try {
           const sentRequestsData = await retry(() => apiService.get<FriendRequest[]>('/friends/friendrequests/sent'));
           setSentRequests(Array.isArray(sentRequestsData) ? sentRequestsData : []);
-        } catch (sentRequestsError) {
+          showMessage('Sent requests loaded');
+        } catch (sentRequestsError: unknown) {
           console.error("Error fetching sent friend requests:", sentRequestsError);
-          showMessage("Failed to load sent friend requests. Some data may be incomplete.");
+          if (sentRequestsError instanceof Error && 'status' in sentRequestsError && (sentRequestsError as ApplicationError).status === 401) {
+            showMessage('Your session has expired. Please log in again to see sent requests.');
+          } else {
+            showMessage('Failed to load sent friend requests. Some data may be incomplete.');
+          }
         }
       } catch (error) {
         setError("Failed to load friends data. Server may be unavailable.");
@@ -139,6 +162,7 @@ const FriendsManagement: React.FC = () => {
       // First, find the receiverId based on username
       try {
         const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(`/users/search?username=${encodeURIComponent(friendUsername)}`));
+        showMessage('User search results loaded');
         if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
           showMessage(`User "${friendUsername}" not found. Please check the username and try again.`);
           setIsSubmitting(false);
@@ -172,9 +196,13 @@ const FriendsManagement: React.FC = () => {
             showMessage("Failed to send friend request. The user may already be your friend or have a pending request.");
           }
         }
-      } catch (searchError) {
+      } catch (searchError: unknown) {
         console.error("Error searching for user by username:", searchError);
-        showMessage(`Error searching for user "${friendUsername}". The search service may be unavailable.`);
+        if (searchError instanceof Error && 'status' in searchError && (searchError as ApplicationError).status === 401) {
+          showMessage('Your session has expired. Please log in again to search for users.');
+        } else {
+          showMessage(`Error searching for user "${friendUsername}". The search service may be unavailable.`);
+        }
       }
     } catch (error) {
       console.error("Critical error in friend request process:", error);
@@ -215,9 +243,26 @@ const FriendsManagement: React.FC = () => {
           console.error("Error refreshing received requests after accepting:", refreshRequestsError);
           showMessage("Friend request accepted, but requests list couldn't be refreshed. Please reload the page.");
         }
-      } catch (acceptError) {
+      } catch (acceptError: unknown) {
         console.error(`Error accepting friend request ID ${requestId}:`, acceptError);
-        showMessage(`Failed to accept friend request. The request may have expired or been withdrawn.`);
+        if (acceptError instanceof Error && 'status' in acceptError) {
+          const status = (acceptError as ApplicationError).status;
+          switch (status) {
+            case 400:
+              showMessage('This friend request appears to be invalid.');
+              break;
+            case 401:
+              showMessage('Your session has expired. Please log in again to accept requests.');
+              break;
+            case 404:
+              showMessage('This friend request could not be found. It might have been cancelled.');
+              break;
+            default:
+              showMessage('Failed to accept friend request.');
+          }
+        } else {
+          showMessage('Failed to accept friend request.');
+        }
       }
     } catch (error) {
       console.error("Critical error in accept friend request process:", error);
@@ -240,9 +285,26 @@ const FriendsManagement: React.FC = () => {
           console.error("Error refreshing received requests after rejection:", refreshError);
           showMessage("Friend request rejected, but the list couldn't be refreshed. Please reload the page.");
         }
-      } catch (rejectError) {
+      } catch (rejectError: unknown) {
         console.error(`Error rejecting friend request ID ${requestId}:`, rejectError);
-        showMessage("Failed to reject friend request. The request may have expired or been withdrawn.");
+        if (rejectError instanceof Error && 'status' in rejectError) {
+          const status = (rejectError as ApplicationError).status;
+          switch (status) {
+            case 400:
+              showMessage('This friend request appears to be invalid.');
+              break;
+            case 401:
+              showMessage('Your session has expired. Please log in again to reject requests.');
+              break;
+            case 404:
+              showMessage('This friend request could not be found. It might have been cancelled.');
+              break;
+            default:
+              showMessage('Failed to reject friend request.');
+          }
+        } else {
+          showMessage('Failed to reject friend request.');
+        }
       }
     } catch (error) {
       console.error("Critical error in reject friend request process:", error);
@@ -273,9 +335,29 @@ const FriendsManagement: React.FC = () => {
           console.error("Error refreshing sent requests after cancellation:", refreshError);
           showMessage("Friend request was canceled, but the list couldn't be refreshed. Please reload the page.");
         }
-      } catch (cancelError) {
+      } catch (cancelError: unknown) {
         console.error(`Error canceling friend request ID ${requestId}:`, cancelError);
-        showMessage("Failed to cancel friend request. The request may have already been accepted or rejected.");
+        if (cancelError instanceof Error && 'status' in cancelError) {
+          const status = (cancelError as ApplicationError).status;
+          switch (status) {
+            case 400:
+              showMessage('This friend request appears to be invalid.');
+              break;
+            case 401:
+              showMessage('Your session has expired. Please log in again to cancel requests.');
+              break;
+            case 403:
+              showMessage("You cannot cancel a friend request you didn't send.");
+              break;
+            case 404:
+              showMessage('This friend request could not be found.');
+              break;
+            default:
+              showMessage('Failed to cancel friend request.');
+          }
+        } else {
+          showMessage('Failed to cancel friend request.');
+        }
       }
     } catch (error) {
       console.error("Critical error in cancel friend request process:", error);
@@ -303,9 +385,26 @@ const FriendsManagement: React.FC = () => {
           console.error("Error refreshing friends list after removing friend:", refreshError);
           showMessage("Friend was removed, but the list couldn't be refreshed. Please reload the page.");
         }
-      } catch (removeError) {
+      } catch (removeError: unknown) {
         console.error(`Error removing friend with ID ${friendId}:`, removeError);
-        showMessage("Failed to remove friend. The friendship may have already been removed on the server.");
+        if (removeError instanceof Error && 'status' in removeError) {
+          const status = (removeError as ApplicationError).status;
+          switch (status) {
+            case 400:
+              showMessage('Could not remove friend. Please check the user details.');
+              break;
+            case 401:
+              showMessage('Your session has expired. Please log in again to remove friends.');
+              break;
+            case 404:
+              showMessage('Could not find the friend or your user account.');
+              break;
+            default:
+              showMessage('Failed to remove friend.');
+          }
+        } else {
+          showMessage('Failed to remove friend.');
+        }
       }
     } catch (error) {
       console.error("Critical error in remove friend process:", error);
@@ -332,7 +431,7 @@ const FriendsManagement: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
+    return <ErrorMessage message={error} />;
   }
 
   const displayFriends = searchQuery ? filteredFriends : friends;

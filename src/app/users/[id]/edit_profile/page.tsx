@@ -11,6 +11,8 @@ import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Movie } from "@/app/types/movie";
 import MovieCard from "@/components/ui/Movie_card";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
 
 // Static genre list - same as in GenrePreferences component
 const GENRES = [
@@ -43,6 +45,9 @@ const EditProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
 
   // state for editable fields
   const [username, setUsername] = useState<string>("");
@@ -61,7 +66,9 @@ const EditProfile: React.FC = () => {
     value: token,
   } = useLocalStorage<string>("token", "");
 
-  const { value: userId } = useLocalStorage<string>("userId", "");
+  const {
+    value: userId,
+  } = useLocalStorage<string>("userId", "");
 
   const handleSelectFavoriteMovie = () => {
     // Store the current state in localStorage or session before navigating
@@ -99,14 +106,14 @@ const EditProfile: React.FC = () => {
 
     // validate if the user is authorised to edit this profile
     if (userId && userId.valueOf() !== id) {
-      alert("You can only edit your own profile");
+      setSubmitError("You can only edit your own profile");
       router.push(`/users/${id}/profile`);
       return;
     }
 
     // check if user is null before updating
     if (!user) {
-      alert("User data not available");
+      setSubmitError("User data not available");
       return;
     }
 
@@ -133,20 +140,55 @@ const EditProfile: React.FC = () => {
           await apiService.post(`/users/${id}/preferences/genres`, {
             genreIds: favoriteGenres
           });
-        } catch (genreError) {
-          console.error("Error updating genre preference:", genreError);
-          // Continue with profile update anyway
+        } catch (genreError: unknown) {
+          if (genreError instanceof Error && 'status' in genreError) {
+            const appErr = genreError as ApplicationError;
+            switch (appErr.status) {
+              case 400:
+                setSubmitError("An invalid genre was selected. Please check your choices.");
+                break;
+              case 401:
+                setSubmitError("Your session has expired. Please log in again to save preferences.");
+                break;
+              case 403:
+                setSubmitError("You don't have permission to change these preferences.");
+                break;
+              case 404:
+                setSubmitError("We couldn't find your user account to save preferences.");
+                break;
+              default:
+                setSubmitError("An unexpected error occurred while saving your preferences.");
+            }
+          } else {
+            setSubmitError("An unexpected error occurred while saving your preferences.");
+          }
         }
       }
 
-      alert("Profile updated successfully!");
+      setSuccessMessage("Profile updated successfully!");
+      setShowSuccessMessage(true);
       router.push(`/users/${id}/profile`);
     } catch (error: unknown) {
-      if (error instanceof Error && "status" in error) {
-        const applicationError = error as ApplicationError;
-        alert(`Error: ${applicationError.message}`);
+      if (error instanceof Error && 'status' in error) {
+        const appErr = error as ApplicationError;
+        switch (appErr.status) {
+          case 401:
+            setSubmitError("Your session has expired. Please log in again to update your profile.");
+            break;
+          case 403:
+            setSubmitError("You don't have permission to update this profile.");
+            break;
+          case 404:
+            setSubmitError("We couldn't find the user profile to update.");
+            break;
+          case 409:
+            setSubmitError("That username or email is already in use. Please choose another.");
+            break;
+          default:
+            setSubmitError("An unexpected error occurred while updating your profile.");
+        }
       } else {
-        alert("An unexpected error occurred while updating the profile");
+        setSubmitError("An unexpected error occurred while updating your profile.");
       }
     }
   };
@@ -215,8 +257,13 @@ const EditProfile: React.FC = () => {
             setFavoriteGenres(fetchedUser.favoriteGenres);
           }
         } catch (error: unknown) {
-          if (error instanceof Error) {
-            setError(`Failed to load user data: ${error.message}`);
+          if (error instanceof Error && 'status' in error) {
+            const appErr = error as ApplicationError;
+            if (appErr.status === 404) {
+              setError("Oops! We couldn't find the user profile you were looking for.");
+            } else {
+              setError(`Failed to load user data: ${appErr.message}`);
+            }
           } else {
             setError("Failed to load user data");
           }
@@ -230,6 +277,18 @@ const EditProfile: React.FC = () => {
     }
   }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenres]); // Include hasProcessedStoredMovie and favoriteGenres as dependencies
 
+  // Loading and error states
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return <ErrorMessage message={error} onClose={() => setError(null)} />;
+  }
+
   if (loading && !hasProcessedStoredMovie) {
     return (
         <div className="flex justify-center items-center py-12">
@@ -237,10 +296,6 @@ const EditProfile: React.FC = () => {
           </div>
         </div>
     );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
   }
 
   return (
@@ -267,6 +322,15 @@ const EditProfile: React.FC = () => {
               </h2>
             </div>
 
+            {/* Submission errors */}
+            <ErrorMessage message={submitError} onClose={() => setSubmitError("")} />
+            {/* Success message */}
+            <ActionMessage
+              message={successMessage}
+              isVisible={showSuccessMessage}
+              onHide={() => setShowSuccessMessage(false)}
+              className="bg-green-500"
+            />
             {/* Edit Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
