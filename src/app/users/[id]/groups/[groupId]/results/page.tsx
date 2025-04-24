@@ -10,6 +10,7 @@ import { useApi } from "@/app/hooks/useApi";
 import { retry } from 'src/utils/retry';
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
 import type { ApplicationError } from "@/app/types/error";
 
 // Removed unused Group and GroupPhase imports
@@ -40,7 +41,19 @@ const Results: React.FC = () => {
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [actionMessage, setActionMessage] = useState<string>("");
+  const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
   const apiService = useApi();
+
+  // Full winning movie details (fetch for posterURL)
+  const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
+  useEffect(() => {
+    if (rankingResult) {
+      apiService.get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
+        .then(movie => setFullWinningMovie(movie))
+        .catch(err => console.error('Failed to fetch full movie data:', err));
+    }
+  }, [apiService, rankingResult]);
 
   // Fetch ranking result
   useEffect(() => {
@@ -52,6 +65,9 @@ const Results: React.FC = () => {
             `/groups/${groupId}/rankings/result`
         ));
         setRankingResult(response);
+        // Success feedback
+        setActionMessage("Results loaded successfully");
+        setShowActionMessage(true);
       } catch (err: unknown) {
         console.error("Failed to fetch ranking result:", err);
         if (err instanceof Error && 'status' in err) {
@@ -82,6 +98,9 @@ const Results: React.FC = () => {
             `/groups/${groupId}/rankings/details`
         ));
         setDetailedResults(response);
+        // Success feedback
+        setActionMessage("Detailed results loaded successfully");
+        setShowActionMessage(true);
       } catch (err: unknown) {
         console.error("Failed to fetch detailed ranking results:", err);
         if (err instanceof Error && 'status' in err) {
@@ -117,7 +136,16 @@ const Results: React.FC = () => {
   }, [phaseFromHook, phaseLoading, phaseError, router, userId, groupId]);
 
   // Helper function to get complete image URL
-  const getFullPosterUrl = (posterPath: string) => {
+  const getFullPosterUrl = (posterPath?: string | null): string => {
+    // No poster provided, use placeholder
+    if (!posterPath) {
+      return "https://via.placeholder.com/250x375?text=No+Image";
+    }
+    // If already a full URL, return as is
+    if (posterPath.startsWith('http')) {
+      return posterPath;
+    }
+    // Prefix TMDB base path for relative poster paths
     return `https://image.tmdb.org/t/p/w500${posterPath}`;
   };
 
@@ -147,6 +175,14 @@ const Results: React.FC = () => {
           {/* Error display */}
           {error && <ErrorMessage message={error} onClose={() => setError("")} />}
 
+          {/* Success message box */}
+          <ActionMessage
+            message={actionMessage}
+            isVisible={showActionMessage}
+            onHide={() => setShowActionMessage(false)}
+            className="bg-green-500"
+          />
+
           {/* Winner Section */}
           <div className="flex flex-col items-center justify-center text-center mb-12">
             {phaseFromHook !== "RESULTS" ? (
@@ -170,13 +206,15 @@ const Results: React.FC = () => {
                   </h2>
                   <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
                     <img
-                        src={getFullPosterUrl(rankingResult.winningMovie.posterURL)}
-                        alt={rankingResult.winningMovie.title}
+                        src={getFullPosterUrl(
+                          fullWinningMovie?.posterURL ?? rankingResult.winningMovie.posterURL
+                        )}
+                        alt={fullWinningMovie?.title || rankingResult.winningMovie.title}
                         className="w-full h-full object-cover"
                     />
                   </div>
                   <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
-                    {rankingResult.winningMovie.title}
+                    {fullWinningMovie?.title || rankingResult.winningMovie.title}
                   </h2>
 
                   {detailedResults.length > 0 && (

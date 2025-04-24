@@ -518,6 +518,7 @@ const Dashboard: React.FC = () => {
                     message={actionMessage}
                     isVisible={showActionMessage}
                     onHide={() => setShowActionMessage(false)}
+                    className="bg-green-500"
                 />
             </div>
         </div>
