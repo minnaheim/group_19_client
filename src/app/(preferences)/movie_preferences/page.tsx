@@ -36,6 +36,7 @@ const MoviePreferences: React.FC = () => {
   const [error, setError] = useState<string>(""); // error for all contexts
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
@@ -156,6 +157,7 @@ const MoviePreferences: React.FC = () => {
   };
 
   const handleNext = async () => {
+    setIsSubmitting(true);
     const effectiveUserId = userId || id;
 
     try {
@@ -184,6 +186,8 @@ const MoviePreferences: React.FC = () => {
       } else {
         setError("An error occurred while saving your preferences. Please try again.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -258,7 +262,12 @@ const MoviePreferences: React.FC = () => {
           >
             Back
           </Button>
-          <Button onClick={handleNext}>Next</Button>
+          <Button
+            onClick={handleNext}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : "Next"}
+          </Button>
         </div>
       </div>
   );

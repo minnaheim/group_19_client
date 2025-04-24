@@ -182,17 +182,6 @@ const Profile: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Added Favorite Genre */}
-                {user?.favoriteGenres && user.favoriteGenres.length > 0 && (
-                    <div className="font-semibold text-[#3b3e88] text-base">
-                      <p>
-                        <span className="font-semibold text-[#3b3e88] text-base">
-                          favorite genre:</span> {user.favoriteGenres[0]}
-                      </p>
-                    </div>
-                )}
-
-
                 <div className="mt-6">
                   <p className="font-semibold text-[#3b3e88] text-base mb-2">
                     Preferred Genres:
