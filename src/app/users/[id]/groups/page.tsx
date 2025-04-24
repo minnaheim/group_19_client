@@ -920,7 +920,7 @@ const GroupsManagement: React.FC = () => {
                     {/* Error and Success Message Area at the bottom */}
                     <div className="min-h-[40px] py-2 space-y-2">
                          {dialogError && (<ErrorMessage message={dialogError} onClose={() => setDialogError(null)} />)}
-                         {showActionMessage && actionMessage && !dialogError && (<ActionMessage message={actionMessage} isVisible={showActionMessage} onHide={() => setShowActionMessage(false)} className="bg-green-500 text-white"/>)}
+                         {showActionMessage && actionMessage && !dialogError && (<ActionMessage message={actionMessage} isVisible={showActionMessage} onHide={() => setShowActionMessage(false)} className="bg-green-500"/>)}
                     </div>
                   </>
                 ) : (
