@@ -9,6 +9,8 @@ import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import { useState, useEffect } from "react";
 
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
+import MovieCardSimple from "@/components/ui/movie_card_simple";
+import { Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
@@ -139,6 +141,8 @@ const MoviePool: React.FC = () => {
           alert(err.message || "You can only remove movies during the POOL phase, and only movies you added.");
         } else if (err.status === 401) {
           alert("Session expired. Please log in again.");
+        } else if (err.status === 403) {
+          alert(err.message || "You can only remove movies you added.");
         } else {
           alert("An error occurred while removing the movie from the pool. Please try again.");
         }
@@ -203,22 +207,22 @@ const MoviePool: React.FC = () => {
           </div>
 
           {/* Display movie pool in horizontal list, just like the watchlist */}
-          <div className="overflow-x-auto mb-8">
-            <MovieListHorizontal
-                movies={moviePool}
-                onMovieClick={(movie) => {
-                  if (phase === "POOL") {
-                    handleRemoveFromPool(movie.movieId);
-                  }
-                }}
-                emptyMessage="No movies in the pool yet"
-                noResultsMessage="No movies match your search"
-                hasOuterContainer={false}
-                selectedMovieIds={[]}
-            />
-            {phase !== "POOL" && (
-              <p className="text-center text-sm text-[#f97274] mt-2">You can only remove movies during the POOL phase.</p>
-            )}
+          <div className="flex overflow-x-auto mb-8 gap-4">
+            {moviePool.map((movie) => (
+              <div key={movie.movieId} className="relative flex-shrink-0">
+                <MovieCardSimple movie={movie} onClick={() => {}} />
+                {phase === "POOL" && (
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => handleRemoveFromPool(movie.movieId)}
+                    className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
+                    title="Remove from pool"
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
 
           <div className="flex justify-between items-center mt-8 gap-2">
