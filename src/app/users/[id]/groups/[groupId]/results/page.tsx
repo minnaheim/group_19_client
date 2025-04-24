@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 import { retry } from 'src/utils/retry';
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import type { ApplicationError } from "@/app/types/error";
 
 // Removed unused Group and GroupPhase imports
 
@@ -37,6 +39,7 @@ const Results: React.FC = () => {
   const [rankingResult, setRankingResult] = useState<RankingResultGetDTO | null>(null);
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   const apiService = useApi();
 
   // Fetch ranking result
@@ -49,8 +52,20 @@ const Results: React.FC = () => {
             `/groups/${groupId}/rankings/result`
         ));
         setRankingResult(response);
-      } catch (error) {
-        console.error("Failed to fetch ranking result:", error);
+      } catch (err: unknown) {
+        console.error("Failed to fetch ranking result:", err);
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (appErr.status === 404) {
+            setError("Could not find the group or results are not yet available.");
+          } else if (appErr.status === 409) {
+            setError("Results can only be viewed after voting has ended.");
+          } else {
+            setError("An error occurred while loading results. Please try again.");
+          }
+        } else {
+          setError("An error occurred while loading results. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
@@ -67,8 +82,20 @@ const Results: React.FC = () => {
             `/groups/${groupId}/rankings/details`
         ));
         setDetailedResults(response);
-      } catch (error) {
-        console.error("Failed to fetch detailed ranking results:", error);
+      } catch (err: unknown) {
+        console.error("Failed to fetch detailed ranking results:", err);
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (appErr.status === 404) {
+            setError("The specified group could not be found.");
+          } else if (appErr.status === 409) {
+            setError("Detailed results can only be viewed after voting has ended.");
+          } else {
+            setError("An error occurred while loading detailed results. Please try again.");
+          }
+        } else {
+          setError("An error occurred while loading detailed results. Please try again.");
+        }
       }
     };
     fetchDetailedResults();
@@ -76,7 +103,10 @@ const Results: React.FC = () => {
 
   useEffect(() => {
     if (phaseLoading) return;
-    if (phaseError) { alert(phaseError); return; }
+    if (phaseError) {
+      setError(phaseError);
+      return;
+    }
     if (phaseFromHook && phaseFromHook !== "RESULTS") {
       if (phaseFromHook === "POOL") {
         router.replace(`/users/${userId}/groups/${groupId}/pool`);
@@ -113,6 +143,9 @@ const Results: React.FC = () => {
               <p className="text-[#b9c0de] mt-2">See what your group has chosen to watch</p>
             </div>
           </div>
+
+          {/* Error display */}
+          {error && <ErrorMessage message={error} onClose={() => setError("")} />}
 
           {/* Winner Section */}
           <div className="flex flex-col items-center justify-center text-center mb-12">

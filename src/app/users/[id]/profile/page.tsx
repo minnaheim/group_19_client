@@ -10,6 +10,7 @@ import Navigation from "@/components/ui/navigation";
 import { ApplicationError } from "@/app/types/error";
 import { retry } from "@/utils/retry";
 import ActionMessage from "@/components/ui/action_message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import MovieCard from "@/components/ui/Movie_card";
 import MovieDetailsModal from "@/components/ui/movie_details";
 
@@ -77,17 +78,33 @@ const Profile: React.FC = () => {
   const fetchUser = async () => {
     setLoading(true);
     setError(null);
+    // Fetch profile
     try {
       const fetchedUser: User = await retry(() => apiService.get(`/users/${id}/profile`));
       setUser(fetchedUser);
-      // Fetch user preferences (genres and favorite movie) with retry
+      showMessage('User profile loaded');
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
+        showMessage("Oops! We couldn't find the profile you were looking for.");
+      } else {
+        setError('An error occurred fetching the profile. Please try again later.');
+      }
+      setLoading(false);
+      return;
+    }
+    // Fetch preferences
+    try {
       const prefs = await retry(() => apiService.get(`/users/${id}/preferences`)) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
       setUserGenres(Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : []);
       setUserFavoriteMovie(prefs.favoriteMovie || null);
-    } catch (error: unknown) {
-      if (error instanceof Error && "status" in error) {
-        const applicationError = error as ApplicationError;
-        showMessage(`Error: ${applicationError.message}`);
+      showMessage('User preferences loaded');
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        showMessage('Your session seems to have expired. Could not load preferences.');
+      } else if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
+        showMessage('Could not find preferences for this user.');
+      } else {
+        setError('An error occurred fetching preferences. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -114,17 +131,10 @@ const Profile: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-        <div className="text-red-500 text-center py-8">
-          {error}
-        </div>
-    );
-  }
-
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
         <Navigation userId={userId} activeItem="Profile Page" />
+        {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
         {/* Main content */}
         <div className="flex-1 p-6 md:p-12">
           <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
@@ -273,6 +283,7 @@ const Profile: React.FC = () => {
               message={actionMessage}
               isVisible={showActionMessage}
               onHide={() => setShowActionMessage(false)}
+              className="bg-green-500"
           />
         </div>
       </div>

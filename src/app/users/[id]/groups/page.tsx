@@ -8,6 +8,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/ui/navigation";
 import ActionMessage from "@/components/ui/action_message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { retry } from 'src/utils/retry';
+import type { ApplicationError } from "@/app/types/error";
 
 // Updated Group interface to match the new DTO
 interface Group {
@@ -106,29 +108,37 @@ const GroupsManagement: React.FC = () => {
   // Helper function to load group details (members and movie pool)
   const loadGroupDetails = React.useCallback(async (groupId: number) => {
     try {
-      // Fetch group base info
-      const group: Group = await retry(() => apiService.get<Group>(`/groups/${groupId}`));
-      // Fetch group members
-      const members: User[] = await retry(() => apiService.get<User[]>(`/groups/${groupId}/members`));
-      // Fetch group movie pool
-      const movies: Movie[] = await retry(() => apiService.get<Movie[]>(`/groups/${groupId}/pool`));
-      // Return enhanced group with details
+      const group: Group = await apiService.get<Group>(`/groups/${groupId}`);
+      const members: User[] = await apiService.get<User[]>(`/groups/${groupId}/members`);
+      const movies: Movie[] = await apiService.get<Movie[]>(`/groups/${groupId}/pool`);
       return {
         ...group,
         creator: await fetchUserById(group.creatorId),
         members: Array.isArray(members) ? members : [],
         movies: Array.isArray(movies) ? movies : []
       };
-    } catch (error) {
-      console.error("Error loading group details:", error);
+    } catch (err: unknown) {
+      console.error('Error loading group details:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        if (appErr.status === 401) {
+          showMessage('Your session has expired. Please log in again.');
+        } else if (appErr.status === 404) {
+          showMessage('Could not find the group or you are not a member.');
+        } else {
+          showMessage('An error occurred while loading group details. Please try again.');
+        }
+      } else {
+        showMessage('An error occurred while loading group details. Please try again.');
+      }
       return {
         groupId,
-        groupName: "Unknown",
+        groupName: 'Unknown',
         creatorId: -1,
-        creator: { userId: -1, username: "Unknown", email: "", password: "", bio: "", watchlist: [], watchedMovies: [] },
+        creator: { userId: -1, username: 'Unknown', email: '', password: '', bio: '', watchlist: [], watchedMovies: [] },
         members: [],
         movies: [],
-        phase: "UNKNOWN"
+        phase: 'UNKNOWN'
       };
     }
   }, [apiService]);
@@ -137,8 +147,14 @@ const GroupsManagement: React.FC = () => {
   const fetchUserById = async (userId: number): Promise<User> => {
     try {
       return await retry(() => apiService.get<User>(`/users/${userId}/profile`));
-    } catch (error) {
-      console.error("Error fetching user:", error);
+    } catch (err: unknown) {
+      console.error("Error fetching user:", err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        if (appErr.status === 404) {
+          showMessage("Oops! We couldn't find the user profile.");
+        }
+      }
       // Return a placeholder user if we can't fetch the real one
       return {
         userId: userId,
@@ -151,19 +167,53 @@ const GroupsManagement: React.FC = () => {
   const fetchGroupsData = async () => {
     if (!id) return;
     setLoading(true);
+    // Fetch all groups
     try {
       const groupsData: Group[] = await retry(() => apiService.get<Group[]>('/groups'));
-      setGroups(Array.isArray(groupsData) ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName)) : []);
+      setGroups(
+          Array.isArray(groupsData)
+              ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
+              : []
+      );
+    } catch (err: unknown) {
+      console.error('Error loading groups:', err);
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        setError('Your session has expired. Please log in again to view your groups.');
+      } else {
+        setError('Failed to load groups. Please try again.');
+      }
+      setLoading(false);
+      return;
+    }
+    // Fetch received invitations
+    try {
       const receivedData = await retry(() => apiService.get<GroupInvitation[]>('/groups/invitations/received'));
       setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
+    } catch (err: unknown) {
+      console.error('Error loading received invitations:', err);
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        setError('Your session has expired. Please log in again to view invitations.');
+      } else {
+        setError('Failed to load received invitations. Please try again.');
+      }
+      setLoading(false);
+      return;
+    }
+    // Fetch sent invitations
+    try {
       const sentData = await retry(() => apiService.get<GroupInvitation[]>('/groups/invitations/sent'));
       setSentInvitations(Array.isArray(sentData) ? sentData : []);
-    } catch (error) {
-      console.error('Error fetching groups data:', error);
-      setError('Failed to connect to the server');
-    } finally {
+    } catch (err: unknown) {
+      console.error('Error loading sent invitations:', err);
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        setError('Your session has expired. Please log in again to view invitations.');
+      } else {
+        setError('Failed to load sent invitations. Please try again.');
+      }
       setLoading(false);
+      return;
     }
+    setLoading(false);
   };
 
   // Load detailed information for each group
@@ -234,12 +284,14 @@ const GroupsManagement: React.FC = () => {
       showMessage(`Group "${newGroupName}" created successfully`);
       setNewGroupName("");
       setIsCreateGroupDialogOpen(false);
-    } catch (error) {
-      console.error("Error creating group:", error);
-      if (error instanceof Error) {
-        showMessage(`Failed to create group: ${error.message}`);
+    } catch (err: unknown) {
+      console.error('Error creating group:', err);
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        showMessage('Your session has expired. Please log in again to create a group.');
+      } else if (err instanceof Error) {
+        showMessage(`Failed to create group: ${err.message}`);
       } else {
-        showMessage("Failed to create group");
+        showMessage('Failed to create group');
       }
     } finally {
       setIsSubmittingGroup(false);
@@ -249,188 +301,196 @@ const GroupsManagement: React.FC = () => {
   // Handle inviting a member to a group
   const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsSubmittingInvite(true);
 
     if (!inviteUsername.trim() || !selectedGroupId) {
       showMessage("Please enter a username");
+      setIsSubmittingInvite(false);
       return;
     }
 
-    setIsSubmittingInvite(true);
-
+    let receiverId: number;
     try {
-      // First, find the receiverId based on username
-      const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(
-          `/users/search?username=${encodeURIComponent(inviteUsername)}`));
-
-      if (
-          !searchResults ||
-          !Array.isArray(searchResults) ||
-          searchResults.length === 0
-      ) {
+      const results = await apiService.get<UserSearchResponse[]>(
+        `/users/search?username=${encodeURIComponent(inviteUsername)}`
+      );
+      if (!Array.isArray(results) || results.length === 0) {
         showMessage(`User '${inviteUsername}' not found`);
         setIsSubmittingInvite(false);
         return;
       }
-
-      const receiverId = searchResults[0].userId;
-      const response = await retry(() => apiService.post(
-          `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
-          {}
-      ));
-
-      if (response) {
-        // Refresh sent invitations
-        const updatedSentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-            "/groups/invitations/sent"
-        ));
-        if (Array.isArray(updatedSentInvitations)) {
-          setSentInvitations(updatedSentInvitations);
-        }
-      }
-
-      showMessage(`Invitation sent to ${inviteUsername}`);
-      setInviteUsername("");
-      setIsInviteDialogOpen(false);
-      setSelectedGroupId(null);
-
-      // Switch to invitations tab to show the new invitation
-      setActiveTab("invitations");
-    } catch (error) {
-      console.error("Error sending invitation:", error);
-      if (error instanceof Error) {
-        showMessage(`Failed to send invitation: ${error.message}`);
+      receiverId = results[0].userId;
+    } catch (err: unknown) {
+      console.error('Error searching users:', err);
+      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
+        showMessage('Your session has expired. Please log in again to search for users.');
       } else {
-        showMessage("Failed to send invitation");
+        showMessage('Failed to search for users. Please try again.');
       }
-    } finally {
       setIsSubmittingInvite(false);
+      return;
     }
+
+    try {
+      await apiService.post(
+        `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
+        {}
+      );
+      const updated = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+      if (Array.isArray(updated)) setSentInvitations(updated);
+    } catch (err: unknown) {
+      console.error('Error sending invitation:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch (appErr.status) {
+          case 400:
+            showMessage('Could not send invitation. Please check the group and user details.');
+            break;
+          case 401:
+            showMessage('Your session has expired. Please log in again to send invitations.');
+            break;
+          case 403:
+            showMessage("You don't have permission to invite members to this group.");
+            break;
+          case 404:
+            showMessage('Could not find the specified group or user.');
+            break;
+          default:
+            showMessage('Failed to send invitation. Please try again.');
+        }
+      } else {
+        showMessage('Failed to send invitation. Please try again.');
+      }
+      setIsSubmittingInvite(false);
+      return;
+    }
+
+    showMessage(`Invitation sent to ${inviteUsername}`);
+    setInviteUsername("");
+    setIsInviteDialogOpen(false);
+    setSelectedGroupId(null);
+    setActiveTab('invitations');
+    setIsSubmittingInvite(false);
   };
 
-  // Handle accepting a group invitation
+  // Handle accepting an invitation
   const handleAcceptInvitation = async (invitationId: number) => {
+    // Optimistic removal
+    setReceivedInvitations(prev => prev.filter(inv => inv.invitationId !== invitationId));
     try {
-      // Optimistically update UI by removing the invitation from the list immediately
-      setReceivedInvitations(prevInvitations =>
-          prevInvitations.filter(invitation => invitation.invitationId !== invitationId)
-      );
-
-      // Send request to server
-      await retry(() => apiService.post(
-          `/groups/invitations/${invitationId}/accept`,
-          {}
-      ));
-
-      // Refresh groups since we joined a new one
-      const updatedGroups = await retry(() => apiService.get<Group[]>("/groups"));
-      if (Array.isArray(updatedGroups)) {
-        setGroups(updatedGroups.sort((a, b) => a.groupName.localeCompare(b.groupName)));
-      }
-
-      // Double-check our received invitations are in sync with server
-      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-          "/groups/invitations/received"
-      ));
-      if (Array.isArray(updatedInvitations)) {
-        setReceivedInvitations(updatedInvitations);
-      }
-
-      showMessage("Group invitation accepted");
-    } catch (error) {
-      console.error("Error accepting invitation:", error);
-
-      // If there was an error, refresh invitations from server to restore correct state
-      try {
-        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-            "/groups/invitations/received"
-        ));
-        if (Array.isArray(currentInvitations)) {
-          setReceivedInvitations(currentInvitations);
+      await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
+      // Refresh groups
+      const groupsData = await apiService.get<Group[]>('/groups');
+      if (Array.isArray(groupsData)) setGroups(groupsData.sort((a,b)=>a.groupName.localeCompare(b.groupName)));
+      // Refresh received invitations
+      const invites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+      if (Array.isArray(invites)) setReceivedInvitations(invites);
+      showMessage('Group invitation accepted');
+    } catch (err: unknown) {
+      console.error('Error accepting invitation:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch(appErr.status) {
+          case 400:
+            showMessage('This invitation seems to be invalid.');
+            break;
+          case 401:
+            showMessage('Your session has expired. Please log in again to accept invitations.');
+            break;
+          case 403:
+            showMessage('You cannot accept this invitation.');
+            break;
+          case 404:
+            showMessage('This group invitation could not be found.');
+            break;
+          default:
+            showMessage('An error occurred while accepting invitation. Please try again.');
         }
-      } catch (refreshError) {
-        console.error("Error refreshing invitations:", refreshError);
+      } else {
+        showMessage('An error occurred while accepting invitation. Please try again.');
       }
-
-      showMessage("Failed to accept invitation");
+      // Restore on error
+      try { const current = await apiService.get<GroupInvitation[]>('/groups/invitations/received'); if(Array.isArray(current)) setReceivedInvitations(current); } catch {}
     }
   };
 
-// Handle rejecting a group invitation
+  // Handle rejecting an invitation
   const handleRejectInvitation = async (invitationId: number) => {
+    setReceivedInvitations(prev => prev.filter(inv => inv.invitationId !== invitationId));
     try {
-      // Optimistically update UI by removing the invitation from the list immediately
-      setReceivedInvitations(prevInvitations =>
-          prevInvitations.filter(invitation => invitation.invitationId !== invitationId)
-      );
-
-      // Send request to server
-      await retry(() => apiService.post(
-          `/groups/invitations/${invitationId}/reject`,
-          {}
-      ));
-
-      // Double-check our received invitations are in sync with server
-      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-          "/groups/invitations/received"
-      ));
-      if (Array.isArray(updatedInvitations)) {
-        setReceivedInvitations(updatedInvitations);
-      }
-
-      showMessage("Group invitation rejected");
-    } catch (error) {
-      console.error("Error rejecting invitation:", error);
-
-      // If there was an error, refresh invitations from server to restore correct state
-      try {
-        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-            "/groups/invitations/received"
-        ));
-        if (Array.isArray(currentInvitations)) {
-          setReceivedInvitations(currentInvitations);
+      await apiService.post(`/groups/invitations/${invitationId}/reject`, {});
+      const invites = await apiService.get<GroupInvitation[]>('/groups/invitations/received');
+      if (Array.isArray(invites)) setReceivedInvitations(invites);
+      showMessage('Group invitation rejected');
+    } catch (err: unknown) {
+      console.error('Error rejecting invitation:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch(appErr.status) {
+          case 400:
+            showMessage('This invitation seems to be invalid.');
+            break;
+          case 401:
+            showMessage('Your session has expired. Please log in again to reject invitations.');
+            break;
+          case 403:
+            showMessage('You cannot reject this invitation.');
+            break;
+          case 404:
+            showMessage('This group invitation could not be found.');
+            break;
+          default:
+            showMessage('An error occurred while rejecting invitation. Please try again.');
         }
-      } catch (refreshError) {
-        console.error("Error refreshing invitations:", refreshError);
+      } else {
+        showMessage('An error occurred while rejecting invitation. Please try again.');
       }
-
-      showMessage("Failed to reject invitation");
+      try { const current = await apiService.get<GroupInvitation[]>('/groups/invitations/received'); if(Array.isArray(current)) setReceivedInvitations(current); } catch {}
     }
   };
 
-//cancel invitations
+  //cancel invitations
   const handleCancelInvitation = async (invitationId: number) => {
     try {
-
-      // Send request to server
-      await apiService.delete(
-          `/groups/invitations/${invitationId}`
-      );
-
-      // Refresh sent invitations to ensure sync with server
-      const updatedInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-          "/groups/invitations/sent"
-      ));
-      if (Array.isArray(updatedInvitations)) {
-        setSentInvitations(updatedInvitations);
-      }
-
-      showMessage("Invitation canceled");
-    } catch (error) {
-      console.error("Error canceling invitation:", error);
-
-      // If there was an error, refresh invitations from server
-      try {
-        const currentInvitations = await retry(() => apiService.get<GroupInvitation[]>(
-            "/groups/invitations/sent"
-        ));
-        if (Array.isArray(currentInvitations)) {
-          setSentInvitations(currentInvitations);
+      // Cancel invitation
+      await apiService.delete(`/groups/invitations/${invitationId}`);
+      // Refresh sent invitations
+      const invites = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+      if (Array.isArray(invites)) setSentInvitations(invites);
+      showMessage('Invitation cancelled');
+    } catch (err: unknown) {
+      console.error('Error cancelling invitation:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch (appErr.status) {
+          case 400:
+            showMessage('This invitation seems to be invalid.');
+            break;
+          case 401:
+            showMessage('Your session has expired. Please log in again to cancel invitations.');
+            break;
+          case 403:
+            showMessage("You cannot cancel this invitation as you didn't send it.");
+            break;
+          case 404:
+            showMessage('This group invitation could not be found.');
+            break;
+          default:
+            showMessage('An error occurred while cancelling invitation. Please try again.');
         }
-      } catch (refreshError) {
-        console.error("Error refreshing invitations:", refreshError);
+      } else {
+        showMessage('An error occurred while cancelling invitation. Please try again.');
       }
-
-      showMessage("Failed to cancel invitation");
+      // Refresh on error
+      try {
+        const current = await apiService.get<GroupInvitation[]>('/groups/invitations/sent');
+        if (Array.isArray(current)) setSentInvitations(current);
+      } catch (refreshErr) {
+        if (refreshErr instanceof Error && 'status' in refreshErr && (refreshErr as ApplicationError).status === 401) {
+          showMessage('Your session has expired. Please log in again.');
+        }
+      }
     }
   };
 
@@ -438,14 +498,31 @@ const GroupsManagement: React.FC = () => {
   const handleLeaveGroup = async (groupId: number) => {
     try {
       await apiService.delete(`/groups/${groupId}/leave`);
-      showMessage("You left the group");
+      showMessage('Left group successfully');
       setIsGroupDetailDialogOpen(false);
-      // Remove left group from lists immediately
       setGroups(prev => prev.filter(g => g.groupId !== groupId));
       setGroupsWithDetails(prev => prev.filter(g => g.groupId !== groupId));
       setSelectedGroup(null);
-    } catch {
-      alert('Failed to leave group.');
+    } catch (err: unknown) {
+      console.error('Error leaving group:', err);
+      if (err instanceof Error && 'status' in err) {
+        const appErr = err as ApplicationError;
+        switch (appErr.status) {
+          case 401:
+            showMessage('Your session has expired. Please log in again to leave the group.');
+            break;
+          case 403:
+            showMessage('You cannot leave a group you are not a member of.');
+            break;
+          case 404:
+            showMessage('Could not find the group or your user account.');
+            break;
+          default:
+            showMessage('An error occurred while leaving the group. Please try again.');
+        }
+      } else {
+        showMessage('An error occurred while leaving the group. Please try again.');
+      }
     }
   };
 
@@ -491,7 +568,11 @@ const GroupsManagement: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
+    return (
+      <div className="text-red-500 text-center py-8">
+        <ErrorMessage message={error} onClose={() => setError(null)} />
+      </div>
+    );
   }
 
   const displayGroups = searchQuery ? filteredGroups : groupsWithDetails;
@@ -503,6 +584,7 @@ const GroupsManagement: React.FC = () => {
 
         {/* Main content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
+          {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
           <div className="mb-8">
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
               Your Movie Groups
@@ -901,11 +983,28 @@ const GroupsManagement: React.FC = () => {
           <Dialog open={isInviteDialogOpen} onOpenChange={(open) => {
             setIsInviteDialogOpen(open);
             if (open) {
-              apiService.get<User[]>(`/users/${id}/friends`).then(() => {
-                // handle friends data if needed
-              }).catch(() => {
-                // handle error
-              });
+              apiService.get<User[]>(`/users/${id}/friends`)
+                .then(() => {
+                  // optional: set friends list
+                })
+                .catch((err: unknown) => {
+                  console.error('Error loading friends:', err);
+                  if (err instanceof Error && 'status' in err) {
+                    const appErr = err as ApplicationError;
+                    switch (appErr.status) {
+                      case 401:
+                        showMessage('Your session has expired. Please log in again to view friends.');
+                        break;
+                      case 404:
+                        showMessage('Could not find the user account.');
+                        break;
+                      default:
+                        showMessage('Failed to load friends. Please try again.');
+                    }
+                  } else {
+                    showMessage('Failed to load friends. Please try again.');
+                  }
+                });
             }
           }}>
             <DialogContent className="max-w-md w-full rounded-2xl">
@@ -988,16 +1087,31 @@ const GroupsManagement: React.FC = () => {
                                 if (!newName || newName === selectedGroup.groupName) return;
                                 try {
                                   await apiService.put(`/groups/${selectedGroup.groupId}`, { groupName: newName });
-                                  showMessage('Group name updated.');
-                                  // Refresh groups overview
+                                  showMessage('Group name updated');
                                   await fetchGroupsData();
                                   await enhanceGroupsWithDetails();
-                                  // Refresh selected group details
                                   const refreshed = await loadGroupDetails(selectedGroup.groupId);
                                   setSelectedGroup(refreshed);
-                                } catch {
-                                  setActionMessage(`Failed to update group name.`);
-                                  setShowActionMessage(true);
+                                } catch (err: unknown) {
+                                  console.error('Error updating group name:', err);
+                                  if (err instanceof Error && 'status' in err) {
+                                    const appErr = err as ApplicationError;
+                                    switch(appErr.status) {
+                                      case 401:
+                                        showMessage('Your session has expired. Please log in again to edit the group.');
+                                        break;
+                                      case 403:
+                                        showMessage('Only the group creator can change the group name.');
+                                        break;
+                                      case 404:
+                                        showMessage('The specified group could not be found.');
+                                        break;
+                                      default:
+                                        showMessage('An error occurred while updating the group name. Please try again.');
+                                    }
+                                  } else {
+                                    showMessage('An error occurred while updating the group name. Please try again.');
+                                  }
                                 }
                               }}
                             >
@@ -1010,16 +1124,31 @@ const GroupsManagement: React.FC = () => {
                                 if (!confirm('Are you sure you want to delete this group?')) return;
                                 try {
                                   await apiService.delete(`/groups/${selectedGroup.groupId}`);
-                                  // Close dialog and optimistically remove group from lists
                                   setIsGroupDetailDialogOpen(false);
-                                  showMessage('Group deleted.');
-                                  if (selectedGroup) {
-                                    setGroups(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
-                                    setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
-                                  }
+                                  showMessage('Group deleted');
+                                  setGroups(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
+                                  setGroupsWithDetails(prev => prev.filter(g => g.groupId !== selectedGroup.groupId));
                                   setSelectedGroup(null);
-                                } catch {
-                                  alert('Failed to delete group.');
+                                } catch (err: unknown) {
+                                  console.error('Error deleting group:', err);
+                                  if (err instanceof Error && 'status' in err) {
+                                    const appErr = err as ApplicationError;
+                                    switch (appErr.status) {
+                                      case 401:
+                                        showMessage('Your session has expired. Please log in again to delete the group.');
+                                        break;
+                                      case 403:
+                                        showMessage('Only the group creator can delete this group.');
+                                        break;
+                                      case 404:
+                                        showMessage('The specified group could not be found.');
+                                        break;
+                                      default:
+                                        showMessage('An error occurred while deleting the group. Please try again.');
+                                    }
+                                  } else {
+                                    showMessage('An error occurred while deleting the group. Please try again.');
+                                  }
                                 }
                               }}
                             >
@@ -1067,15 +1196,28 @@ const GroupsManagement: React.FC = () => {
                                         className="border-rose-500 text-rose-500 hover:bg-rose-50 rounded-xl ml-2"
                                         onClick={async () => {
                                           try {
-                                            await retry(() => apiService.delete(`/groups/${selectedGroup.groupId}/members/${member.userId}`));
-                                            setActionMessage(`Removed ${member.username} from the group.`);
-                                            setShowActionMessage(true);
-                                            // Refresh group details
-                                            const refreshed = await loadGroupDetails(Number(selectedGroup.groupId));
-                                            setSelectedGroup(refreshed);
-                                          } catch {
-                                            setActionMessage(`Failed to remove ${member.username}.`);
-                                            setShowActionMessage(true);
+                                            await apiService.delete(`/groups/${selectedGroup.groupId}/members/${member.userId}`);
+                                            showMessage('Member removed');
+                                          } catch (err: unknown) {
+                                            console.error('Error removing member:', err);
+                                            if (err instanceof Error && 'status' in err) {
+                                              const appErr = err as ApplicationError;
+                                              switch(appErr.status) {
+                                                case 401:
+                                                  showMessage('Your session has expired. Please log in again to manage members.');
+                                                  break;
+                                                case 403:
+                                                  showMessage('Only the group creator can remove members from the group.');
+                                                  break;
+                                                case 404:
+                                                  showMessage('Could not find the group or the specified member.');
+                                                  break;
+                                                default:
+                                                  showMessage('An error occurred while removing member. Please try again.');
+                                              }
+                                            } else {
+                                              showMessage('An error occurred while removing member. Please try again.');
+                                            }
                                           }
                                         }}
                                       >
@@ -1167,18 +1309,42 @@ const GroupsManagement: React.FC = () => {
                                   try {
                                     if (selectedGroup.phase === "POOL") {
                                       await apiService.post(`/groups/${selectedGroup.groupId}/start-voting`, {});
+                                      showMessage('Voting started');
                                       router.replace(`/users/${id}/groups/${selectedGroup.groupId}/vote`);
                                     } else if (selectedGroup.phase === "VOTING") {
                                       await apiService.post(`/groups/${selectedGroup.groupId}/show-results`, {});
+                                      showMessage('Results shown');
                                       router.replace(`/users/${id}/groups/${selectedGroup.groupId}/results`);
                                     }
-                                  } catch {
-                                    // Only admin can advance; ignore errors
+                                  } catch (err: unknown) {
+                                    console.error('Error advancing group phase:', err);
+                                    if (err instanceof Error && 'status' in err) {
+                                      const appErr = err as ApplicationError;
+                                      switch (appErr.status) {
+                                        case 403:
+                                          showMessage(
+                                            selectedGroup.phase === "POOL"
+                                            ? 'Only the group creator can start the voting phase.'
+                                            : 'Only the group creator can end voting and show results.'
+                                          );
+                                          break;
+                                        case 404:
+                                          showMessage('The specified group could not be found.');
+                                          break;
+                                        case 409:
+                                          showMessage(
+                                            selectedGroup.phase === "POOL"
+                                            ? "Voting can only be started when the group is in the 'Pool' phase."
+                                            : 'This action can only be performed when voting is active.'
+                                          );
+                                          break;
+                                        default:
+                                          showMessage('An error occurred. Please try again.');
+                                      }
+                                    } else {
+                                      showMessage('An error occurred. Please try again.');
+                                    }
                                   }
-                                  // Redirect regardless
-                                  const nextPath = selectedGroup.phase === "POOL"
-                                    ? `vote` : `results`;
-                                  router.replace(`/users/${id}/groups/${selectedGroup.groupId}/${nextPath}`);
                                 }}
                               >
                                 {selectedGroup.phase === "POOL"
@@ -1200,6 +1366,7 @@ const GroupsManagement: React.FC = () => {
               message={actionMessage}
               isVisible={showActionMessage}
               onHide={() => setShowActionMessage(false)}
+              className="bg-green-500"
           />
         </div>
       </div>
