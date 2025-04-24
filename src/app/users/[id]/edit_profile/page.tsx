@@ -50,7 +50,7 @@ const EditProfile: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
-  const [favoriteGenre, setFavoriteGenre] = useState<string>("");
+  const [favoriteGenres, setFavoriteGenres] = useState<string[]>([]);
   const [isSelectingGenre, setIsSelectingGenre] = useState<boolean>(false);
 
   // Track if we've already processed movie from session storage
@@ -70,7 +70,7 @@ const EditProfile: React.FC = () => {
       email,
       password,
       bio,
-      favoriteGenre,
+      favoriteGenres,
       isSelectingFavoriteMovie: true
     }));
 
@@ -83,8 +83,11 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSelectGenre = (genreName: string) => {
-    setFavoriteGenre(genreName);
-    setIsSelectingGenre(false);
+    setFavoriteGenres(prev =>
+      prev.includes(genreName)
+        ? prev.filter(g => g !== genreName)
+        : [...prev, genreName]
+    );
   };
 
   const handleCancel = () => {
@@ -118,17 +121,17 @@ const EditProfile: React.FC = () => {
       bio: bio,
       // Use the current favorite movie from state
       favoriteMovie: favoriteMovie || user.favoriteMovie,
-      favoriteGenres: favoriteGenre ? [favoriteGenre] : user.favoriteGenres
+      favoriteGenres: favoriteGenres.length > 0 ? favoriteGenres : user.favoriteGenres
     };
 
     try {
       await apiService.put(`/users/${id}/profile`, updatedUser);
 
       // If genre changed, also update genre preferences
-      if (favoriteGenre && (!user.favoriteGenres || user.favoriteGenres[0] !== favoriteGenre)) {
+      if (favoriteGenres.length > 0 && (!user.favoriteGenres || JSON.stringify(user.favoriteGenres) !== JSON.stringify(favoriteGenres))) {
         try {
           await apiService.post(`/users/${id}/preferences/genres`, {
-            genreIds: [favoriteGenre]
+            genreIds: favoriteGenres
           });
         } catch (genreError) {
           console.error("Error updating genre preference:", genreError);
@@ -172,7 +175,7 @@ const EditProfile: React.FC = () => {
           if (state.email) setEmail(state.email);
           if (state.password) setPassword(state.password);
           if (state.bio) setBio(state.bio);
-          if (state.favoriteGenre) setFavoriteGenre(state.favoriteGenre);
+          if (state.favoriteGenres) setFavoriteGenres(state.favoriteGenres);
           sessionStorage.removeItem('editProfileState');
         } catch (e) {
           console.error('Error parsing stored state', e);
@@ -207,9 +210,9 @@ const EditProfile: React.FC = () => {
             setFavoriteMovie(fetchedUser.favoriteMovie || null);
           }
 
-          // Set favorite genre (first one from the array) if not already set
-          if (!favoriteGenre && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
-            setFavoriteGenre(fetchedUser.favoriteGenres[0]);
+          // Set favorite genres if not already set
+          if ((!favoriteGenres || favoriteGenres.length === 0) && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
+            setFavoriteGenres(fetchedUser.favoriteGenres);
           }
         } catch (error: unknown) {
           if (error instanceof Error) {
@@ -225,7 +228,7 @@ const EditProfile: React.FC = () => {
 
       fetchUserData();
     }
-  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenre]); // Include hasProcessedStoredMovie and favoriteGenre as dependencies
+  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenres]); // Include hasProcessedStoredMovie and favoriteGenres as dependencies
 
   if (loading && !hasProcessedStoredMovie) {
     return (
@@ -317,12 +320,12 @@ const EditProfile: React.FC = () => {
               {/* Favorite Genre Selection */}
               <div>
                 <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Favorite Genre
+                  Favorite Genres
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
                   <span className="text-sm text-gray-600">
-                    {favoriteGenre || "No favorite genre selected"}
+                    {favoriteGenres.length > 0 ? favoriteGenres.join(", ") : "No favorite genres selected"}
                   </span>
                   </div>
                   <Button
@@ -331,14 +334,14 @@ const EditProfile: React.FC = () => {
                       className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
                       onClick={handleToggleGenreSelection}
                   >
-                    {favoriteGenre ? "Change" : "Select"} Favorite Genre
+                    {favoriteGenres.length > 0 ? "Change" : "Select"} Favorite Genres
                   </Button>
                 </div>
 
                 {/* Genre Selection Panel */}
                 {isSelectingGenre && (
                     <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
-                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genre</h4>
+                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genres</h4>
                       <div className="flex flex-wrap gap-2">
                         {GENRES.map((genre) => (
                             <button
@@ -346,7 +349,7 @@ const EditProfile: React.FC = () => {
                                 type="button"
                                 onClick={() => handleSelectGenre(genre.name)}
                                 className={`px-4 py-2 rounded-full border ${
-                                    favoriteGenre === genre.name
+                                    favoriteGenres.includes(genre.name)
                                         ? "bg-[#AFB3FF] text-white"
                                         : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
                                 }`}
@@ -355,6 +358,7 @@ const EditProfile: React.FC = () => {
                             </button>
                         ))}
                       </div>
+                      <p className="mt-2 text-sm text-gray-600">{favoriteGenres.length} selected</p>
                     </div>
                 )}
               </div>
