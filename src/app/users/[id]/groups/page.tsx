@@ -25,6 +25,7 @@ import type { ApplicationError } from "@/app/types/error"; // Ensure this path i
 interface Group {
   groupId: number;
   groupName: string;
+  creator: User;
   creatorId: number;
   memberIds: number[];
   movieIds: number[];
@@ -170,7 +171,7 @@ const GroupsManagement: React.FC = () => {
       const group: Group = await apiService.get<Group>(`/groups/${groupId}`);
       const members: User[] = await apiService.get<User[]>(`/groups/${groupId}/members`);
       const movies: Movie[] = await apiService.get<Movie[]>(`/groups/${groupId}/pool`);
-      const creator = await fetchUserById(group.creatorId); // fetchUserById handles its own errors/placeholders
+      const creator = group.creator; // fetchUserById handles its own errors/placeholders
 
       // Construct the detailed object
       return {
