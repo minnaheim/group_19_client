@@ -587,7 +587,46 @@ const FriendsManagement: React.FC = () => {
                                  {/* ... friend card content ... */}
                                   <div>
                                       <h3 className="font-semibold text-[#3b3e88] mb-1">{friend.username}</h3>
-                                      {/* ... rest of friend card ... */}
+                                      {friend.bio && (
+                                          <p className="text-[#838bad] text-xs mb-2">{friend.bio}</p>
+                                      )}
+
+                                      {/* Favorite movie section */}
+                                      {friend.favoriteMovie && (
+                                          <div className="mb-2">
+                                            <p className="text-xs text-[#3b3e88]/60 mb-1">Favorite Movie</p>
+                                            <div className="flex items-center gap-2">
+                                              <div className="w-8 h-12 bg-indigo-100 rounded overflow-hidden flex-shrink-0">
+                                                <img
+                                                    src={friend.favoriteMovie.posterURL}
+                                                    alt={friend.favoriteMovie.title}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                              </div>
+                                              <span className="text-xs font-medium line-clamp-1 text-[#3b3e88]">
+                               {friend.favoriteMovie.title}
+                             </span>
+                                            </div>
+                                          </div>
+                                      )}
+
+                                      {/* Favorite genres */}
+                                      {friend.favoriteGenres && friend.favoriteGenres.length > 0 && (
+                                          <div className="mb-3">
+                                            <p className="text-xs text-[#3b3e88]/60 mb-1">Favorite Genres</p>
+                                            <div className="flex flex-wrap gap-1">
+                                              {friend.favoriteGenres.map((genre, idx) => (
+                                                  <span
+                                                      key={idx}
+                                                      className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full"
+                                                  >
+                                 {genre}
+                               </span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                      )}
+                                    {/* ... rest of friend card ... */}
                                       <div className="flex flex-row gap-2">
                                           <Button className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-xs h-8 rounded-xl flex-1" onClick={() => navigateToFriendWatchlist(friend.userId)}>View Watchlist</Button>
                                           <Button variant="outline" className="border-rose-500 text-rose-500 hover:bg-rose-50 text-xs h-8 rounded-xl w-8 p-0 flex items-center justify-center" onClick={() => handleRemoveFriend(friend.userId)}>
