@@ -199,7 +199,7 @@ const FriendsManagement: React.FC = () => {
         const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(
           `/users/search?username=${encodeURIComponent(friendUsername)}`
         ));
-        if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
+        if (!searchResults) {
           setError(`User "${friendUsername}" not found. Please check the username.`);
           setIsSubmitting(false);
           return;
