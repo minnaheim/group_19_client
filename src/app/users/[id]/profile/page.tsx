@@ -64,7 +64,7 @@ const Profile: React.FC = () => {
   };
 
   const handleBack = () => {
-    router.push("/users/dashboard");
+    router.push(`users/${id}/dashboard`);
   };
 
   const showMessage = (message: string) => {
