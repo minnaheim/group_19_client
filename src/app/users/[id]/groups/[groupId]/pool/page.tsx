@@ -215,7 +215,7 @@ const MoviePool: React.FC = () => {
           {/* Show User's Watchlist */}
           <div className="mb-8">
             <h2 className="font-semibold text-[#3b3e88] text-xl">
-              Choose a Movie from your Watchlist to Add to the Pool
+              Choose up to two Movies from your Watchlist to Add to the Pool
             </h2>
           </div>
           <div className="overflow-x-auto mb-8">
