@@ -196,17 +196,28 @@ const FriendsManagement: React.FC = () => {
     try {
       // --- Block: Find user by username ---
       try {
-        const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(`/users/search?username=${encodeURIComponent(friendUsername)}`));
+        const searchResults = await retry(() => apiService.get<UserSearchResponse[]>(
+          `/users/search?username=${encodeURIComponent(friendUsername)}`
+        ));
         if (!searchResults || !Array.isArray(searchResults) || searchResults.length === 0) {
-          setError(`User "${friendUsername}" not found. Please check the username.`); // Use setError
+          setError(`User "${friendUsername}" not found. Please check the username.`);
           setIsSubmitting(false);
           return;
         }
+        // Use exact match to avoid ambiguous substring results
+        const matchedUser = searchResults.find(u =>
+          u.username.toLowerCase() === friendUsername.trim().toLowerCase()
+        );
+        if (!matchedUser) {
+          setError(`User "${friendUsername}" not found. Please check the username.`);
+          setIsSubmitting(false);
+          return;
+        }
+        const receiverId = matchedUser.userId;
         // --- End Block: Find user by username ---
 
 
         // --- Block: Send the actual request ---
-        const receiverId = searchResults[0].userId;
         try {
           await apiService.post(`/friends/add/${receiverId}`, {});
           showSuccessMessageFn(`Friend request sent to ${friendUsername}`); // Success
