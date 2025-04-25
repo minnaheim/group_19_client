@@ -252,7 +252,7 @@ const Vote: React.FC = () => {
   const isSubmitEnabled = () => {
     const filledSlots = rankings.filter(movie => movie !== null).length;
     const minRequired = Math.min(5, availableMovies.length + filledSlots);
-    return filledSlots >= minRequired && availableMovies.length === 0;
+    return filledSlots >= minRequired;
   };
 
   // Get the error message for ranking requirements
