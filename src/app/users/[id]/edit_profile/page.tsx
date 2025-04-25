@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
+import { retry } from "@/utils/retry";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { ApplicationError } from "@/app/types/error";
 import { useApi } from "@/app/hooks/useApi";
@@ -10,6 +11,8 @@ import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Movie } from "@/app/types/movie";
 import MovieCard from "@/components/ui/Movie_card";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
 
 // Static genre list - same as in GenrePreferences component
 const GENRES = [
@@ -42,6 +45,9 @@ const EditProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
 
   // state for editable fields
   const [username, setUsername] = useState<string>("");
@@ -49,7 +55,7 @@ const EditProfile: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
-  const [favoriteGenre, setFavoriteGenre] = useState<string>("");
+  const [favoriteGenres, setFavoriteGenres] = useState<string[]>([]);
   const [isSelectingGenre, setIsSelectingGenre] = useState<boolean>(false);
 
   // Track if we've already processed movie from session storage
@@ -60,7 +66,9 @@ const EditProfile: React.FC = () => {
     value: token,
   } = useLocalStorage<string>("token", "");
 
-  const { value: userId } = useLocalStorage<string>("userId", "");
+  const {
+    value: userId,
+  } = useLocalStorage<string>("userId", "");
 
   const handleSelectFavoriteMovie = () => {
     // Store the current state in localStorage or session before navigating
@@ -69,7 +77,7 @@ const EditProfile: React.FC = () => {
       email,
       password,
       bio,
-      favoriteGenre,
+      favoriteGenres,
       isSelectingFavoriteMovie: true
     }));
 
@@ -82,8 +90,11 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSelectGenre = (genreName: string) => {
-    setFavoriteGenre(genreName);
-    setIsSelectingGenre(false);
+    setFavoriteGenres(prev =>
+      prev.includes(genreName)
+        ? prev.filter(g => g !== genreName)
+        : [...prev, genreName]
+    );
   };
 
   const handleCancel = () => {
@@ -95,14 +106,14 @@ const EditProfile: React.FC = () => {
 
     // validate if the user is authorised to edit this profile
     if (userId && userId.valueOf() !== id) {
-      alert("You can only edit your own profile");
+      setSubmitError("You can only edit your own profile");
       router.push(`/users/${id}/profile`);
       return;
     }
 
     // check if user is null before updating
     if (!user) {
-      alert("User data not available");
+      setSubmitError("User data not available");
       return;
     }
 
@@ -117,32 +128,67 @@ const EditProfile: React.FC = () => {
       bio: bio,
       // Use the current favorite movie from state
       favoriteMovie: favoriteMovie || user.favoriteMovie,
-      favoriteGenres: favoriteGenre ? [favoriteGenre] : user.favoriteGenres
+      favoriteGenres: favoriteGenres.length > 0 ? favoriteGenres : user.favoriteGenres
     };
 
     try {
       await apiService.put(`/users/${id}/profile`, updatedUser);
 
       // If genre changed, also update genre preferences
-      if (favoriteGenre && (!user.favoriteGenres || user.favoriteGenres[0] !== favoriteGenre)) {
+      if (favoriteGenres.length > 0 && (!user.favoriteGenres || JSON.stringify(user.favoriteGenres) !== JSON.stringify(favoriteGenres))) {
         try {
           await apiService.post(`/users/${id}/preferences/genres`, {
-            genreIds: [favoriteGenre]
+            genreIds: favoriteGenres
           });
-        } catch (genreError) {
-          console.error("Error updating genre preference:", genreError);
-          // Continue with profile update anyway
+        } catch (genreError: unknown) {
+          if (genreError instanceof Error && 'status' in genreError) {
+            const appErr = genreError as ApplicationError;
+            switch (appErr.status) {
+              case 400:
+                setSubmitError("An invalid genre was selected. Please check your choices.");
+                break;
+              case 401:
+                setSubmitError("Your session has expired. Please log in again to save preferences.");
+                break;
+              case 403:
+                setSubmitError("You don't have permission to change these preferences.");
+                break;
+              case 404:
+                setSubmitError("We couldn't find your user account to save preferences.");
+                break;
+              default:
+                setSubmitError("An unexpected error occurred while saving your preferences.");
+            }
+          } else {
+            setSubmitError("An unexpected error occurred while saving your preferences.");
+          }
         }
       }
 
-      alert("Profile updated successfully!");
+      setSuccessMessage("Profile updated successfully!");
+      setShowSuccessMessage(true);
       router.push(`/users/${id}/profile`);
     } catch (error: unknown) {
-      if (error instanceof Error && "status" in error) {
-        const applicationError = error as ApplicationError;
-        alert(`Error: ${applicationError.message}`);
+      if (error instanceof Error && 'status' in error) {
+        const appErr = error as ApplicationError;
+        switch (appErr.status) {
+          case 401:
+            setSubmitError("Your session has expired. Please log in again to update your profile.");
+            break;
+          case 403:
+            setSubmitError("You don't have permission to update this profile.");
+            break;
+          case 404:
+            setSubmitError("We couldn't find the user profile to update.");
+            break;
+          case 409:
+            setSubmitError("That username or email is already in use. Please choose another.");
+            break;
+          default:
+            setSubmitError("An unexpected error occurred while updating your profile.");
+        }
       } else {
-        alert("An unexpected error occurred while updating the profile");
+        setSubmitError("An unexpected error occurred while updating your profile.");
       }
     }
   };
@@ -171,7 +217,7 @@ const EditProfile: React.FC = () => {
           if (state.email) setEmail(state.email);
           if (state.password) setPassword(state.password);
           if (state.bio) setBio(state.bio);
-          if (state.favoriteGenre) setFavoriteGenre(state.favoriteGenre);
+          if (state.favoriteGenres) setFavoriteGenres(state.favoriteGenres);
           sessionStorage.removeItem('editProfileState');
         } catch (e) {
           console.error('Error parsing stored state', e);
@@ -181,7 +227,7 @@ const EditProfile: React.FC = () => {
       // Mark as processed regardless of outcome
       setHasProcessedStoredMovie(true);
     }
-  }, []); // Run once on mount
+  }, [hasProcessedStoredMovie]);
 
   // Second useEffect to fetch user data
   useEffect(() => {
@@ -192,7 +238,7 @@ const EditProfile: React.FC = () => {
 
       const fetchUserData = async () => {
         try {
-          const fetchedUser = await apiService.get(`/users/${id}/profile`) as User;
+          const fetchedUser = await retry(() => apiService.get(`/users/${id}/profile`)) as User;
           setUser(fetchedUser);
 
           // Initialize form fields if not already set from session storage
@@ -206,13 +252,18 @@ const EditProfile: React.FC = () => {
             setFavoriteMovie(fetchedUser.favoriteMovie || null);
           }
 
-          // Set favorite genre (first one from the array) if not already set
-          if (!favoriteGenre && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
-            setFavoriteGenre(fetchedUser.favoriteGenres[0]);
+          // Set favorite genres if not already set
+          if ((!favoriteGenres || favoriteGenres.length === 0) && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
+            setFavoriteGenres(fetchedUser.favoriteGenres);
           }
         } catch (error: unknown) {
-          if (error instanceof Error) {
-            setError(`Failed to load user data: ${error.message}`);
+          if (error instanceof Error && 'status' in error) {
+            const appErr = error as ApplicationError;
+            if (appErr.status === 404) {
+              setError("Oops! We couldn't find the user profile you were looking for.");
+            } else {
+              setError(`Failed to load user data: ${appErr.message}`);
+            }
           } else {
             setError("Failed to load user data");
           }
@@ -224,7 +275,19 @@ const EditProfile: React.FC = () => {
 
       fetchUserData();
     }
-  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie]); // Include hasProcessedStoredMovie as a dependency
+  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenres]); // Include hasProcessedStoredMovie and favoriteGenres as dependencies
+
+  // Loading and error states
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return <ErrorMessage message={error} onClose={() => setError(null)} />;
+  }
 
   if (loading && !hasProcessedStoredMovie) {
     return (
@@ -233,10 +296,6 @@ const EditProfile: React.FC = () => {
           </div>
         </div>
     );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
   }
 
   return (
@@ -263,6 +322,15 @@ const EditProfile: React.FC = () => {
               </h2>
             </div>
 
+            {/* Submission errors */}
+            <ErrorMessage message={submitError} onClose={() => setSubmitError("")} />
+            {/* Success message */}
+            <ActionMessage
+              message={successMessage}
+              isVisible={showSuccessMessage}
+              onHide={() => setShowSuccessMessage(false)}
+              className="bg-green-500"
+            />
             {/* Edit Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
@@ -316,12 +384,12 @@ const EditProfile: React.FC = () => {
               {/* Favorite Genre Selection */}
               <div>
                 <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Favorite Genre
+                  Favorite Genres
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
                   <span className="text-sm text-gray-600">
-                    {favoriteGenre || "No favorite genre selected"}
+                    {favoriteGenres.length > 0 ? favoriteGenres.join(", ") : "No favorite genres selected"}
                   </span>
                   </div>
                   <Button
@@ -330,14 +398,14 @@ const EditProfile: React.FC = () => {
                       className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
                       onClick={handleToggleGenreSelection}
                   >
-                    {favoriteGenre ? "Change" : "Select"} Favorite Genre
+                    {favoriteGenres.length > 0 ? "Change" : "Select"} Favorite Genres
                   </Button>
                 </div>
 
                 {/* Genre Selection Panel */}
                 {isSelectingGenre && (
                     <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
-                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genre</h4>
+                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genres</h4>
                       <div className="flex flex-wrap gap-2">
                         {GENRES.map((genre) => (
                             <button
@@ -345,7 +413,7 @@ const EditProfile: React.FC = () => {
                                 type="button"
                                 onClick={() => handleSelectGenre(genre.name)}
                                 className={`px-4 py-2 rounded-full border ${
-                                    favoriteGenre === genre.name
+                                    favoriteGenres.includes(genre.name)
                                         ? "bg-[#AFB3FF] text-white"
                                         : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
                                 }`}
@@ -354,6 +422,7 @@ const EditProfile: React.FC = () => {
                             </button>
                         ))}
                       </div>
+                      <p className="mt-2 text-sm text-gray-600">{favoriteGenres.length} selected</p>
                     </div>
                 )}
               </div>

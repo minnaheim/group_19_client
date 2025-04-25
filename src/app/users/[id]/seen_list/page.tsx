@@ -12,6 +12,8 @@ import SearchBar from "@/components/ui/search_bar";
 import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import { retry } from "@/utils/retry";
 
 const SeenList: React.FC = () => {
   const { id } = useParams();
@@ -47,24 +49,18 @@ const SeenList: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!id) return;
-
       try {
         setLoading(true);
-
-        // Try to get the user data from the profile endpoint
-        try {
-          const userData = await apiService.get(`/users/${id}/profile`);
-          setUser(userData as User);
-        } catch (apiError) {
-          console.log("API error, using mock data:", apiError);
+        const userData = await retry(() => apiService.get(`/users/${id}/profile`));
+        setUser(userData as User);
+        showMessage('User profile loaded');
+      } catch (error: unknown) {
+        if (error instanceof Error && 'status' in error && (error as ApplicationError).status === 404) {
+          showMessage("Oops! We couldn't find your profile details.");
+        } else {
+          setError('Failed to load user data');
         }
-        setLoading(false);
-      } catch (error) {
-        setError("Failed to load user data");
-        if (error instanceof Error && "status" in error) {
-          const applicationError = error as ApplicationError;
-          alert(`Error: ${applicationError.message}`);
-        }
+      } finally {
         setLoading(false);
       }
     };
@@ -136,41 +132,38 @@ const SeenList: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
-    try {
-      // Process each movie removal separately
-      for (const movieId of selectedMoviesToRemove) {
-        try {
-          // Call the server API to remove the movie
-          await apiService.delete(`/users/${id}/watched/${movieId}`, {});
-        } catch (apiError) {
-          console.error("Error removing movie from watched list:", apiError);
+    if (!user) return;
+    for (const movieId of selectedMoviesToRemove) {
+      try {
+        await apiService.delete(`/users/${id}/watched/${movieId}`, {});
+        showMessage('Movie removed from watched list');
+      } catch (error: unknown) {
+        if (error instanceof Error && 'status' in error) {
+          const status = (error as ApplicationError).status;
+          switch (status) {
+            case 401:
+              showMessage('Please log in again to remove movies from your watched list.');
+              break;
+            case 403:
+              showMessage("You don't have permission to modify this watched list.");
+              break;
+            case 404:
+              showMessage('Could not find the user, movie, or watched list entry.');
+              break;
+            default:
+              showMessage('Failed to remove movie from watched list.');
+          }
+        } else {
+          showMessage('Failed to remove movie from watched list.');
         }
       }
-
-      // After all removals, update local state
-      if (user) {
-        const updatedMovies = user.watchedMovies.filter(
-            (movie) => !selectedMoviesToRemove.includes(movie.movieId),
-        );
-
-        setUser({
-          ...user,
-          watchedMovies: updatedMovies,
-        });
-      }
-
-      showMessage(
-          `Removed ${selectedMoviesToRemove.length} movie(s) from your seen list`,
-      );
-      setIsEditing(false);
-      setSelectedMoviesToRemove([]);
-    } catch (error) {
-      setError("Failed to update movie list");
-      if (error instanceof Error && "status" in error) {
-        const applicationError = error as ApplicationError;
-        showMessage(`Error: ${applicationError.message}`);
-      }
     }
+    const updatedMovies = user.watchedMovies.filter(
+      (movie) => !selectedMoviesToRemove.includes(movie.movieId),
+    );
+    setUser({ ...user, watchedMovies: updatedMovies });
+    setIsEditing(false);
+    setSelectedMoviesToRemove([]);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +204,7 @@ const SeenList: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-8">{error}</div>;
+    return <ErrorMessage message={error} onClose={() => setError(null)} />;
   }
 
   // Determine which movies to display
@@ -223,7 +216,7 @@ const SeenList: React.FC = () => {
       <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
         {/* Sidebar */}
         <Navigation userId={userId} activeItem="Profile Page" />
-
+        {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
         {/* Main content */}
         <div className="flex-1 p-6 overflow-auto">
           <div className="mb-8">
@@ -324,6 +317,7 @@ const SeenList: React.FC = () => {
               message={actionMessage}
               isVisible={showActionMessage}
               onHide={() => setShowActionMessage(false)}
+              className="bg-green-500"
           />
         </div>
       </div>

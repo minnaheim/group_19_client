@@ -4,9 +4,16 @@ import { Movie } from "@/app/types/movie";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import {useParams, useRouter} from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
+import { retry } from 'src/utils/retry';
+import { useGroupPhase } from "@/app/hooks/useGroupPhase";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
+import type { ApplicationError } from "@/app/types/error";
+
+// Removed unused Group and GroupPhase imports
 
 // Define interfaces for the data coming from the backend
 interface MovieAverageRankDTO {
@@ -23,59 +30,122 @@ interface RankingResultGetDTO {
 }
 
 const Results: React.FC = () => {
-  const {id, groupId} = useParams();
+  const params = useParams();
+  let { id, groupId } = params as { id?: string | string[]; groupId?: string | string[] };
+  if (Array.isArray(id)) id = id[0];
+  if (Array.isArray(groupId)) groupId = groupId[0];
+  const { phase: phaseFromHook, loading: phaseLoading, error: phaseError } = useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<RankingResultGetDTO | null>(null);
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [actionMessage, setActionMessage] = useState<string>("");
+  const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
   const apiService = useApi();
+
+  // Full winning movie details (fetch for posterURL)
+  const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
+  useEffect(() => {
+    if (rankingResult) {
+      apiService.get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
+        .then(movie => setFullWinningMovie(movie))
+        .catch(err => console.error('Failed to fetch full movie data:', err));
+    }
+  }, [apiService, rankingResult]);
 
   // Fetch ranking result
   useEffect(() => {
     const fetchRankingResult = async () => {
-      if (!groupId || !id) return;
-
+      if (!groupId || !id || phaseFromHook !== "RESULTS") return;
       try {
         setLoading(true);
-        // Using the endpoint from your backend controller
-        const response = await apiService.get<RankingResultGetDTO>(
+        const response = await retry(() => apiService.get<RankingResultGetDTO>(
             `/groups/${groupId}/rankings/result`
-        );
+        ));
         setRankingResult(response);
-      } catch (error) {
-        console.error("Failed to fetch ranking result:", error);
-        // We'll handle this in the UI rather than showing an alert
+        // Success feedback
+        setActionMessage("Results loaded successfully");
+        setShowActionMessage(true);
+      } catch (err: unknown) {
+        console.error("Failed to fetch ranking result:", err);
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (appErr.status === 404) {
+            setError("Could not find the group or results are not yet available.");
+          } else if (appErr.status === 409) {
+            setError("Results can only be viewed after voting has ended.");
+          } else {
+            setError("An error occurred while loading results. Please try again.");
+          }
+        } else {
+          setError("An error occurred while loading results. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
     };
-
     fetchRankingResult();
-  }, [apiService, groupId]);
+  }, [apiService, groupId, id, phaseFromHook]);
 
   // Fetch detailed ranking results
   useEffect(() => {
     const fetchDetailedResults = async () => {
-      if (!groupId) return;
-
+      if (!groupId || phaseFromHook !== "RESULTS") return;
       try {
-        // Using the detailed rankings endpoint from your backend controller
-        const response = await apiService.get<MovieAverageRankDTO[]>(
+        const response = await retry(() => apiService.get<MovieAverageRankDTO[]>(
             `/groups/${groupId}/rankings/details`
-        );
+        ));
         setDetailedResults(response);
-      } catch (error) {
-        console.error("Failed to fetch detailed ranking results:", error);
-        // We'll handle this in the UI
+        // Success feedback
+        setActionMessage("Detailed results loaded successfully");
+        setShowActionMessage(true);
+      } catch (err: unknown) {
+        console.error("Failed to fetch detailed ranking results:", err);
+        if (err instanceof Error && 'status' in err) {
+          const appErr = err as ApplicationError;
+          if (appErr.status === 404) {
+            setError("The specified group could not be found.");
+          } else if (appErr.status === 409) {
+            setError("Detailed results can only be viewed after voting has ended.");
+          } else {
+            setError("An error occurred while loading detailed results. Please try again.");
+          }
+        } else {
+          setError("An error occurred while loading detailed results. Please try again.");
+        }
       }
     };
-
     fetchDetailedResults();
-  }, [apiService, groupId]);
+  }, [apiService, groupId, phaseFromHook]);
+
+  useEffect(() => {
+    if (phaseLoading) return;
+    if (phaseError) {
+      setError(phaseError);
+      return;
+    }
+    if (phaseFromHook && phaseFromHook !== "RESULTS") {
+      if (phaseFromHook === "POOL") {
+        router.replace(`/users/${userId}/groups/${groupId}/pool`);
+      } else if (phaseFromHook === "VOTING") {
+        router.replace(`/users/${userId}/groups/${groupId}/vote`);
+      }
+    }
+  }, [phaseFromHook, phaseLoading, phaseError, router, userId, groupId]);
 
   // Helper function to get complete image URL
-  const getFullPosterUrl = (posterPath: string) => {
+  const getFullPosterUrl = (posterPath?: string | null): string => {
+    // No poster provided, use placeholder
+    if (!posterPath) {
+      return "https://via.placeholder.com/250x375?text=No+Image";
+    }
+    // If already a full URL, return as is
+    if (posterPath.startsWith('http')) {
+      return posterPath;
+    }
+    // Prefix TMDB base path for relative poster paths
     return `https://image.tmdb.org/t/p/w500${posterPath}`;
   };
 
@@ -88,19 +158,46 @@ const Results: React.FC = () => {
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
-        <Navigation userId={userId} activeItem=" Movie Groups" />
+        <Navigation userId={userId} activeItem="Movie Groups" />
 
         {/* Main content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="font-semibold text-[#3b3e88] text-3xl">Movie Ranking Results</h1>
-            <p className="text-[#b9c0de] mt-2">See what your group has chosen to watch</p>
+          <div className="mb-8 flex items-center">
+            <div>
+              <h1 className="font-semibold text-[#3b3e88] text-3xl">
+                Movie Ranking Results
+              </h1>
+              <p className="text-[#b9c0de] mt-2">See what your group has chosen to watch</p>
+            </div>
           </div>
+
+          {/* Error display */}
+          {error && <ErrorMessage message={error} onClose={() => setError("")} />}
+
+          {/* Success message box */}
+          <ActionMessage
+            message={actionMessage}
+            isVisible={showActionMessage}
+            onHide={() => setShowActionMessage(false)}
+            className="bg-green-500"
+          />
 
           {/* Winner Section */}
           <div className="flex flex-col items-center justify-center text-center mb-12">
-            {loading ? (
+            {phaseFromHook !== "RESULTS" ? (
+                <div className="text-center p-6 bg-white rounded-lg shadow-md">
+                  <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                    Results Not Available Yet
+                  </h2>
+                  <p className="text-[#b9c0de] mb-4">
+                    The results will be available once the group enters the RESULTS phase.
+                  </p>
+                  <p className="text-[#b9c0de]">
+                    Please check back later!
+                  </p>
+                </div>
+            ) : loading ? (
                 <p className="text-[#b9c0de] text-lg mt-2">Loading results...</p>
             ) : rankingResult ? (
                 <>
@@ -109,13 +206,15 @@ const Results: React.FC = () => {
                   </h2>
                   <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
                     <img
-                        src={getFullPosterUrl(rankingResult.winningMovie.posterURL)}
-                        alt={rankingResult.winningMovie.title}
+                        src={getFullPosterUrl(
+                          fullWinningMovie?.posterURL ?? rankingResult.winningMovie.posterURL
+                        )}
+                        alt={fullWinningMovie?.title || rankingResult.winningMovie.title}
                         className="w-full h-full object-cover"
                     />
                   </div>
                   <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
-                    {rankingResult.winningMovie.title}
+                    {fullWinningMovie?.title || rankingResult.winningMovie.title}
                   </h2>
 
                   {detailedResults.length > 0 && (
@@ -177,12 +276,12 @@ const Results: React.FC = () => {
           )}
 
           {/* Buttons */}
-          <div className="flex justify-center gap-4 mt-8">
+          <div className="flex justify-between items-center mt-8">
             <Button
-                variant="outline"
-                onClick={() => router.push(`/users/${userId}/groups/${groupId}/pool`)}
+              variant="outline"
+              onClick={() => router.push(`/users/${userId}/groups`)}
             >
-              Back to Pool
+              Back to group overview
             </Button>
             <Button onClick={() => router.push(`/users/${userId}/dashboard`)}>
               Go to Dashboard

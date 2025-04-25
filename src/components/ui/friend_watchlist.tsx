@@ -11,7 +11,7 @@ import SearchBar from "@/components/ui/search_bar";
 import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
-
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 const FriendWatchlist: React.FC = () => {
     const { id, friendId } = useParams(); // Updated to use friendId param
@@ -142,7 +142,7 @@ const FriendWatchlist: React.FC = () => {
     }
 
     if (error) {
-        return <div className="text-red-500 text-center py-8">{error}</div>;
+        return <ErrorMessage message={error} onClose={() => setError(null)} />;
     }
 
     return (

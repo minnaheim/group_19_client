@@ -8,6 +8,7 @@ import { useApi } from "@/app/hooks/useApi";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { User } from "@/app/types/user";
 import { useState } from "react";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 const Login: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
@@ -65,13 +66,14 @@ const Login: React.FC = () => {
     return !newErrors.username && !newErrors.password;
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (): Promise<void> => {
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
     setLoginError("");
+    
 
     try {
       // Based on your backend controller, the login endpoint returns a User object directly
@@ -93,19 +95,46 @@ const Login: React.FC = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-
-      // Handle different types of errors
-      if (error instanceof Error) {
-        if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-          setLoginError("Invalid username or password");
-        } else if (error.message.includes("Network Error") || error.message.includes("Failed to fetch")) {
-          setLoginError("Network error. Please check your connection and try again.");
-        } else {
-          setLoginError(`Login failed: ${error.message}`);
+      let userMessage = "An unknown error occurred during login.";
+      // Type guard for Axios-like error
+      type ErrorWithResponse = { response: { status: number; data?: { message?: string } } };
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as ErrorWithResponse).response === "object" &&
+        (error as ErrorWithResponse).response !== null &&
+        "status" in (error as ErrorWithResponse).response
+      ) {
+        const errResp = (error as ErrorWithResponse).response;
+        switch (errResp.status) {
+          case 400:
+            userMessage = "Please enter both username/email and password.";
+            break;
+          case 404:
+            userMessage = "We couldn't find an account with that username/email. Do you want to register?";
+            break;
+          case 401:
+            userMessage = "Incorrect password. Please try again.";
+            break;
+          default:
+            userMessage = errResp.data?.message || userMessage;
         }
-      } else {
-        setLoginError("An unknown error occurred during login");
+      } else if (error instanceof Error) {
+        if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+          userMessage = "Incorrect password. Please try again.";
+        } else if (error.message.includes("404")) {
+          userMessage = "We couldn't find an account with that username/email. Do you want to register?";
+        } else if (error.message.includes("400")) {
+          userMessage = "Please enter both username/email and password.";
+        } else if (error.message.includes("Network Error") || error.message.includes("Failed to fetch")) {
+          userMessage = "Network error. Please check your connection and try again.";
+        } else {
+          userMessage = `Login failed: ${error.message}`;
+        }
       }
+      setLoginError(userMessage);
+      
     } finally {
       setIsLoading(false);
     }
@@ -116,11 +145,7 @@ const Login: React.FC = () => {
         <CardContent className="space-y-4 pt-6">
           <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
-          {loginError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                <p>{loginError}</p>
-              </div>
-          )}
+          <ErrorMessage message={loginError} onClose={() => setLoginError("")} />
 
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
             <div className="grid w-full items-center gap-4">
@@ -134,7 +159,7 @@ const Login: React.FC = () => {
                     autoComplete="username"
                 />
                 {errors.username && (
-                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  <ErrorMessage message={errors.username} onClose={() => setErrors(prev => ({...prev, username: ""}))} />
                 )}
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -148,7 +173,7 @@ const Login: React.FC = () => {
                     autoComplete="current-password"
                 />
                 {errors.password && (
-                    <p className="text-red-500 text-sm">{errors.password}</p>
+                  <ErrorMessage message={errors.password} onClose={() => setErrors(prev => ({...prev, password: ""}))} />
                 )}
               </div>
             </div>

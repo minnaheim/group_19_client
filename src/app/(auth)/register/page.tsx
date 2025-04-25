@@ -8,6 +8,8 @@ import { useApi } from "@/app/hooks/useApi";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { User } from "@/app/types/user";
 import { useState } from "react";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import { ApplicationError } from "@/app/types/error";
 
 const Register: React.FC = () => {
   const router = useRouter();
@@ -102,20 +104,22 @@ const Register: React.FC = () => {
       } else {
         setRegisterError("Invalid response received from server");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
-
-      // Handle different types of errors
-      if (error instanceof Error) {
-        if (error.message.includes("409") || error.message.includes("Conflict")) {
-          setRegisterError("Username or email already exists");
-        } else if (error.message.includes("Network Error") || error.message.includes("Failed to fetch")) {
-          setRegisterError("Network error. Please check your connection and try again.");
-        } else {
-          setRegisterError(`Registration failed: ${error.message}`);
+      if (error instanceof Error && 'status' in error) {
+        const status = (error as ApplicationError).status;
+        switch (status) {
+          case 400:
+            setRegisterError('Please fill out all required fields correctly.');
+          case 409:
+            setRegisterError('This username or email is already registered. Try logging in.');
+          default:
+            setRegisterError(`Registration failed: ${error.message}`);
         }
+      } else if (error instanceof Error && (error.message.includes('Network Error') || error.message.includes('Failed to fetch'))) {
+        setRegisterError('Network error. Please check your connection and try again.');
       } else {
-        setRegisterError("An unknown error occurred during registration");
+        setRegisterError('An unknown error occurred during registration');
       }
     } finally {
       setIsLoading(false);
@@ -128,9 +132,7 @@ const Register: React.FC = () => {
           <h2 className="text-2xl font-bold text-center mb-6">Register</h2>
 
           {registerError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                <p>{registerError}</p>
-              </div>
+            <ErrorMessage message={registerError} onClose={() => setRegisterError("")} />
           )}
 
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
@@ -146,7 +148,7 @@ const Register: React.FC = () => {
                     autoComplete="email"
                 />
                 {errors.email && (
-                    <p className="text-red-500 text-sm">{errors.email}</p>
+                  <ErrorMessage message={errors.email} onClose={() => setErrors(prev => ({...prev, email: ""}))} />
                 )}
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -159,7 +161,7 @@ const Register: React.FC = () => {
                     autoComplete="username"
                 />
                 {errors.username && (
-                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  <ErrorMessage message={errors.username} onClose={() => setErrors(prev => ({...prev, username: ""}))} />
                 )}
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -173,7 +175,7 @@ const Register: React.FC = () => {
                     autoComplete="new-password"
                 />
                 {errors.password && (
-                    <p className="text-red-500 text-sm">{errors.password}</p>
+                  <ErrorMessage message={errors.password} onClose={() => setErrors(prev => ({...prev, password: ""}))} />
                 )}
               </div>
             </div>
