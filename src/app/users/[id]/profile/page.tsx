@@ -23,9 +23,11 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // User preferences state
+  // User favorites state
   const [userGenres, setUserGenres] = useState<string[]>([]);
   const [userFavoriteMovie, setUserFavoriteMovie] = useState<Movie | null>(null);
+  const [userActors, setUserActors] = useState<string[]>([]);
+  const [userDirectors, setUserDirectors] = useState<string[]>([]);
 
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -92,19 +94,21 @@ const Profile: React.FC = () => {
       setLoading(false);
       return;
     }
-    // Fetch preferences
+    // Fetch favorites
     try {
-      const prefs = await retry(() => apiService.get(`/users/${id}/preferences`)) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
+      const prefs = await retry(() => apiService.get(`/users/${id}/favorites`)) as { favoriteGenres: string[]; favoriteMovie: Movie | null; favoriteActors: string[]; favoriteDirectors: string[] };
       setUserGenres(Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : []);
       setUserFavoriteMovie(prefs.favoriteMovie || null);
-      showMessage('User preferences loaded');
+      setUserActors(Array.isArray(prefs.favoriteActors) ? prefs.favoriteActors : []);
+      setUserDirectors(Array.isArray(prefs.favoriteDirectors) ? prefs.favoriteDirectors : []);
+      showMessage('User favorites loaded');
     } catch (err: unknown) {
       if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
-        showMessage('Your session seems to have expired. Could not load preferences.');
+        showMessage('Your session seems to have expired. Could not load favorites.');
       } else if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
-        showMessage('Could not find preferences for this user.');
+        showMessage('Could not find favorites for this user.');
       } else {
-        setError('An error occurred fetching preferences. Please try again later.');
+        setError('An error occurred fetching favorites. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -184,7 +188,7 @@ const Profile: React.FC = () => {
 
                 <div className="mt-6">
                   <p className="font-semibold text-[#3b3e88] text-base mb-2">
-                    Preferred Genres:
+                    Favorite Genres:
                   </p>
                   <p className="text-[#3b3e88] text-base mb-4">
                     {userGenres.length > 0 ? userGenres.join(", ") : "No genres selected."}
@@ -205,6 +209,16 @@ const Profile: React.FC = () => {
                   ) : (
                     <p className="text-[#3b3e88] text-base">No favorite movie selected.</p>
                   )}
+                  <div className="mt-4">
+                    <p className="font-semibold text-[#3b3e88] text-base mb-2">Favorite Actors:</p>
+                    <p className="text-[#3b3e88] text-base mb-4">
+                      {userActors.length > 0 ? userActors.join(", ") : "No favorite actors selected."}
+                    </p>
+                    <p className="font-semibold text-[#3b3e88] text-base mb-2">Favorite Directors:</p>
+                    <p className="text-[#3b3e88] text-base">
+                      {userDirectors.length > 0 ? userDirectors.join(", ") : "No favorite directors selected."}
+                    </p>
+                  </div>
                   {/* Movie Details Modal */}
                   {selectedMovie && (
                     <MovieDetailsModal

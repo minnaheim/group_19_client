@@ -160,7 +160,7 @@ const SearchMovies: React.FC = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, apiService]);
 
-  // get recommended movies based on user preferences
+  // get recommended movies based on user favorites
   const getRecommendedMovies = async () => {
     try {
       const recommendedMovies = await retry(() => apiService.get(`/movies/suggestions/${id}`));
@@ -402,7 +402,7 @@ const SearchMovies: React.FC = () => {
             <h2 className="text-xl font-medium text-[#3b3e88]">
               {isSearching
                   ? `Search Results (${searchResults.length})`
-                  : "Browse movies based on your preferences"}
+                  : "Browse movies based on your favorites"}
             </h2>
           </div>
 

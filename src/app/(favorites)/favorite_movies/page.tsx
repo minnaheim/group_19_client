@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import ActionMessage from "@/components/ui/action_message";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { usePreferences } from "@/app/context/PreferencesContext";
+import { useFavorites } from "@/app/context/FavoritesContext";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
 // Helper function to remove duplicate movies by movieId
@@ -26,7 +26,7 @@ const removeDuplicateMovies = (movies: Movie[]): Movie[] => {
   return Array.from(uniqueMovies.values());
 };
 
-const MoviePreferences: React.FC = () => {
+const MovieFavorites: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -40,7 +40,7 @@ const MoviePreferences: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
-  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = usePreferences();
+  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = useFavorites();
   const { value: userId } = useLocalStorage<string>("userId", "");
   //const { value: token } = useLocalStorage<string>("token", "");
 
@@ -181,10 +181,10 @@ const MoviePreferences: React.FC = () => {
             setError("We couldn't find your user account to save your favorite movie.");
             break;
           default:
-            setError("An error occurred while saving your preferences. Please try again.");
+            setError("An error occurred while saving your favorites. Please try again.");
         }
       } else {
-        setError("An error occurred while saving your preferences. Please try again.");
+        setError("An error occurred while saving your favorites. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -258,7 +258,7 @@ const MoviePreferences: React.FC = () => {
         <div className="flex justify-between mt-4">
           <Button
               variant="destructive"
-              onClick={() => router.push("/genre_preferences")}
+              onClick={() => router.push("/genre_favorites")}
           >
             Back
           </Button>
@@ -273,4 +273,4 @@ const MoviePreferences: React.FC = () => {
   );
 };
 
-export default MoviePreferences;
+export default MovieFavorites;

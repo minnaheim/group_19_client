@@ -99,8 +99,8 @@ const Register: React.FC = () => {
           setToken(userData.token.replace("Bearer ", ""));
         }
 
-        // Navigate to genre preferences page after successful registration
-        router.push("/genre_preferences");
+        // Navigate to genre favorites page after successful registration
+        router.push("/favorite_genres");
       } else {
         setRegisterError("Invalid response received from server");
       }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
@@ -14,7 +14,7 @@ import MovieCard from "@/components/ui/Movie_card";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ActionMessage from "@/components/ui/action_message";
 
-// Static genre list - same as in GenrePreferences component
+// Static genre list - same as in GenreFavorites component
 const GENRES = [
   { id: 28, name: "Action" },
   { id: 12, name: "Adventure" },
@@ -57,6 +57,10 @@ const EditProfile: React.FC = () => {
   const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
   const [favoriteGenres, setFavoriteGenres] = useState<string[]>([]);
   const [isSelectingGenre, setIsSelectingGenre] = useState<boolean>(false);
+  const [favoriteActors, setFavoriteActors] = useState<string[]>([]);
+  const [favoriteDirectors, setFavoriteDirectors] = useState<string[]>([]);
+  const [isSelectingActors, setIsSelectingActors] = useState(false);
+  const [isSelectingDirectors, setIsSelectingDirectors] = useState(false);
 
   // Track if we've already processed movie from session storage
   const [hasProcessedStoredMovie, setHasProcessedStoredMovie] = useState(false);
@@ -78,6 +82,8 @@ const EditProfile: React.FC = () => {
       password,
       bio,
       favoriteGenres,
+      favoriteActors,
+      favoriteDirectors,
       isSelectingFavoriteMovie: true
     }));
 
@@ -128,42 +134,20 @@ const EditProfile: React.FC = () => {
       bio: bio,
       // Use the current favorite movie from state
       favoriteMovie: favoriteMovie || user.favoriteMovie,
-      favoriteGenres: favoriteGenres.length > 0 ? favoriteGenres : user.favoriteGenres
+      favoriteGenres: favoriteGenres.length > 0 ? favoriteGenres : user.favoriteGenres,
+      favoriteActors: favoriteActors.length > 0 ? favoriteActors : user.favoriteActors,
+      favoriteDirectors: favoriteDirectors.length > 0 ? favoriteDirectors : user.favoriteDirectors
     };
 
     try {
       await apiService.put(`/users/${id}/profile`, updatedUser);
 
-      // If genre changed, also update genre preferences
-      if (favoriteGenres.length > 0 && (!user.favoriteGenres || JSON.stringify(user.favoriteGenres) !== JSON.stringify(favoriteGenres))) {
-        try {
-          await apiService.post(`/users/${id}/preferences/genres`, {
-            genreIds: favoriteGenres
-          });
-        } catch (genreError: unknown) {
-          if (genreError instanceof Error && 'status' in genreError) {
-            const appErr = genreError as ApplicationError;
-            switch (appErr.status) {
-              case 400:
-                setSubmitError("An invalid genre was selected. Please check your choices.");
-                break;
-              case 401:
-                setSubmitError("Your session has expired. Please log in again to save preferences.");
-                break;
-              case 403:
-                setSubmitError("You don't have permission to change these preferences.");
-                break;
-              case 404:
-                setSubmitError("We couldn't find your user account to save preferences.");
-                break;
-              default:
-                setSubmitError("An unexpected error occurred while saving your preferences.");
-            }
-          } else {
-            setSubmitError("An unexpected error occurred while saving your preferences.");
-          }
-        }
-      }
+      // Update genre favorites
+      await apiService.post(`/users/${id}/favorites/genres`, { genreIds: favoriteGenres });
+      // Update actor favorites (empty array clears all on backend)
+      await apiService.post(`/users/${id}/favorites/actors`, { favoriteActors });
+      // Update director favorites (empty array clears all on backend)
+      await apiService.post(`/users/${id}/favorites/directors`, { favoriteDirectors });
 
       setSuccessMessage("Profile updated successfully!");
       setShowSuccessMessage(true);
@@ -218,6 +202,8 @@ const EditProfile: React.FC = () => {
           if (state.password) setPassword(state.password);
           if (state.bio) setBio(state.bio);
           if (state.favoriteGenres) setFavoriteGenres(state.favoriteGenres);
+          if (state.favoriteActors) setFavoriteActors(state.favoriteActors);
+          if (state.favoriteDirectors) setFavoriteDirectors(state.favoriteDirectors);
           sessionStorage.removeItem('editProfileState');
         } catch (e) {
           console.error('Error parsing stored state', e);
@@ -227,7 +213,7 @@ const EditProfile: React.FC = () => {
       // Mark as processed regardless of outcome
       setHasProcessedStoredMovie(true);
     }
-  }, [hasProcessedStoredMovie]);
+  }, [hasProcessedStoredMovie]); // Dependency only on hasProcessedStoredMovie
 
   // Second useEffect to fetch user data
   useEffect(() => {
@@ -252,9 +238,21 @@ const EditProfile: React.FC = () => {
             setFavoriteMovie(fetchedUser.favoriteMovie || null);
           }
 
-          // Set favorite genres if not already set
+          // Set favorite genres if not already set from session storage or API fetch
           if ((!favoriteGenres || favoriteGenres.length === 0) && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
             setFavoriteGenres(fetchedUser.favoriteGenres);
+          }
+
+          // Set favorite actors/directors if not already set
+          if (favoriteActors.length === 0 && fetchedUser.favoriteActors) {
+            setFavoriteActors(Array.isArray(fetchedUser.favoriteActors)
+              ? fetchedUser.favoriteActors
+              : Object.values(fetchedUser.favoriteActors));
+          }
+          if (favoriteDirectors.length === 0 && fetchedUser.favoriteDirectors) {
+            setFavoriteDirectors(Array.isArray(fetchedUser.favoriteDirectors)
+              ? fetchedUser.favoriteDirectors
+              : Object.values(fetchedUser.favoriteDirectors));
           }
         } catch (error: unknown) {
           if (error instanceof Error && 'status' in error) {
@@ -275,7 +273,24 @@ const EditProfile: React.FC = () => {
 
       fetchUserData();
     }
-  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie, favoriteGenres]); // Include hasProcessedStoredMovie and favoriteGenres as dependencies
+    // *** CHANGE 1: Removed favoriteGenres from dependency array ***
+  }, [id, apiService, token, userId, hasProcessedStoredMovie, favoriteMovie]);
+
+  // Compute actor and director selectable options
+  const actorOptions = useMemo(() => {
+    const set = new Set<string>();
+    if (favoriteMovie?.actors) favoriteMovie.actors.forEach(a => set.add(a));
+    user?.watchlist.forEach(m => m.actors.forEach(a => set.add(a)));
+    user?.watchedMovies.forEach(m => m.actors.forEach(a => set.add(a)));
+    return Array.from(set);
+  }, [favoriteMovie, user]);
+  const directorOptions = useMemo(() => {
+    const set = new Set<string>();
+    if (favoriteMovie?.directors) favoriteMovie.directors.forEach(d => set.add(d));
+    user?.watchlist.forEach(m => m.directors.forEach(d => set.add(d)));
+    user?.watchedMovies.forEach(m => m.directors.forEach(d => set.add(d)));
+    return Array.from(set);
+  }, [favoriteMovie, user]);
 
   // Loading and error states
   if (loading) {
@@ -291,204 +306,281 @@ const EditProfile: React.FC = () => {
 
   if (loading && !hasProcessedStoredMovie) {
     return (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-          </div>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
         </div>
+      </div>
     );
   }
 
   return (
-      <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
-        {/* Sidebar */}
-        <Navigation userId={userId} activeItem="Profile Page" />
+    <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
+      {/* Sidebar */}
+      <Navigation userId={userId} activeItem="Profile Page" />
 
-        {/* Main content */}
-        <div className="flex-1 p-6 md:p-12">
-          <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
-            edit profile
-          </h1>
+      {/* Main content */}
+      <div className="flex-1 p-6 md:p-12">
+        <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
+          edit profile
+        </h1>
 
-          <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-            {/* Profile Header */}
-            <div className="relative">
-              <img
-                  className="w-full h-48 object-cover"
-                  alt="Profile Banner"
-                  src="/rectangle-45.svg"
-              />
-              <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
-                edit your profile
-              </h2>
-            </div>
-
-            {/* Submission errors */}
-            <ErrorMessage message={submitError} onClose={() => setSubmitError("")} />
-            {/* Success message */}
-            <ActionMessage
-              message={successMessage}
-              isVisible={showSuccessMessage}
-              onHide={() => setShowSuccessMessage(false)}
-              className="bg-green-500"
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+          {/* Profile Header */}
+          <div className="relative">
+            <img
+              className="w-full h-48 object-cover"
+              alt="Profile Banner"
+              src="/rectangle-45.svg"
             />
-            {/* Edit Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Username
-                </label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Email
-                </label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Password
-                </label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Bio
-                </label>
-                <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
-                    rows={3}
-                />
-              </div>
-
-              {/* Favorite Genre Selection */}
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Favorite Genres
-                </label>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                  <span className="text-sm text-gray-600">
-                    {favoriteGenres.length > 0 ? favoriteGenres.join(", ") : "No favorite genres selected"}
-                  </span>
-                  </div>
-                  <Button
-                      type="button"
-                      variant="outline"
-                      className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
-                      onClick={handleToggleGenreSelection}
-                  >
-                    {favoriteGenres.length > 0 ? "Change" : "Select"} Favorite Genres
-                  </Button>
-                </div>
-
-                {/* Genre Selection Panel */}
-                {isSelectingGenre && (
-                    <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
-                      <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genres</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {GENRES.map((genre) => (
-                            <button
-                                key={genre.id}
-                                type="button"
-                                onClick={() => handleSelectGenre(genre.name)}
-                                className={`px-4 py-2 rounded-full border ${
-                                    favoriteGenres.includes(genre.name)
-                                        ? "bg-[#AFB3FF] text-white"
-                                        : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
-                                }`}
-                            >
-                              {genre.name}
-                            </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-sm text-gray-600">{favoriteGenres.length} selected</p>
-                    </div>
-                )}
-              </div>
-
-              {/* Favorite Movie Section */}
-              <div>
-                <label className="block text-[#3b3e88] text-sm font-medium mb-2">
-                  Favorite Movie
-                </label>
-                <div className="flex items-center space-x-4">
-                  {favoriteMovie ? (
-                      <div className="flex items-center space-x-4">
-                        <MovieCard
-                            movie={favoriteMovie}
-                            isInWatchlist={false}
-                            isInSeenList={false}
-                            isFavorite={true}
-                            onClick={() => {}} // Empty handler since we don't need modal here
-                        />
-                        <span className="text-sm text-gray-600">{favoriteMovie.title}</span>
-                      </div>
-                  ) : (
-                      <div className="flex items-center">
-                        <span className="text-sm text-gray-600">No favorite movie selected</span>
-                      </div>
-                  )}
-                  <Button
-                      type="button"
-                      variant="outline"
-                      className="bg-[#ff9a3e] text-white hover:bg-[#e88b35]"
-                      onClick={handleSelectFavoriteMovie}
-                  >
-                    {favoriteMovie ? "Change" : "Select"} Favorite Movie
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex space-x-4">
-                <Button
-                    type="submit"
-                    variant="default"
-                    className="bg-[#ff9a3e] hover:bg-[#e88b35]"
-                >
-                  save changes
-                </Button>
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
-                    onClick={handleCancel}
-                >
-                  cancel
-                </Button>
-              </div>
-            </form>
+            <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
+              edit your profile
+            </h2>
           </div>
 
-          <Button
-              variant="destructive"
-              className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#e03e65] hover:opacity-60"
-              onClick={handleCancel}
-          >
-            back
-          </Button>
+          {/* Edit Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Bio
+              </label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3b3e88]"
+                rows={3}
+              />
+            </div>
+
+            {/* Favorite Genre Selection - *** CHANGE 2: Button Placement *** */}
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Favorite Genres
+              </label>
+              <div className="mb-2"> {/* Display selected genres */}
+                <span className="text-md text-gray-600">
+                  {favoriteGenres.length > 0 ? favoriteGenres.join(", ") : <span className="text-sm text-gray-600">No favorite genres selected</span>}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2 for spacing
+                onClick={handleToggleGenreSelection}
+              >
+                {favoriteGenres.length > 0 ? "Change" : "Select"} Favorite Genres
+              </Button>
+
+              {/* Genre Selection Panel */}
+              {isSelectingGenre && (
+                <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
+                  <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genres</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {GENRES.map((genre) => (
+                      <button
+                        key={genre.id}
+                        type="button"
+                        onClick={() => handleSelectGenre(genre.name)}
+                        className={`px-4 py-2 rounded-full border ${
+                          favoriteGenres.includes(genre.name)
+                            ? "bg-[#AFB3FF] text-white"
+                            : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                        }`}
+                      >
+                        {genre.name}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600">{favoriteGenres.length} selected</p>
+                </div>
+              )}
+            </div>
+
+            {/* Favorite Actors */}
+            <div className="mt-4">
+              <p className="block text-[#3b3e88] text-sm font-medium mb-2">Favorite Actors</p>
+              <p className="text-md text-gray-600 mb-2"> {/* Added mb-2 */}
+                {favoriteActors.length > 0 ? favoriteActors.join(', ') : <span className="text-sm text-gray-600"> No favorite actors selected.</span>}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsSelectingActors(!isSelectingActors)}
+                className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2
+              >
+                {favoriteActors.length > 0 ? 'Change' : 'Select'} Favorite Actors
+              </Button>
+              {isSelectingActors && (
+                <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
+                  <div className="flex flex-wrap gap-2">
+                    {actorOptions.map(name => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => {
+                          setFavoriteActors(prev =>
+                            prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+                          );
+                        }}
+                        className={`px-3 py-1 rounded-full border ${
+                          favoriteActors.includes(name)
+                            ? 'bg-[#AFB3FF] text-white'
+                            : 'bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]'
+                        }`}
+                      >{name}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Favorite Directors */}
+            <div className="mt-4">
+              <p className="block text-[#3b3e88] text-sm font-medium mb-2">Favorite Directors</p>
+              <p className="text-md text-gray-600 mb-2"> {/* Added mb-2 */}
+                {favoriteDirectors.length > 0 ? favoriteDirectors.join(', ') : <span className="text-sm text-gray-600"> No favorite directors selected.</span>}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsSelectingDirectors(!isSelectingDirectors)}
+                className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2
+              >
+                {favoriteDirectors.length > 0 ? 'Change' : 'Select'} Favorite Directors
+              </Button>
+              {isSelectingDirectors && (
+                <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
+                  <div className="flex flex-wrap gap-2">
+                    {directorOptions.map(name => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => {
+                          setFavoriteDirectors(prev =>
+                            prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+                          );
+                        }}
+                        className={`px-3 py-1 rounded-full border ${
+                          favoriteDirectors.includes(name)
+                            ? 'bg-[#AFB3FF] text-white'
+                            : 'bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]'
+                        }`}
+                      >{name}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Favorite Movie Section - *** CHANGE 2: Button Placement *** */}
+            <div>
+              <label className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Favorite Movie
+              </label>
+              <div className="mb-2"> {/* Display selected movie */}
+                {favoriteMovie ? (
+                  <div className="flex items-center space-x-4">
+                    <MovieCard
+                      movie={favoriteMovie}
+                      isInWatchlist={false}
+                      isInSeenList={false}
+                      isFavorite={true}
+                      onClick={() => { }} // Empty handler since we don't need modal here
+                    />
+                    <span className="text-md text-gray-600">{favoriteMovie.title}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-600">No favorite movie selected</span>
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2"
+                onClick={handleSelectFavoriteMovie}
+              >
+                {favoriteMovie ? "Change" : "Select"} Favorite Movie
+              </Button>
+            </div>
+
+            {/* Inline error/success messages */}
+            {submitError && (
+              <ErrorMessage message={submitError} onClose={() => setSubmitError("")} />
+            )}
+            {showSuccessMessage && (
+              <ActionMessage
+                message={successMessage}
+                isVisible={showSuccessMessage}
+                onHide={() => setShowSuccessMessage(false)}
+                className="bg-green-500"
+              />
+            )}
+            <div className="flex space-x-4 pt-4"> {/* Added pt-4 for spacing */}
+              <Button
+                type="submit"
+                variant="default"
+                className="bg-[#ff9a3e] hover:bg-[#e88b35]"
+              >
+                save changes
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
+                onClick={handleCancel}
+              >
+                cancel
+              </Button>
+            </div>
+          </form>
         </div>
+
+        <Button
+          variant="destructive"
+          className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#e03e65] hover:opacity-60"
+          onClick={handleCancel}
+        >
+          back
+        </Button>
       </div>
+    </div>
   );
 };
 

@@ -4,7 +4,7 @@ import React, { createContext, useState, useContext, ReactNode } from "react";
 
 import { Movie } from "@/app/types/movie";
 
-export type PreferencesContextType = {
+export type FavoritesContextType = {
   selectedGenres: string[];
   setSelectedGenres: (genres: string[]) => void;
   favoriteMovieId: number | null;
@@ -13,11 +13,11 @@ export type PreferencesContextType = {
   setFavoriteMovie: (movie: Movie | null) => void;
 };
 
-export const PreferencesContext = createContext<PreferencesContextType | undefined>(
+export const FavoritesContext = createContext<FavoritesContextType | undefined>(
   undefined
 );
 
-export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({
+export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -25,7 +25,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({
   const [favoriteMovie, setFavoriteMovie] = useState<Movie | null>(null);
 
   return (
-    <PreferencesContext.Provider
+    <FavoritesContext.Provider
       value={{
         selectedGenres,
         setSelectedGenres,
@@ -36,14 +36,14 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({
       }}
     >
       {children}
-    </PreferencesContext.Provider>
+    </FavoritesContext.Provider>
   );
 };
 
-export const usePreferences = () => {
-  const context = useContext(PreferencesContext);
+export const useFavorites = () => {
+  const context = useContext(FavoritesContext);
   if (context === undefined) {
-    throw new Error("usePreferences must be used within a PreferencesProvider");
+    throw new Error("useFavorites must be used within a FavoritesProvider");
   }
   return context;
 };
