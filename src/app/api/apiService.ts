@@ -7,7 +7,11 @@ export interface ApiRequestOptions {
   skipAuth?: boolean;
 }
 
-import { UserPreferencesGenresDTO, UserPreferencesFavoriteMovieDTO, UserPreferencesDTO } from "@/app/types/userPreferences";
+import {
+  UserFavoritesDTO,
+  UserFavoritesGenresDTO,
+  UserFavoritesMovieDTO,
+} from "@/app/types/userFavorites";
 import { Movie } from "@/app/types/movie";
 
 export class ApiService {
@@ -32,8 +36,8 @@ export class ApiService {
    * @throws ApplicationError if res.ok is false.
    */
   private async processResponse<T>(
-      res: Response,
-      errorMessage: string,
+    res: Response,
+    errorMessage: string,
   ): Promise<T> {
     if (!res.ok) {
       let errorDetail = res.statusText;
@@ -49,12 +53,12 @@ export class ApiService {
       }
       const detailedMessage = `${errorMessage} (${res.status}: ${errorDetail})`;
       const error: ApplicationError = new Error(
-          detailedMessage,
+        detailedMessage,
       ) as ApplicationError;
       error.info = JSON.stringify(
-          { status: res.status, statusText: res.statusText },
-          null,
-          2,
+        { status: res.status, statusText: res.statusText },
+        null,
+        2,
       );
       error.status = res.status;
       throw error;
@@ -74,15 +78,18 @@ export class ApiService {
    * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async get<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
+  public async get<T>(
+    endpoint: string,
+    options?: ApiRequestOptions,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
       headers: this.getHeaders(options),
     });
     return this.processResponse<T>(
-        res,
-        "An error occurred while fetching the data.\n",
+      res,
+      "An error occurred while fetching the data.\n",
     );
   }
 
@@ -93,7 +100,11 @@ export class ApiService {
    * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<T> {
+  public async post<T>(
+    endpoint: string,
+    data: unknown,
+    options?: ApiRequestOptions,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       headers: this.getHeaders(options),
@@ -103,15 +114,19 @@ export class ApiService {
 
     // Process response body
     return this.processResponse<T>(
-        res,
-        "An error occurred while posting the data.\n",
+      res,
+      "An error occurred while posting the data.\n",
     );
   }
 
   /**
    * Version of POST that returns both the response body and headers
    */
-  public async postWithHeaders<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<[T, Headers]> {
+  public async postWithHeaders<T>(
+    endpoint: string,
+    data: unknown,
+    options?: ApiRequestOptions,
+  ): Promise<[T, Headers]> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       headers: this.getHeaders(options),
@@ -121,8 +136,8 @@ export class ApiService {
 
     // Process response body
     const responseBody = await this.processResponse<T>(
-        res,
-        "An error occurred while posting the data.\n",
+      res,
+      "An error occurred while posting the data.\n",
     );
 
     // Return both the response body and headers
@@ -136,7 +151,11 @@ export class ApiService {
    * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async put<T>(endpoint: string, data: unknown, options?: ApiRequestOptions): Promise<T> {
+  public async put<T>(
+    endpoint: string,
+    data: unknown,
+    options?: ApiRequestOptions,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
@@ -144,8 +163,8 @@ export class ApiService {
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
-        res,
-        "An error occurred while updating the data.\n",
+      res,
+      "An error occurred while updating the data.\n",
     );
   }
 
@@ -156,7 +175,11 @@ export class ApiService {
    * @param options - Optional request configuration.
    * @returns JSON data of type T.
    */
-  public async delete<T>(endpoint: string, data?: unknown, options?: ApiRequestOptions): Promise<T> {
+  public async delete<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: ApiRequestOptions,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const fetchOptions: RequestInit = {
       method: "DELETE",
@@ -170,8 +193,8 @@ export class ApiService {
 
     const res = await fetch(url, fetchOptions);
     return this.processResponse<T>(
-        res,
-        "An error occurred while deleting the data.\n",
+      res,
+      "An error occurred while deleting the data.\n",
     );
   }
 
@@ -190,7 +213,7 @@ export class ApiService {
     if (!options?.skipAuth) {
       const token = localStorage.getItem("token");
       if (token) {
-        const cleanToken = token.startsWith("\"") ? token.slice(1,-1) : token
+        const cleanToken = token.startsWith('"') ? token.slice(1, -1) : token;
         headers["Authorization"] = `Bearer ${cleanToken}`;
       }
     }
@@ -203,41 +226,51 @@ export class ApiService {
     return headers;
   }
 
-  // --- User Preferences API ---
+  // --- User Favorites API ---
 
   // Get all genres
   public async getGenres(): Promise<{ id: number; name: string }[]> {
-    return this.get<{ id: number; name: string }[]>(`/movies/genres`, { skipAuth: true });
+    return this.get<{ id: number; name: string }[]>(`/movies/genres`, {
+      skipAuth: true,
+    });
   }
 
-  // Save genre preferences for a user
-  public async saveUserGenres(userId: number, genreIds: string[]): Promise<UserPreferencesGenresDTO> {
-    return this.post<UserPreferencesGenresDTO>(
-        `/users/${userId}/preferences/genres`,
-        { genreIds }
+  // Save genre favorites for a user
+  public async saveUserGenres(
+    userId: number,
+    genreIds: string[],
+  ): Promise<UserFavoritesGenresDTO> {
+    return this.post<UserFavoritesGenresDTO>(
+      `/users/${userId}/favorites/genres`,
+      { genreIds },
     );
   }
 
-  // Get genre preferences for a user
-  public async getUserGenres(userId: number): Promise<UserPreferencesGenresDTO> {
-    return this.get<UserPreferencesGenresDTO>(`/users/${userId}/preferences/genres`);
+  // Get genre favorites for a user
+  public async getUserGenres(userId: number): Promise<UserFavoritesGenresDTO> {
+    return this.get<UserFavoritesGenresDTO>(
+      `/users/${userId}/favorites/genres`,
+    );
   }
 
   // Save favorite movie for a user
-  public async saveFavoriteMovie(userId: number, movieId: number): Promise<UserPreferencesFavoriteMovieDTO> {
-    return this.post<UserPreferencesFavoriteMovieDTO>(
-        `/users/${userId}/preferences/favorite-movie`,
-        { movieId }
+  public async saveFavoriteMovie(
+    userId: number,
+    movieId: number,
+  ): Promise<UserFavoritesMovieDTO> {
+    return this.post<UserFavoritesMovieDTO>(
+      `/users/${userId}/favorites/movie`,
+      { movieId },
     );
   }
 
   // Get favorite movie for a user
   public async getFavoriteMovie(userId: number): Promise<{ movie: Movie }> {
-    return this.get<{ movie: Movie }>(`/users/${userId}/preferences/favorite-movie`);
+    return this.get<{ movie: Movie }>(`/users/${userId}/favorites/movie`);
   }
 
-  // Get all preferences for a user (genres + favorite movie)
-  public async getUserPreferences(userId: number): Promise<UserPreferencesDTO> {
-    return this.get<UserPreferencesDTO>(`/users/${userId}/preferences`);
+  // Get all favorites for a user (genres + favorite movie)
+  public async getUserFavorites(userId: number): Promise<UserFavoritesDTO> {
+    return this.get<UserFavoritesDTO>(`/users/${userId}/favorites`);
   }
 }

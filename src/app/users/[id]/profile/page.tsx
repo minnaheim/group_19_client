@@ -23,9 +23,13 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // User preferences state
+  // User favorites state
   const [userGenres, setUserGenres] = useState<string[]>([]);
-  const [userFavoriteMovie, setUserFavoriteMovie] = useState<Movie | null>(null);
+  const [userFavoriteMovie, setUserFavoriteMovie] = useState<Movie | null>(
+    null,
+  );
+  const [userActors, setUserActors] = useState<string[]>([]);
+  const [userDirectors, setUserDirectors] = useState<string[]>([]);
 
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -80,39 +84,68 @@ const Profile: React.FC = () => {
     setError(null);
     // Fetch profile
     try {
-      const fetchedUser: User = await retry(() => apiService.get(`/users/${id}/profile`));
+      const fetchedUser: User = await retry(() =>
+        apiService.get(`/users/${id}/profile`)
+      );
       setUser(fetchedUser);
-      showMessage('User profile loaded');
+      showMessage("User profile loaded");
     } catch (err: unknown) {
-      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
+      if (
+        err instanceof Error && "status" in err &&
+        (err as ApplicationError).status === 404
+      ) {
         showMessage("Oops! We couldn't find the profile you were looking for.");
       } else {
-        setError('An error occurred fetching the profile. Please try again later.');
+        setError(
+          "An error occurred fetching the profile. Please try again later.",
+        );
       }
       setLoading(false);
       return;
     }
-    // Fetch preferences
+    // Fetch favorites
     try {
-      const prefs = await retry(() => apiService.get(`/users/${id}/preferences`)) as { favoriteGenres: string[]; favoriteMovie: Movie | null };
-      setUserGenres(Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : []);
+      const prefs = await retry(() =>
+        apiService.get(`/users/${id}/favorites`)
+      ) as {
+        favoriteGenres: string[];
+        favoriteMovie: Movie | null;
+        favoriteActors: string[];
+        favoriteDirectors: string[];
+      };
+      setUserGenres(
+        Array.isArray(prefs.favoriteGenres) ? prefs.favoriteGenres : [],
+      );
       setUserFavoriteMovie(prefs.favoriteMovie || null);
-      showMessage('User preferences loaded');
+      setUserActors(
+        Array.isArray(prefs.favoriteActors) ? prefs.favoriteActors : [],
+      );
+      setUserDirectors(
+        Array.isArray(prefs.favoriteDirectors) ? prefs.favoriteDirectors : [],
+      );
+      showMessage("User favorites loaded");
     } catch (err: unknown) {
-      if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 401) {
-        showMessage('Your session seems to have expired. Could not load preferences.');
-      } else if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
-        showMessage('Could not find preferences for this user.');
+      if (
+        err instanceof Error && "status" in err &&
+        (err as ApplicationError).status === 401
+      ) {
+        showMessage(
+          "Your session seems to have expired. Could not load favorites.",
+        );
+      } else if (
+        err instanceof Error && "status" in err &&
+        (err as ApplicationError).status === 404
+      ) {
+        showMessage("Could not find favorites for this user.");
       } else {
-        setError('An error occurred fetching preferences. Please try again later.');
+        setError(
+          "An error occurred fetching favorites. Please try again later.",
+        );
       }
     } finally {
       setLoading(false);
     }
   };
-
-
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -124,75 +157,81 @@ const Profile: React.FC = () => {
 
   if (loading) {
     return (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-          </div>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
         </div>
+      </div>
     );
   }
 
   return (
-      <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
-        <Navigation userId={userId} activeItem="Profile Page" />
-        {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
-        {/* Main content */}
-        <div className="flex-1 p-6 md:p-12">
-          <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
-            Profile Page
-          </h1>
+    <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
+      <Navigation userId={userId} activeItem="Profile Page" />
+      {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
+      {/* Main content */}
+      <div className="flex-1 p-6 md:p-12">
+        <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
+          Profile Page
+        </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Profile Card */}
-            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-              {/* Profile Header */}
-              <div className="relative">
-                <img
-                    className="w-full h-48 object-cover"
-                    alt="Profile Banner"
-                    src="/rectangle-45.svg"
-                />
-                <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
-                  Your Profile
-                </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Profile Card */}
+          <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+            {/* Profile Header */}
+            <div className="relative">
+              <img
+                className="w-full h-48 object-cover"
+                alt="Profile Banner"
+                src="/rectangle-45.svg"
+              />
+              <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
+                Your Profile
+              </h2>
+            </div>
+
+            {/* Profile Body */}
+            <div className="p-6 space-y-6">
+              <div>
+                <p className="font-semibold text-[#3b3e88] text-base">
+                  username: {user?.username}
+                </p>
               </div>
 
-              {/* Profile Body */}
-              <div className="p-6 space-y-6">
-                <div>
-                  <p className="font-semibold text-[#3b3e88] text-base">
-                    username: {user?.username}
-                  </p>
-                </div>
+              <div>
+                <p className="font-semibold text-[#3b3e88] text-base">
+                  e-mail: {user?.email}
+                </p>
+              </div>
 
-                <div>
-                  <p className="font-semibold text-[#3b3e88] text-base">
-                    e-mail: {user?.email}
-                  </p>
-                </div>
+              <div>
+                <p className="font-semibold text-[#3b3e88] text-base">
+                  password: {user?.password}
+                </p>
+              </div>
 
-                <div>
-                  <p className="font-semibold text-[#3b3e88] text-base">
-                    password: {user?.password}
-                  </p>
-                </div>
+              <div>
+                <p className="font-semibold text-[#3b3e88] text-base">
+                  bio:{" "}
+                  {user?.bio
+                    ? user.bio
+                    : 'click "edit profile" to add your bio!'}
+                </p>
+              </div>
 
-                <div>
-                  <p className="font-semibold text-[#3b3e88] text-base">
-                    bio: {user?.bio ? user.bio : "click \"edit profile\" to add your bio!"}
-                  </p>
-                </div>
-
-                <div className="mt-6">
-                  <p className="font-semibold text-[#3b3e88] text-base mb-2">
-                    Preferred Genres:
-                  </p>
-                  <p className="text-[#3b3e88] text-base mb-4">
-                    {userGenres.length > 0 ? userGenres.join(", ") : "No genres selected."}
-                  </p>
-                  <p className="font-semibold text-[#3b3e88] text-base mb-2">
-                    Favorite Movie:
-                  </p>
-                  {userFavoriteMovie ? (
+              <div className="mt-6">
+                <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                  Favorite Genres:
+                </p>
+                <p className="text-[#3b3e88] text-base mb-4">
+                  {userGenres.length > 0
+                    ? userGenres.join(", ")
+                    : "No genres selected."}
+                </p>
+                <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                  Favorite Movie:
+                </p>
+                {userFavoriteMovie
+                  ? (
                     <div className="flex justify-center">
                       <MovieCard
                         movie={userFavoriteMovie}
@@ -202,80 +241,105 @@ const Profile: React.FC = () => {
                         onClick={handleMovieClick}
                       />
                     </div>
-                  ) : (
-                    <p className="text-[#3b3e88] text-base">No favorite movie selected.</p>
+                  )
+                  : (
+                    <p className="text-[#3b3e88] text-base">
+                      No favorite movie selected.
+                    </p>
                   )}
-                  {/* Movie Details Modal */}
-                  {selectedMovie && (
-                    <MovieDetailsModal
-                      movie={selectedMovie}
-                      isOpen={isModalOpen}
-                      onClose={closeModal}
-                      isInWatchlist={user?.watchlist?.some(m => m.movieId === selectedMovie.movieId) || false}
-                      isInSeenList={user?.watchedMovies?.some(m => m.movieId === selectedMovie.movieId) || false}
-                    />
-                  )}
+                <div className="mt-4">
+                  <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                    Favorite Actors:
+                  </p>
+                  <p className="text-[#3b3e88] text-base mb-4">
+                    {userActors.length > 0
+                      ? userActors.join(", ")
+                      : "No favorite actors selected."}
+                  </p>
+                  <p className="font-semibold text-[#3b3e88] text-base mb-2">
+                    Favorite Directors:
+                  </p>
+                  <p className="text-[#3b3e88] text-base">
+                    {userDirectors.length > 0
+                      ? userDirectors.join(", ")
+                      : "No favorite directors selected."}
+                  </p>
                 </div>
-
-                <Button
-                    variant="default"
-                    className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
-                    onClick={handleEditProfile}
-                >
-                  edit profile
-                </Button>
-              </div>
-            </div>
-
-            {/* Watched Movies Card */}
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <h2 className="font-semibold text-[#3b3e88] text-2xl mb-4">
-                Already Seen
-              </h2>
-
-              <div className="mb-8 max-h-[400px] overflow-y-auto">
-                {/* Movie Grid using custom component approach */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {user?.watchedMovies?.map((movie) => (
-                      <img
-                          key={movie.movieId}
-                          className="w-full aspect-[2/3] object-cover rounded"
-                          alt={movie.title}
-                          src={movie.posterURL}
-                      />
-                  ))}
-                </div>
+                {/* Movie Details Modal */}
+                {selectedMovie && (
+                  <MovieDetailsModal
+                    movie={selectedMovie}
+                    isOpen={isModalOpen}
+                    onClose={closeModal}
+                    isInWatchlist={user?.watchlist?.some((m) =>
+                      m.movieId === selectedMovie.movieId
+                    ) || false}
+                    isInSeenList={user?.watchedMovies?.some((m) =>
+                      m.movieId === selectedMovie.movieId
+                    ) || false}
+                  />
+                )}
               </div>
 
-              <div className="flex space-x-4">
-                <Button
-                    variant="default"
-                    className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
-                    onClick={handleEditWatched}
-                >
-                  edit seen movies
-                </Button>
-              </div>
+              <Button
+                variant="default"
+                className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                onClick={handleEditProfile}
+              >
+                edit profile
+              </Button>
             </div>
           </div>
 
-          <Button
-              variant="destructive"
-              className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#f44771]/60 hover:opacity-80"
-              onClick={handleBack}
-          >
-            back to dashboard
-          </Button>
+          {/* Watched Movies Card */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h2 className="font-semibold text-[#3b3e88] text-2xl mb-4">
+              Already Seen
+            </h2>
 
-          {/* Action Message Component */}
-          <ActionMessage
-              message={actionMessage}
-              isVisible={showActionMessage}
-              onHide={() => setShowActionMessage(false)}
-              className="bg-green-500"
-          />
+            <div className="mb-8 max-h-[400px] overflow-y-auto">
+              {/* Movie Grid using custom component approach */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {user?.watchedMovies?.map((movie) => (
+                  <img
+                    key={movie.movieId}
+                    className="w-full aspect-[2/3] object-cover rounded"
+                    alt={movie.title}
+                    src={movie.posterURL}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <Button
+                variant="default"
+                className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
+                onClick={handleEditWatched}
+              >
+                edit seen movies
+              </Button>
+            </div>
+          </div>
         </div>
+
+        <Button
+          variant="destructive"
+          className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#f44771]/60 hover:opacity-80"
+          onClick={handleBack}
+        >
+          back to dashboard
+        </Button>
+
+        {/* Action Message Component */}
+        <ActionMessage
+          message={actionMessage}
+          isVisible={showActionMessage}
+          onHide={() => setShowActionMessage(false)}
+          className="bg-green-500"
+        />
       </div>
+    </div>
   );
 };
 

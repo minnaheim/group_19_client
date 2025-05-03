@@ -2,13 +2,13 @@
 import * as React from "react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
-import { PreferencesProvider } from "@/app/context/PreferencesContext";
+import { FavoritesProvider } from "@/app/context/FavoritesContext";
 
 const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   return (
-    <PreferencesProvider>
+    <FavoritesProvider>
       <div className="h-screen w-full md:grid grid-cols-10">
         <div className="max-md:hidden col-span-4 bg-[#AFB3FF]">
           <div className="absolute top-4 left-4 flex items-center space-x-2">
@@ -40,7 +40,7 @@ const PreferenceLayout: React.FC<{ children: React.ReactNode }> = ({
           </Card>
         </div>
       </div>
-    </PreferencesProvider>
+    </FavoritesProvider>
   );
 };
 

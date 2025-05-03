@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Movie } from "@/app/types/movie";
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import SearchBar from "@/components/ui/search_bar";
@@ -8,16 +8,16 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import type { ApplicationError } from "@/app/types/error";
 import { Button } from "@/components/ui/button";
 import ActionMessage from "@/components/ui/action_message";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { usePreferences } from "@/app/context/PreferencesContext";
+import { useFavorites } from "@/app/context/FavoritesContext";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
 // Helper function to remove duplicate movies by movieId
 const removeDuplicateMovies = (movies: Movie[]): Movie[] => {
   const uniqueMovies = new Map<number, Movie>();
 
-  movies.forEach(movie => {
+  movies.forEach((movie) => {
     if (!uniqueMovies.has(movie.movieId)) {
       uniqueMovies.set(movie.movieId, movie);
     }
@@ -26,7 +26,7 @@ const removeDuplicateMovies = (movies: Movie[]): Movie[] => {
   return Array.from(uniqueMovies.values());
 };
 
-const MoviePreferences: React.FC = () => {
+const MovieFavorites: React.FC = () => {
   const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -40,7 +40,8 @@ const MoviePreferences: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const { id } = useParams();
-  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } = usePreferences();
+  const { selectedGenres, favoriteMovieId, setFavoriteMovieId } =
+    useFavorites();
   const { value: userId } = useLocalStorage<string>("userId", "");
   //const { value: token } = useLocalStorage<string>("token", "");
 
@@ -53,38 +54,48 @@ const MoviePreferences: React.FC = () => {
           // Join selected genres for query
           const genresParam = selectedGenres.map(encodeURIComponent).join(",");
           const response = await apiService.get<Movie[]>(
-            `/movies?genres=${genresParam}`
+            `/movies?genres=${genresParam}`,
           );
           // Remove duplicates before setting state
           setGenreMovies(removeDuplicateMovies(response));
         } else {
           // If no genres are selected, show recent movies
           const currentYear = new Date().getFullYear();
-          const response = await apiService.get<Movie[]>(`/movies?year=${currentYear}`);
+          const response = await apiService.get<Movie[]>(
+            `/movies?year=${currentYear}`,
+          );
           // Remove duplicates before setting state
           setGenreMovies(removeDuplicateMovies(response));
         }
       } catch (err: unknown) {
         // Map errors for movie fetch by genres or recent fetch
-        if (err instanceof Error && 'status' in err) {
+        if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (selectedGenres && selectedGenres.length > 0) {
             // fetching by genres
             if (appErr.status === 400) {
-              setError("We couldn't find movies for the selected genres. Try different genres.");
+              setError(
+                "We couldn't find movies for the selected genres. Try different genres.",
+              );
             } else {
-              setError("An error occurred while fetching movies. Please try again.");
+              setError(
+                "An error occurred while fetching movies. Please try again.",
+              );
             }
           } else {
             // fetching recent movies
             if (appErr.status === 400) {
               setError("We couldn't fetch recent movies at this time.");
             } else {
-              setError("An error occurred while fetching movies. Please try again.");
+              setError(
+                "An error occurred while fetching movies. Please try again.",
+              );
             }
           }
         } else {
-          setError("An error occurred while fetching movies. Please try again.");
+          setError(
+            "An error occurred while fetching movies. Please try again.",
+          );
         }
         setGenreMovies([]);
       } finally {
@@ -120,10 +131,12 @@ const MoviePreferences: React.FC = () => {
         }
       } catch (err: unknown) {
         console.error("Search failed:", err);
-        if (err instanceof Error && 'status' in err) {
+        if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (appErr.status === 400) {
-            setError("No movies found matching your search term. Try searching for something else.");
+            setError(
+              "No movies found matching your search term. Try searching for something else.",
+            );
           } else {
             setError("Failed to search movies");
           }
@@ -162,29 +175,42 @@ const MoviePreferences: React.FC = () => {
 
     try {
       if (favoriteMovieId !== null) {
-        await apiService.saveFavoriteMovie(Number(effectiveUserId), favoriteMovieId);
+        await apiService.saveFavoriteMovie(
+          Number(effectiveUserId),
+          favoriteMovieId,
+        );
         setSuccessMessage("Favorite movie saved successfully");
         setShowSuccessMessage(true);
       }
       router.push(`/users/${effectiveUserId}/dashboard`);
     } catch (err) {
-      if (err instanceof Error && 'status' in err) {
+      if (err instanceof Error && "status" in err) {
         const appErr = err as ApplicationError;
         switch (appErr.status) {
           case 401:
-            setError("Your session has expired. Please log in again to save your favorite movie.");
+            setError(
+              "Your session has expired. Please log in again to save your favorite movie.",
+            );
             break;
           case 403:
-            setError("You don't have permission to change this favorite movie preference.");
+            setError(
+              "You don't have permission to change this favorite movie preference.",
+            );
             break;
           case 404:
-            setError("We couldn't find your user account to save your favorite movie.");
+            setError(
+              "We couldn't find your user account to save your favorite movie.",
+            );
             break;
           default:
-            setError("An error occurred while saving your preferences. Please try again.");
+            setError(
+              "An error occurred while saving your favorites. Please try again.",
+            );
         }
       } else {
-        setError("An error occurred while saving your preferences. Please try again.");
+        setError(
+          "An error occurred while saving your favorites. Please try again.",
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -199,78 +225,86 @@ const MoviePreferences: React.FC = () => {
       {/* Subheading with selected genres */}
       <h3 className="text-center text-[#3C3F88] mb-6">
         {selectedGenres && selectedGenres.length > 0
-          ? `Based on your selected genres (${selectedGenres.join(", ")}), select your favorite movie!`
+          ? `Based on your selected genres (${
+            selectedGenres.join(", ")
+          }), select your favorite movie!`
           : "Select your favorite movie!"}
       </h3>
 
-        {/* Error display */}
-        <ErrorMessage message={error} onClose={() => setError("")} />
-        <ActionMessage
-          message={successMessage}
-          isVisible={showSuccessMessage}
-          onHide={() => setShowSuccessMessage(false)}
-          className="bg-green-500"
-        />
-        {genreMovies.length === 0 && !isLoading && !error && (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4" role="alert">
-              <p>No movies found for your selected genre. Please go back and select a different genre.</p>
-            </div>
-        )}
-
-        {/* Search Bar - simplified version */}
-        <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            onClearSearch={clearSearch}
-            placeholder="Search for movie titles..."
-            className="mb-6"
-        />
-
-        {/* Loading State */}
-        {isLoading && (
-            <div className="text-center py-8">
-              <p className="text-[#3C3F88]">Loading movies...</p>
-            </div>
-        )}
-
-        {/* Movie List */}
-        {!isLoading && (
-            <div className="overflow-x-auto">
-              <MovieListHorizontal
-                  movies={displayMovies}
-                  onMovieClick={toggleMovie}
-                  emptyMessage={`No movies match your "${selectedGenres}" genre`}
-                  noResultsMessage="No movies match your search"
-                  hasOuterContainer={false}
-                  selectedMovieIds={selectedMovies.map(m => m.movieId)}
-              />
-            </div>
-        )}
-
-        {/* Selected Movie Info */}
-        <p className="text-center mt-4 text-sm text-[#3C3F88]">
-          {selectedMovies.length > 0
-              ? `You selected: ${selectedMovies[0].title}`
-              : "No movie selected"}
-        </p>
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-4">
-          <Button
-              variant="destructive"
-              onClick={() => router.push("/genre_preferences")}
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Next"}
-          </Button>
+      {/* Error display */}
+      <ErrorMessage message={error} onClose={() => setError("")} />
+      <ActionMessage
+        message={successMessage}
+        isVisible={showSuccessMessage}
+        onHide={() => setShowSuccessMessage(false)}
+        className="bg-green-500"
+      />
+      {genreMovies.length === 0 && !isLoading && !error && (
+        <div
+          className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4"
+          role="alert"
+        >
+          <p>
+            No movies found for your selected genre. Please go back and select a
+            different genre.
+          </p>
         </div>
+      )}
+
+      {/* Search Bar - simplified version */}
+      <SearchBar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onClearSearch={clearSearch}
+        placeholder="Search for movie titles..."
+        className="mb-6"
+      />
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <p className="text-[#3C3F88]">Loading movies...</p>
+        </div>
+      )}
+
+      {/* Movie List */}
+      {!isLoading && (
+        <div className="overflow-x-auto">
+          <MovieListHorizontal
+            movies={displayMovies}
+            onMovieClick={toggleMovie}
+            emptyMessage={`No movies match your "${selectedGenres}" genre`}
+            noResultsMessage="No movies match your search"
+            hasOuterContainer={false}
+            selectedMovieIds={selectedMovies.map((m) => m.movieId)}
+          />
+        </div>
+      )}
+
+      {/* Selected Movie Info */}
+      <p className="text-center mt-4 text-sm text-[#3C3F88]">
+        {selectedMovies.length > 0
+          ? `You selected: ${selectedMovies[0].title}`
+          : "No movie selected"}
+      </p>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-4">
+        <Button
+          variant="destructive"
+          onClick={() => router.push("/genre_favorites")}
+        >
+          Back
+        </Button>
+        <Button
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Next"}
+        </Button>
       </div>
+    </div>
   );
 };
 
-export default MoviePreferences;
+export default MovieFavorites;

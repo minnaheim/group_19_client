@@ -1,19 +1,19 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { usePreferences } from "@/app/context/PreferencesContext";
+import { useFavorites } from "@/app/context/FavoritesContext";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import ActionMessage from "@/components/ui/action_message";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import type { ApplicationError } from "@/app/types/error";
 
-const GenrePreferences: React.FC = () => {
+const GenreFavorites: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
-  const { selectedGenres, setSelectedGenres } = usePreferences();
+  const { selectedGenres, setSelectedGenres } = useFavorites();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -25,7 +25,9 @@ const GenrePreferences: React.FC = () => {
     apiService.getGenres()
       .then(setGenres)
       .catch(() => {
-        setError("We couldn't load movie genres right now. Please try again later.");
+        setError(
+          "We couldn't load movie genres right now. Please try again later.",
+        );
         setGenres([]);
       });
   }, [apiService]);
@@ -40,13 +42,17 @@ const GenrePreferences: React.FC = () => {
 
   const handleNext = async () => {
     if (!userId) {
-      setError("Your session has expired. Please log in again to save preferences.");
+      setError(
+        "Your session has expired. Please log in again to save favorites.",
+      );
       router.push("/login");
       return;
     }
 
     if (!token || token === "no_token") {
-      setError("Your session has expired. Please log in again to save preferences.");
+      setError(
+        "Your session has expired. Please log in again to save favorites.",
+      );
       router.push("/login");
       return;
     }
@@ -56,30 +62,38 @@ const GenrePreferences: React.FC = () => {
 
     try {
       await apiService.saveUserGenres(Number(userId), selectedGenres);
-      setSuccessMessage("Genre preferences saved successfully");
+      setSuccessMessage("Genre favorites saved successfully");
       setShowSuccessMessage(true);
-      router.push("/movie_preferences");
+      router.push("/favorite_movies");
     } catch (error: unknown) {
-      if (error instanceof Error && 'status' in error) {
+      if (error instanceof Error && "status" in error) {
         const appError = error as ApplicationError;
         switch (appError.status) {
           case 400:
-            setError("An invalid genre was selected. Please check your choices.");
+            setError(
+              "An invalid genre was selected. Please check your choices.",
+            );
             break;
           case 401:
-            setError("Your session has expired. Please log in again to save preferences.");
+            setError(
+              "Your session has expired. Please log in again to save favorites.",
+            );
             break;
           case 403:
-            setError("You don't have permission to change these preferences.");
+            setError("You don't have permission to change these favorites.");
             break;
           case 404:
-            setError("We couldn't find your user account to save preferences.");
+            setError("We couldn't find your user account to save favorites.");
             break;
           default:
-            setError("An error occurred while saving your preferences. Please try again.");
+            setError(
+              "An error occurred while saving your favorites. Please try again.",
+            );
         }
       } else {
-        setError("An error occurred while saving your preferences. Please try again.");
+        setError(
+          "An error occurred while saving your favorites. Please try again.",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -122,7 +136,11 @@ const GenrePreferences: React.FC = () => {
       </p>
       <br />
       <div className="flex justify-between">
-        <Button variant="destructive" onClick={() => router.push("/")} disabled={isLoading}>
+        <Button
+          variant="destructive"
+          onClick={() => router.push("/")}
+          disabled={isLoading}
+        >
           Back
         </Button>
         <Button onClick={handleNext} disabled={isLoading}>
@@ -133,4 +151,4 @@ const GenrePreferences: React.FC = () => {
   );
 };
 
-export default GenrePreferences;
+export default GenreFavorites;
