@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 import { Movie } from "@/app/types/movie";
 
@@ -14,7 +14,7 @@ export type FavoritesContextType = {
 };
 
 export const FavoritesContext = createContext<FavoritesContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({

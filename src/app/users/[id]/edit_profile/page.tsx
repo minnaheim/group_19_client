@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
@@ -34,7 +34,7 @@ const GENRES = [
   { id: 10770, name: "TV Movie" },
   { id: 53, name: "Thriller" },
   { id: 10752, name: "War" },
-  { id: 37, name: "Western" }
+  { id: 37, name: "Western" },
 ];
 
 const EditProfile: React.FC = () => {
@@ -76,16 +76,19 @@ const EditProfile: React.FC = () => {
 
   const handleSelectFavoriteMovie = () => {
     // Store the current state in localStorage or session before navigating
-    sessionStorage.setItem('editProfileState', JSON.stringify({
-      username,
-      email,
-      password,
-      bio,
-      favoriteGenres,
-      favoriteActors,
-      favoriteDirectors,
-      isSelectingFavoriteMovie: true
-    }));
+    sessionStorage.setItem(
+      "editProfileState",
+      JSON.stringify({
+        username,
+        email,
+        password,
+        bio,
+        favoriteGenres,
+        favoriteActors,
+        favoriteDirectors,
+        isSelectingFavoriteMovie: true,
+      }),
+    );
 
     // Use the correct route name
     router.push(`/users/${id}/movie_search?selectFavorite=true`);
@@ -96,9 +99,9 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSelectGenre = (genreName: string) => {
-    setFavoriteGenres(prev =>
+    setFavoriteGenres((prev) =>
       prev.includes(genreName)
-        ? prev.filter(g => g !== genreName)
+        ? prev.filter((g) => g !== genreName)
         : [...prev, genreName]
     );
   };
@@ -134,30 +137,44 @@ const EditProfile: React.FC = () => {
       bio: bio,
       // Use the current favorite movie from state
       favoriteMovie: favoriteMovie || user.favoriteMovie,
-      favoriteGenres: favoriteGenres.length > 0 ? favoriteGenres : user.favoriteGenres,
-      favoriteActors: favoriteActors.length > 0 ? favoriteActors : user.favoriteActors,
-      favoriteDirectors: favoriteDirectors.length > 0 ? favoriteDirectors : user.favoriteDirectors
+      favoriteGenres: favoriteGenres.length > 0
+        ? favoriteGenres
+        : user.favoriteGenres,
+      favoriteActors: favoriteActors.length > 0
+        ? favoriteActors
+        : user.favoriteActors,
+      favoriteDirectors: favoriteDirectors.length > 0
+        ? favoriteDirectors
+        : user.favoriteDirectors,
     };
 
     try {
       await apiService.put(`/users/${id}/profile`, updatedUser);
 
       // Update genre favorites
-      await apiService.post(`/users/${id}/favorites/genres`, { genreIds: favoriteGenres });
+      await apiService.post(`/users/${id}/favorites/genres`, {
+        genreIds: favoriteGenres,
+      });
       // Update actor favorites (empty array clears all on backend)
-      await apiService.post(`/users/${id}/favorites/actors`, { favoriteActors });
+      await apiService.post(`/users/${id}/favorites/actors`, {
+        favoriteActors,
+      });
       // Update director favorites (empty array clears all on backend)
-      await apiService.post(`/users/${id}/favorites/directors`, { favoriteDirectors });
+      await apiService.post(`/users/${id}/favorites/directors`, {
+        favoriteDirectors,
+      });
 
       setSuccessMessage("Profile updated successfully!");
       setShowSuccessMessage(true);
       router.push(`/users/${id}/profile`);
     } catch (error: unknown) {
-      if (error instanceof Error && 'status' in error) {
+      if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            setSubmitError("Your session has expired. Please log in again to update your profile.");
+            setSubmitError(
+              "Your session has expired. Please log in again to update your profile.",
+            );
             break;
           case 403:
             setSubmitError("You don't have permission to update this profile.");
@@ -166,13 +183,19 @@ const EditProfile: React.FC = () => {
             setSubmitError("We couldn't find the user profile to update.");
             break;
           case 409:
-            setSubmitError("That username or email is already in use. Please choose another.");
+            setSubmitError(
+              "That username or email is already in use. Please choose another.",
+            );
             break;
           default:
-            setSubmitError("An unexpected error occurred while updating your profile.");
+            setSubmitError(
+              "An unexpected error occurred while updating your profile.",
+            );
         }
       } else {
-        setSubmitError("An unexpected error occurred while updating your profile.");
+        setSubmitError(
+          "An unexpected error occurred while updating your profile.",
+        );
       }
     }
   };
@@ -180,20 +203,24 @@ const EditProfile: React.FC = () => {
   // First useEffect to check for selected favorite movie in session storage
   useEffect(() => {
     if (!hasProcessedStoredMovie) {
-      const favoriteMovieData = sessionStorage.getItem('selectedFavoriteMovie');
+      const favoriteMovieData = sessionStorage.getItem("selectedFavoriteMovie");
       if (favoriteMovieData) {
         try {
           const selectedMovie = JSON.parse(favoriteMovieData);
-          console.log(`Selected movie from session storage: ${selectedMovie.title || selectedMovie.movieId}`);
+          console.log(
+            `Selected movie from session storage: ${
+              selectedMovie.title || selectedMovie.movieId
+            }`,
+          );
           setFavoriteMovie(selectedMovie);
-          sessionStorage.removeItem('selectedFavoriteMovie');
+          sessionStorage.removeItem("selectedFavoriteMovie");
         } catch (e) {
-          console.error('Error parsing favorite movie data', e);
+          console.error("Error parsing favorite movie data", e);
         }
       }
 
       // Restore other form state if needed
-      const storedState = sessionStorage.getItem('editProfileState');
+      const storedState = sessionStorage.getItem("editProfileState");
       if (storedState) {
         try {
           const state = JSON.parse(storedState);
@@ -203,10 +230,12 @@ const EditProfile: React.FC = () => {
           if (state.bio) setBio(state.bio);
           if (state.favoriteGenres) setFavoriteGenres(state.favoriteGenres);
           if (state.favoriteActors) setFavoriteActors(state.favoriteActors);
-          if (state.favoriteDirectors) setFavoriteDirectors(state.favoriteDirectors);
-          sessionStorage.removeItem('editProfileState');
+          if (state.favoriteDirectors) {
+            setFavoriteDirectors(state.favoriteDirectors);
+          }
+          sessionStorage.removeItem("editProfileState");
         } catch (e) {
-          console.error('Error parsing stored state', e);
+          console.error("Error parsing stored state", e);
         }
       }
 
@@ -224,14 +253,16 @@ const EditProfile: React.FC = () => {
 
       const fetchUserData = async () => {
         try {
-          const fetchedUser = await retry(() => apiService.get(`/users/${id}/profile`)) as User;
+          const fetchedUser = await retry(() =>
+            apiService.get(`/users/${id}/profile`)
+          ) as User;
           setUser(fetchedUser);
 
           // Initialize form fields if not already set from session storage
-          setUsername(prev => prev || fetchedUser.username || "");
-          setEmail(prev => prev || fetchedUser.email || "");
-          setPassword(prev => prev || fetchedUser.password || "");
-          setBio(prev => prev || fetchedUser.bio || "");
+          setUsername((prev) => prev || fetchedUser.username || "");
+          setEmail((prev) => prev || fetchedUser.email || "");
+          setPassword((prev) => prev || fetchedUser.password || "");
+          setBio((prev) => prev || fetchedUser.bio || "");
 
           // For favorite movie, only set from API if we don't have one from session storage
           if (!favoriteMovie) {
@@ -239,26 +270,35 @@ const EditProfile: React.FC = () => {
           }
 
           // Set favorite genres if not already set from session storage or API fetch
-          if ((!favoriteGenres || favoriteGenres.length === 0) && fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0) {
+          if (
+            (!favoriteGenres || favoriteGenres.length === 0) &&
+            fetchedUser.favoriteGenres && fetchedUser.favoriteGenres.length > 0
+          ) {
             setFavoriteGenres(fetchedUser.favoriteGenres);
           }
 
           // Set favorite actors/directors if not already set
           if (favoriteActors.length === 0 && fetchedUser.favoriteActors) {
-            setFavoriteActors(Array.isArray(fetchedUser.favoriteActors)
-              ? fetchedUser.favoriteActors
-              : Object.values(fetchedUser.favoriteActors));
+            setFavoriteActors(
+              Array.isArray(fetchedUser.favoriteActors)
+                ? fetchedUser.favoriteActors
+                : Object.values(fetchedUser.favoriteActors),
+            );
           }
           if (favoriteDirectors.length === 0 && fetchedUser.favoriteDirectors) {
-            setFavoriteDirectors(Array.isArray(fetchedUser.favoriteDirectors)
-              ? fetchedUser.favoriteDirectors
-              : Object.values(fetchedUser.favoriteDirectors));
+            setFavoriteDirectors(
+              Array.isArray(fetchedUser.favoriteDirectors)
+                ? fetchedUser.favoriteDirectors
+                : Object.values(fetchedUser.favoriteDirectors),
+            );
           }
         } catch (error: unknown) {
-          if (error instanceof Error && 'status' in error) {
+          if (error instanceof Error && "status" in error) {
             const appErr = error as ApplicationError;
             if (appErr.status === 404) {
-              setError("Oops! We couldn't find the user profile you were looking for.");
+              setError(
+                "Oops! We couldn't find the user profile you were looking for.",
+              );
             } else {
               setError(`Failed to load user data: ${appErr.message}`);
             }
@@ -279,16 +319,18 @@ const EditProfile: React.FC = () => {
   // Compute actor and director selectable options
   const actorOptions = useMemo(() => {
     const set = new Set<string>();
-    if (favoriteMovie?.actors) favoriteMovie.actors.forEach(a => set.add(a));
-    user?.watchlist.forEach(m => m.actors.forEach(a => set.add(a)));
-    user?.watchedMovies.forEach(m => m.actors.forEach(a => set.add(a)));
+    if (favoriteMovie?.actors) favoriteMovie.actors.forEach((a) => set.add(a));
+    user?.watchlist.forEach((m) => m.actors.forEach((a) => set.add(a)));
+    user?.watchedMovies.forEach((m) => m.actors.forEach((a) => set.add(a)));
     return Array.from(set);
   }, [favoriteMovie, user]);
   const directorOptions = useMemo(() => {
     const set = new Set<string>();
-    if (favoriteMovie?.directors) favoriteMovie.directors.forEach(d => set.add(d));
-    user?.watchlist.forEach(m => m.directors.forEach(d => set.add(d)));
-    user?.watchedMovies.forEach(m => m.directors.forEach(d => set.add(d)));
+    if (favoriteMovie?.directors) {
+      favoriteMovie.directors.forEach((d) => set.add(d));
+    }
+    user?.watchlist.forEach((m) => m.directors.forEach((d) => set.add(d)));
+    user?.watchedMovies.forEach((m) => m.directors.forEach((d) => set.add(d)));
     return Array.from(set);
   }, [favoriteMovie, user]);
 
@@ -296,7 +338,8 @@ const EditProfile: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+        </div>
       </div>
     );
   }
@@ -392,9 +435,16 @@ const EditProfile: React.FC = () => {
               <label className="block text-[#3b3e88] text-sm font-medium mb-2">
                 Favorite Genres
               </label>
-              <div className="mb-2"> {/* Display selected genres */}
+              <div className="mb-2">
+                {/* Display selected genres */}
                 <span className="text-md text-gray-600">
-                  {favoriteGenres.length > 0 ? favoriteGenres.join(", ") : <span className="text-sm text-gray-600">No favorite genres selected</span>}
+                  {favoriteGenres.length > 0
+                    ? favoriteGenres.join(", ")
+                    : (
+                      <span className="text-sm text-gray-600">
+                        No favorite genres selected
+                      </span>
+                    )}
                 </span>
               </div>
               <Button
@@ -403,13 +453,16 @@ const EditProfile: React.FC = () => {
                 className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2 for spacing
                 onClick={handleToggleGenreSelection}
               >
-                {favoriteGenres.length > 0 ? "Change" : "Select"} Favorite Genres
+                {favoriteGenres.length > 0 ? "Change" : "Select"}{" "}
+                Favorite Genres
               </Button>
 
               {/* Genre Selection Panel */}
               {isSelectingGenre && (
                 <div className="mt-4 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
-                  <h4 className="text-[#3b3e88] font-medium mb-4">Select your favorite genres</h4>
+                  <h4 className="text-[#3b3e88] font-medium mb-4">
+                    Select your favorite genres
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {GENRES.map((genre) => (
                       <button
@@ -426,16 +479,27 @@ const EditProfile: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">{favoriteGenres.length} selected</p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    {favoriteGenres.length} selected
+                  </p>
                 </div>
               )}
             </div>
 
             {/* Favorite Actors */}
             <div className="mt-4">
-              <p className="block text-[#3b3e88] text-sm font-medium mb-2">Favorite Actors</p>
-              <p className="text-md text-gray-600 mb-2"> {/* Added mb-2 */}
-                {favoriteActors.length > 0 ? favoriteActors.join(', ') : <span className="text-sm text-gray-600"> No favorite actors selected.</span>}
+              <p className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Favorite Actors
+              </p>
+              <p className="text-md text-gray-600 mb-2">
+                {/* Added mb-2 */}
+                {favoriteActors.length > 0
+                  ? favoriteActors.join(", ")
+                  : (
+                    <span className="text-sm text-gray-600">
+                      No favorite actors selected.
+                    </span>
+                  )}
               </p>
               <Button
                 type="button"
@@ -443,26 +507,31 @@ const EditProfile: React.FC = () => {
                 onClick={() => setIsSelectingActors(!isSelectingActors)}
                 className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2
               >
-                {favoriteActors.length > 0 ? 'Change' : 'Select'} Favorite Actors
+                {favoriteActors.length > 0 ? "Change" : "Select"}{" "}
+                Favorite Actors
               </Button>
               {isSelectingActors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <div className="flex flex-wrap gap-2">
-                    {actorOptions.map(name => (
+                    {actorOptions.map((name) => (
                       <button
                         key={name}
                         type="button"
                         onClick={() => {
-                          setFavoriteActors(prev =>
-                            prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+                          setFavoriteActors((prev) =>
+                            prev.includes(name)
+                              ? prev.filter((n) => n !== name)
+                              : [...prev, name]
                           );
                         }}
                         className={`px-3 py-1 rounded-full border ${
                           favoriteActors.includes(name)
-                            ? 'bg-[#AFB3FF] text-white'
-                            : 'bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]'
+                            ? "bg-[#AFB3FF] text-white"
+                            : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
                         }`}
-                      >{name}</button>
+                      >
+                        {name}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -471,9 +540,18 @@ const EditProfile: React.FC = () => {
 
             {/* Favorite Directors */}
             <div className="mt-4">
-              <p className="block text-[#3b3e88] text-sm font-medium mb-2">Favorite Directors</p>
-              <p className="text-md text-gray-600 mb-2"> {/* Added mb-2 */}
-                {favoriteDirectors.length > 0 ? favoriteDirectors.join(', ') : <span className="text-sm text-gray-600"> No favorite directors selected.</span>}
+              <p className="block text-[#3b3e88] text-sm font-medium mb-2">
+                Favorite Directors
+              </p>
+              <p className="text-md text-gray-600 mb-2">
+                {/* Added mb-2 */}
+                {favoriteDirectors.length > 0
+                  ? favoriteDirectors.join(", ")
+                  : (
+                    <span className="text-sm text-gray-600">
+                      No favorite directors selected.
+                    </span>
+                  )}
               </p>
               <Button
                 type="button"
@@ -481,26 +559,31 @@ const EditProfile: React.FC = () => {
                 onClick={() => setIsSelectingDirectors(!isSelectingDirectors)}
                 className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5] hover:text-gray-500 mb-2" // Added mb-2
               >
-                {favoriteDirectors.length > 0 ? 'Change' : 'Select'} Favorite Directors
+                {favoriteDirectors.length > 0 ? "Change" : "Select"}{" "}
+                Favorite Directors
               </Button>
               {isSelectingDirectors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <div className="flex flex-wrap gap-2">
-                    {directorOptions.map(name => (
+                    {directorOptions.map((name) => (
                       <button
                         key={name}
                         type="button"
                         onClick={() => {
-                          setFavoriteDirectors(prev =>
-                            prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+                          setFavoriteDirectors((prev) =>
+                            prev.includes(name)
+                              ? prev.filter((n) => n !== name)
+                              : [...prev, name]
                           );
                         }}
                         className={`px-3 py-1 rounded-full border ${
                           favoriteDirectors.includes(name)
-                            ? 'bg-[#AFB3FF] text-white'
-                            : 'bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]'
+                            ? "bg-[#AFB3FF] text-white"
+                            : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
                         }`}
-                      >{name}</button>
+                      >
+                        {name}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -512,23 +595,30 @@ const EditProfile: React.FC = () => {
               <label className="block text-[#3b3e88] text-sm font-medium mb-2">
                 Favorite Movie
               </label>
-              <div className="mb-2"> {/* Display selected movie */}
-                {favoriteMovie ? (
-                  <div className="flex items-center space-x-4">
-                    <MovieCard
-                      movie={favoriteMovie}
-                      isInWatchlist={false}
-                      isInSeenList={false}
-                      isFavorite={true}
-                      onClick={() => { }} // Empty handler since we don't need modal here
-                    />
-                    <span className="text-md text-gray-600">{favoriteMovie.title}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-600">No favorite movie selected</span>
-                  </div>
-                )}
+              <div className="mb-2">
+                {/* Display selected movie */}
+                {favoriteMovie
+                  ? (
+                    <div className="flex items-center space-x-4">
+                      <MovieCard
+                        movie={favoriteMovie}
+                        isInWatchlist={false}
+                        isInSeenList={false}
+                        isFavorite={true}
+                        onClick={() => {}} // Empty handler since we don't need modal here
+                      />
+                      <span className="text-md text-gray-600">
+                        {favoriteMovie.title}
+                      </span>
+                    </div>
+                  )
+                  : (
+                    <div className="flex items-center">
+                      <span className="text-sm text-gray-600">
+                        No favorite movie selected
+                      </span>
+                    </div>
+                  )}
               </div>
               <Button
                 type="button"
@@ -542,7 +632,10 @@ const EditProfile: React.FC = () => {
 
             {/* Inline error/success messages */}
             {submitError && (
-              <ErrorMessage message={submitError} onClose={() => setSubmitError("")} />
+              <ErrorMessage
+                message={submitError}
+                onClose={() => setSubmitError("")}
+              />
             )}
             {showSuccessMessage && (
               <ActionMessage
@@ -552,7 +645,8 @@ const EditProfile: React.FC = () => {
                 className="bg-green-500"
               />
             )}
-            <div className="flex space-x-4 pt-4"> {/* Added pt-4 for spacing */}
+            <div className="flex space-x-4 pt-4">
+              {/* Added pt-4 for spacing */}
               <Button
                 type="submit"
                 variant="default"

@@ -28,8 +28,8 @@ export default function AuthLayout({
   const pathname = usePathname();
   // Extracts the last part of the path (e.g., "login" from "/login")
   // Ensure this logic correctly identifies your routes. If routes are nested, adjust accordingly.
-  const activeTab =
-    pathname.substring(pathname.lastIndexOf("/") + 1) || "login"; // Default if path is "/" or unexpected
+  const activeTab = pathname.substring(pathname.lastIndexOf("/") + 1) ||
+    "login"; // Default if path is "/" or unexpected
 
   return (
     <div className="h-screen w-full md:grid grid-cols-10">

@@ -73,7 +73,6 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
     setLoginError("");
-    
 
     try {
       // Based on your backend controller, the login endpoint returns a User object directly
@@ -97,7 +96,9 @@ const Login: React.FC = () => {
       console.error("Login error:", error);
       let userMessage = "An unknown error occurred during login.";
       // Type guard for Axios-like error
-      type ErrorWithResponse = { response: { status: number; data?: { message?: string } } };
+      type ErrorWithResponse = {
+        response: { status: number; data?: { message?: string } };
+      };
       if (
         typeof error === "object" &&
         error !== null &&
@@ -112,7 +113,8 @@ const Login: React.FC = () => {
             userMessage = "Please enter both username/email and password.";
             break;
           case 404:
-            userMessage = "We couldn't find an account with that username/email. Do you want to register?";
+            userMessage =
+              "We couldn't find an account with that username/email. Do you want to register?";
             break;
           case 401:
             userMessage = "Incorrect password. Please try again.";
@@ -121,95 +123,115 @@ const Login: React.FC = () => {
             userMessage = errResp.data?.message || userMessage;
         }
       } else if (error instanceof Error) {
-        if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+        if (
+          error.message.includes("401") ||
+          error.message.includes("Unauthorized")
+        ) {
           userMessage = "Incorrect password. Please try again.";
         } else if (error.message.includes("404")) {
-          userMessage = "We couldn't find an account with that username/email. Do you want to register?";
+          userMessage =
+            "We couldn't find an account with that username/email. Do you want to register?";
         } else if (error.message.includes("400")) {
           userMessage = "Please enter both username/email and password.";
-        } else if (error.message.includes("Network Error") || error.message.includes("Failed to fetch")) {
-          userMessage = "Network error. Please check your connection and try again.";
+        } else if (
+          error.message.includes("Network Error") ||
+          error.message.includes("Failed to fetch")
+        ) {
+          userMessage =
+            "Network error. Please check your connection and try again.";
         } else {
           userMessage = `Login failed: ${error.message}`;
         }
       }
       setLoginError(userMessage);
-      
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardContent className="space-y-4 pt-6">
-          <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="space-y-4 pt-6">
+        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
-          <ErrorMessage message={loginError} onClose={() => setLoginError("")} />
+        <ErrorMessage message={loginError} onClose={() => setLoginError("")} />
 
-          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                    id="username"
-                    placeholder="Enter your username"
-                    value={formValues.username}
-                    onChange={handleInputChange}
-                    autoComplete="username"
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+        >
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                placeholder="Enter your username"
+                value={formValues.username}
+                onChange={handleInputChange}
+                autoComplete="username"
+              />
+              {errors.username && (
+                <ErrorMessage
+                  message={errors.username}
+                  onClose={() =>
+                    setErrors((prev) => ({ ...prev, username: "" }))}
                 />
-                {errors.username && (
-                  <ErrorMessage message={errors.username} onClose={() => setErrors(prev => ({...prev, username: ""}))} />
-                )}
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={formValues.password}
-                    onChange={handleInputChange}
-                    autoComplete="current-password"
-                />
-                {errors.password && (
-                  <ErrorMessage message={errors.password} onClose={() => setErrors(prev => ({...prev, password: ""}))} />
-                )}
-              </div>
+              )}
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button
-              variant="outline"
-              onClick={() => router.push("/")}
-              disabled={isLoading}
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formValues.password}
+                onChange={handleInputChange}
+                autoComplete="current-password"
+              />
+              {errors.password && (
+                <ErrorMessage
+                  message={errors.password}
+                  onClose={() =>
+                    setErrors((prev) => ({ ...prev, password: "" }))}
+                />
+              )}
+            </div>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/")}
+          disabled={isLoading}
+        >
+          Back
+        </Button>
+        <Button
+          onClick={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? "Logging in..." : "Login"}
+        </Button>
+      </CardFooter>
+      <div className="text-center pb-4">
+        <p className="text-sm text-gray-500">
+          Don&#39;t have an account?{" "}
+          <a
+            href="/register"
+            className="text-blue-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              router.push("/register");
+            }}
           >
-            Back
-          </Button>
-          <Button
-              onClick={handleLogin}
-              disabled={isLoading}
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-        </CardFooter>
-        <div className="text-center pb-4">
-          <p className="text-sm text-gray-500">
-            Don&#39;t have an account?{" "}
-            <a
-                href="/register"
-                className="text-blue-600 hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push("/register");
-                }}
-            >
-              Register here
-            </a>
-          </p>
-        </div>
-      </Card>
+            Register here
+          </a>
+        </p>
+      </div>
+    </Card>
   );
 };
 

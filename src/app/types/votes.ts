@@ -1,7 +1,7 @@
-import {Movie} from "@/app/types/movie";
+import { Movie } from "@/app/types/movie";
 
 export interface VoteSubmission {
-    groupId: number;
-    userId: number;
-    votes: Movie[];
+  groupId: number;
+  userId: number;
+  votes: Movie[];
 }

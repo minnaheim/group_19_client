@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
@@ -25,7 +25,9 @@ const GenreFavorites: React.FC = () => {
     apiService.getGenres()
       .then(setGenres)
       .catch(() => {
-        setError("We couldn't load movie genres right now. Please try again later.");
+        setError(
+          "We couldn't load movie genres right now. Please try again later.",
+        );
         setGenres([]);
       });
   }, [apiService]);
@@ -40,13 +42,17 @@ const GenreFavorites: React.FC = () => {
 
   const handleNext = async () => {
     if (!userId) {
-      setError("Your session has expired. Please log in again to save favorites.");
+      setError(
+        "Your session has expired. Please log in again to save favorites.",
+      );
       router.push("/login");
       return;
     }
 
     if (!token || token === "no_token") {
-      setError("Your session has expired. Please log in again to save favorites.");
+      setError(
+        "Your session has expired. Please log in again to save favorites.",
+      );
       router.push("/login");
       return;
     }
@@ -60,14 +66,18 @@ const GenreFavorites: React.FC = () => {
       setShowSuccessMessage(true);
       router.push("/favorite_movies");
     } catch (error: unknown) {
-      if (error instanceof Error && 'status' in error) {
+      if (error instanceof Error && "status" in error) {
         const appError = error as ApplicationError;
         switch (appError.status) {
           case 400:
-            setError("An invalid genre was selected. Please check your choices.");
+            setError(
+              "An invalid genre was selected. Please check your choices.",
+            );
             break;
           case 401:
-            setError("Your session has expired. Please log in again to save favorites.");
+            setError(
+              "Your session has expired. Please log in again to save favorites.",
+            );
             break;
           case 403:
             setError("You don't have permission to change these favorites.");
@@ -76,10 +86,14 @@ const GenreFavorites: React.FC = () => {
             setError("We couldn't find your user account to save favorites.");
             break;
           default:
-            setError("An error occurred while saving your favorites. Please try again.");
+            setError(
+              "An error occurred while saving your favorites. Please try again.",
+            );
         }
       } else {
-        setError("An error occurred while saving your favorites. Please try again.");
+        setError(
+          "An error occurred while saving your favorites. Please try again.",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -122,7 +136,11 @@ const GenreFavorites: React.FC = () => {
       </p>
       <br />
       <div className="flex justify-between">
-        <Button variant="destructive" onClick={() => router.push("/")} disabled={isLoading}>
+        <Button
+          variant="destructive"
+          onClick={() => router.push("/")}
+          disabled={isLoading}
+        >
           Back
         </Button>
         <Button onClick={handleNext} disabled={isLoading}>
