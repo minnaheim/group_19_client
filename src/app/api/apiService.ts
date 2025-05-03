@@ -11,7 +11,7 @@ import {
   UserFavoritesDTO,
   UserFavoritesGenresDTO,
   UserFavoritesMovieDTO,
-} from "@/app/types/UserFavorites";
+} from "@/app/types/userFavorites";
 import { Movie } from "@/app/types/movie";
 
 export class ApiService {
