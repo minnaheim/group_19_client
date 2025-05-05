@@ -205,7 +205,7 @@ const Profile: React.FC = () => {
 
               <div>
                 <p className="font-semibold text-[#3b3e88] text-base">
-                  password: {user?.password}
+                  password: {"••••••••"}
                 </p>
               </div>
 
