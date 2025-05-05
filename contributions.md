@@ -135,18 +135,19 @@ reason).
 
 ## Contributions Week 6 - [07.05.2025] to [13.05.2025]
 
-| **Student**  | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
-| ------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-| BeneJung     | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-| ellaruby0    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| AnabelNigsch | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-| AnabelNigsch | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-| minnaheim    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-| ivis-ii      | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **Student**  | **Date** | **Link to Commit** | **Description**                                                                                                   | **Relevance**                                                                                                   |
+| ------------ | -------- | ------------------ |-------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| BeneJung     | [date]   | [Link to Commit 1] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| BeneJung     | [date]   | [Link to Commit 2] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| ellaruby0    | [date]   | [Link to Commit 1] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| ellaruby0    | [date]   | [Link to Commit 2] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| AnabelNigsch | [date]   | [Link to Commit 1] | As a system I will automatically add the winner as seen to users of a group #526                                  | This is relevant so that the winning movie is added to seen list of all group members                           |
+| AnabelNigsch | [date]   | [Link to Commit 2] | As a system I want to handle movies, which are added to both watchlist and seen list: currently silent error #527 | This is relevant so we allow to add movies to both watchlist and seenlist                                       |
+| AnabelNigsch | [date]   | [Link to Commit 2] | As a system, I want to consider the preferences actor & director whilst suggesting movies to a user #535          | This is relevant so that user preferences (actor & director) whilst suggesting movies to a user are concidered  |
+| minnaheim    | [date]   | [Link to Commit 1] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| minnaheim    | [date]   | [Link to Commit 2] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| ivis-ii      | [date]   | [Link to Commit 1] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
+| ivis-ii      | [date]   | [Link to Commit 2] | [Brief description of the task]                                                                                   | [Why this contribution is relevant]                                                                             |
 
 ---
 
