@@ -56,6 +56,7 @@ interface UserSearchResponse {
   userId: number;
   username: string;
 }
+type Friend = User
 // --- End Interfaces ---
 
 const GroupsManagement: React.FC = () => {
@@ -119,6 +120,14 @@ const GroupsManagement: React.FC = () => {
   const [usersLoaded, setUsersLoaded] = useState<boolean>(false);
   const [isValidUser, setIsValidUser] = useState<boolean>(false);
 
+  const [inviteMethod, setInviteMethod] = useState<"friends" | "search">("friends");
+  const [availableFriends, setAvailableFriends] = useState<Friend[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState<boolean>(false);
+  const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
+  const [friendSearchQuery, setFriendSearchQuery] = useState<string>("");
+  const [filteredAvailableFriends, setFilteredAvailableFriends] = useState<Friend[]>([]);
+
+
   // Ref for click outside handling
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
@@ -165,17 +174,157 @@ const GroupsManagement: React.FC = () => {
 
     const normalizedSearch = searchTerm.toLowerCase().trim();
 
-    // Filter users - exclude current user
-    const filtered = allUsers.filter(user =>
-        // Contains search term
-        user.username.toLowerCase().includes(normalizedSearch) &&
-        // Not the current user
-        user.userId !== parseInt(userId)
-    );
+    // Get current group details if we have a selected group
+    const currentGroup = selectedGroupId
+        ? groupsWithDetails.find(g => g.groupId === selectedGroupId)
+        : null;
+
+    // Filter users based on multiple conditions
+    const filtered = allUsers.filter(user => {
+      // 1. Contains search term
+      const matchesSearch = user.username.toLowerCase().includes(normalizedSearch);
+      if (!matchesSearch) return false;
+
+      // 2. Not the current user
+      if (user.userId === parseInt(userId)) return false;
+
+      // 3. Not already a member of the group
+      if (currentGroup && currentGroup.members.some(m => m.userId === user.userId)) {
+        return false;
+      }
+
+      // 4. Not already invited to the group
+      if (selectedGroupId && sentInvitations.some(inv =>
+          inv.group.groupId === selectedGroupId && inv.receiver.userId === user.userId
+      )) {
+        return false;
+      }
+
+      return true;
+    });
 
     setFilteredUsers(filtered);
     setShowUserSearchResults(filtered.length > 0);
-  }, [allUsers, userId, usersLoaded, isLoadingUsers, fetchAllUsers]);
+  }, [allUsers, userId, usersLoaded, isLoadingUsers, fetchAllUsers, selectedGroupId, groupsWithDetails, sentInvitations]);
+
+  useEffect(() => {
+    const fetchAvailableFriends = async () => {
+      if (!isInviteDialogOpen || !selectedGroupId) return;
+
+      setLoadingFriends(true);
+      setInviteError(null);
+
+      try {
+        // Fetch all friends
+        const friendsData = await retry(() => apiService.get<Friend[]>("/friends"));
+
+        if (!Array.isArray(friendsData)) {
+          throw new Error("Invalid friends data format");
+        }
+
+        // If we have a selected group, filter out friends who are already members
+        if (selectedGroupId) {
+          const groupDetails = groupsWithDetails.find(g => g.groupId === selectedGroupId);
+
+          if (groupDetails) {
+            // Filter out friends who are already in the group
+            const existingMemberIds = groupDetails.members.map(m => m.userId);
+            const filteredFriends = friendsData.filter(friend =>
+                !existingMemberIds.includes(friend.userId)
+            );
+
+            // Also filter out friends who have pending invitations
+            const pendingInviteeIds = sentInvitations
+                .filter(inv => inv.group.groupId === selectedGroupId)
+                .map(inv => inv.receiver.userId);
+
+            const availableFriendsToInvite = filteredFriends.filter(friend =>
+                !pendingInviteeIds.includes(friend.userId)
+            );
+
+            setAvailableFriends(availableFriendsToInvite);
+          } else {
+            setAvailableFriends(friendsData);
+          }
+        } else {
+          setAvailableFriends(friendsData);
+        }
+      } catch (err) {
+        console.error("Error fetching available friends:", err);
+        setInviteError("Failed to load friends list. Please try again.");
+        setAvailableFriends([]);
+      } finally {
+        setLoadingFriends(false);
+      }
+    };
+
+    fetchAvailableFriends();
+  }, [isInviteDialogOpen, selectedGroupId, apiService, groupsWithDetails, sentInvitations]);
+
+  useEffect(() => {
+    if (!friendSearchQuery.trim()) {
+      setFilteredAvailableFriends(availableFriends);
+      return;
+    }
+
+    const query = friendSearchQuery.toLowerCase().trim();
+    const filtered = availableFriends.filter(friend =>
+        friend.username.toLowerCase().includes(query)
+    );
+
+    setFilteredAvailableFriends(filtered);
+  }, [friendSearchQuery, availableFriends]);
+
+  const toggleFriendSelection = (friend: Friend) => {
+    setSelectedFriends(prev => {
+      // If friend is already selected, remove them
+      if (prev.some(f => f.userId === friend.userId)) {
+        return prev.filter(f => f.userId !== friend.userId);
+      }
+      // Otherwise add them to selection
+      return [...prev, friend];
+    });
+  };
+
+  const handleInviteSelectedFriends = async () => {
+    if (selectedFriends.length === 0 || !selectedGroupId) {
+      setInviteError("Please select at least one friend to invite.");
+      return;
+    }
+
+    setIsSubmittingInvite(true);
+    setInviteError(null);
+
+    try {
+      // Send invitations to all selected friends
+      const invitationPromises = selectedFriends.map(friend =>
+          apiService.post(`/groups/invitations/send/${selectedGroupId}/${friend.userId}`, {})
+      );
+
+      // Wait for all invitations to be sent
+      await Promise.all(invitationPromises);
+
+      // Refresh the sent invitations list
+      const updatedSentInvites = await apiService.get<GroupInvitation[]>("/groups/invitations/sent");
+      if (Array.isArray(updatedSentInvites)) {
+        setSentInvitations(updatedSentInvites);
+      }
+
+      // Show success message
+      const friendCount = selectedFriends.length;
+      showSuccessMessage(`Invitation${friendCount !== 1 ? 's' : ''} sent to ${friendCount} friend${friendCount !== 1 ? 's' : ''}`);
+
+      // Reset state
+      setSelectedFriends([]);
+      setIsInviteDialogOpen(false);
+      setActiveTab("invitations"); // Switch tab to see sent invites
+    } catch (err) {
+      console.error("Error inviting friends:", err);
+      setInviteError("Failed to send one or more invitations. Please try again.");
+    } finally {
+      setIsSubmittingInvite(false);
+    }
+  };
 
   // Listen for outside clicks to close dropdown
   useEffect(() => {
@@ -1450,6 +1599,7 @@ const GroupsManagement: React.FC = () => {
           </Dialog>
 
           {/* Invite Member Dialog - UPDATED with client-side search */}
+          {/* Enhanced Invite Member Dialog with both friends selection and user search */}
           <Dialog
               open={isInviteDialogOpen}
               onOpenChange={(open) => {
@@ -1457,11 +1607,12 @@ const GroupsManagement: React.FC = () => {
                 if (!open) {
                   setInviteError(null);
                   setInviteUsername("");
+                  setSelectedFriends([]);
                   /* Don't clear selectedGroupId here if multi-invite is desired */
                 }
               }}
           >
-            <DialogContent className="max-w-md w-full rounded-2xl">
+            <DialogContent className="max-w-md md:max-w-2xl w-full rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-[#3b3e88] text-xl">
                   {selectedGroup
@@ -1469,88 +1620,234 @@ const GroupsManagement: React.FC = () => {
                       : "Invite to Group"}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleInviteMember}>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2 relative">
-                    <Label htmlFor="invite-username" className="text-[#3b3e88]">
-                      Invite by Username
-                    </Label>
-                    <Input
-                        id="invite-username"
-                        value={inviteUsername}
-                        onChange={(e) => setInviteUsername(e.target.value)}
-                        placeholder="Start typing a username..."
-                        className="w-full rounded-xl"
-                        autoComplete="off"
-                        required
-                    />
 
-                    {/* Client-Side Filtered Results Dropdown */}
-                    {showUserSearchResults && inviteUsername.trim().length >= 1 && (
-                        <div
-                            ref={searchResultsRef}
-                            className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-lg max-h-64 overflow-y-auto"
-                        >
-                          {isLoadingUsers && !usersLoaded ? (
-                              <div className="p-4 text-center text-gray-600">
-                                <div
-                                    className="inline-block animate-spin h-4 w-4 border-2 border-[#3b3e88] border-t-transparent rounded-full mr-2"></div>
-                                Loading users...
-                              </div>
-                          ) : filteredUsers.length > 0 ? (
-                              <ul>
-                                {filteredUsers.map((user) => (
-                                    <li
-                                        key={user.userId}
-                                        onClick={() => handleSelectUser(user)}
-                                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors text-[#3b3e88] font-medium border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl"
+              {/* Tab navigation for invite methods */}
+              <div className="flex border-b border-[#3b3e88]/20 mb-4">
+                <button
+                    className={`px-4 py-2 font-medium text-sm ${
+                        inviteMethod === "friends"
+                            ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
+                            : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                    }`}
+                    onClick={() => setInviteMethod("friends")}
+                >
+                  Invite Friends
+                </button>
+                <button
+                    className={`px-4 py-2 font-medium text-sm ${
+                        inviteMethod === "search"
+                            ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
+                            : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                    }`}
+                    onClick={() => setInviteMethod("search")}
+                >
+                  Search Users
+                </button>
+              </div>
+
+              {/* Error Message Area */}
+              <div className="min-h-[40px] pb-2">
+                {inviteError && (
+                    <ErrorMessage
+                        message={inviteError}
+                        onClose={() => setInviteError(null)}
+                    />
+                )}
+              </div>
+
+              {/* Friend Selection Method */}
+              {inviteMethod === "friends" && (
+                  <div className="space-y-4">
+                    {loadingFriends ? (
+                        <div className="flex justify-center py-4">
+                          <div className="animate-spin h-6 w-6 border-2 border-[#3b3e88] border-t-transparent rounded-full"></div>
+                        </div>
+                    ) : availableFriends.length > 0 ? (
+                        <>
+                          <div className="mb-2">
+                            <Label className="text-[#3b3e88] mb-2 block">
+                              Select friends to invite ({selectedFriends.length} selected)
+                            </Label>
+                            {/* Friend search filter */}
+                            <div className="relative mb-3">
+                              <input
+                                  type="text"
+                                  value={friendSearchQuery}
+                                  onChange={(e) => setFriendSearchQuery(e.target.value)}
+                                  placeholder="Filter friends..."
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3b3e88] focus:outline-none"
+                              />
+                              {friendSearchQuery && (
+                                  <button
+                                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                      onClick={() => setFriendSearchQuery("")}
+                                  >
+                                    ✕
+                                  </button>
+                              )}
+                            </div>
+
+                            {/* Friends grid with checkboxes */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
+                              {filteredAvailableFriends.map((friend) => (
+                                  <div
+                                      key={friend.userId}
+                                      className={`flex items-center p-2 rounded-xl transition-colors ${
+                                          selectedFriends.some(f => f.userId === friend.userId)
+                                              ? "bg-indigo-50 border border-indigo-200"
+                                              : "hover:bg-gray-50 border border-transparent"
+                                      }`}
+                                  >
+                                    <input
+                                        type="checkbox"
+                                        id={`friend-${friend.userId}`}
+                                        checked={selectedFriends.some(f => f.userId === friend.userId)}
+                                        onChange={() => toggleFriendSelection(friend)}
+                                        className="h-4 w-4 rounded border-gray-300 text-[#3b3e88] focus:ring-[#3b3e88]"
+                                    />
+                                    <label
+                                        htmlFor={`friend-${friend.userId}`}
+                                        className="ml-2 flex-grow cursor-pointer font-medium text-sm text-[#3b3e88]"
                                     >
-                                      <span>{user.username}</span>
-                                    </li>
-                                ))}
-                              </ul>
-                          ) : usersLoaded ? (
-                              <div className="p-4 text-center text-gray-600">
-                                {allUsers.length > 0
-                                    ? "No matching users found"
-                                    : "No users available to invite"}
-                              </div>
-                          ) : (
-                              <div className="p-4 text-center text-gray-600">
-                                Failed to load users for search
-                              </div>
-                          )}
+                                      {friend.username}
+                                    </label>
+                                  </div>
+                              ))}
+                            </div>
+
+                            {filteredAvailableFriends.length === 0 && (
+                                <div className="text-center py-4 text-[#838bad]">
+                                  No friends match your filter
+                                </div>
+                            )}
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                                type="button"
+                                className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl text-sm"
+                                onClick={handleInviteSelectedFriends}
+                                disabled={isSubmittingInvite || selectedFriends.length === 0}
+                            >
+                              {isSubmittingInvite ? "Sending..." : `Invite ${selectedFriends.length} Friend${selectedFriends.length !== 1 ? 's' : ''}`}
+                            </Button>
+                          </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-8">
+                          <div className="mb-3 flex justify-center">
+                            <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                              <svg
+                                  className="w-8 h-8 text-indigo-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                                >
+                                </path>
+                              </svg>
+                            </div>
+                          </div>
+                          <p className="text-[#838bad]">You don&#39;t have any friends to invite</p>
+                          <p className="text-[#b9c0de] text-sm mb-4">Add friends first or use the search option</p>
+                          <Button
+                              variant="outline"
+                              className="rounded-xl border-[#3b3e88] text-[#3b3e88] text-sm"
+                              onClick={() => setInviteMethod("search")}
+                          >
+                            Switch to User Search
+                          </Button>
                         </div>
                     )}
                   </div>
-                </div>
-                {/* Error Message Area */}
-                <div className="min-h-[40px] py-2">
-                  {inviteError && (
-                      <ErrorMessage
-                          message={inviteError}
-                          onClose={() => setInviteError(null)}
-                      />
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsInviteDialogOpen(false)}
-                      className="rounded-xl"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                      type="submit"
-                      className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
-                      disabled={isSubmittingInvite || !isValidUser}
-                  >
-                    {isSubmittingInvite ? "Sending..." : "Send Invitation"}
-                  </Button>
-                </DialogFooter>
-              </form>
+              )}
+
+              {/* User Search Method */}
+              {inviteMethod === "search" && (
+                  <form onSubmit={handleInviteMember}>
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2 relative">
+                        <Label htmlFor="invite-username" className="text-[#3b3e88]">
+                          Search by Username
+                        </Label>
+                        <Input
+                            id="invite-username"
+                            value={inviteUsername}
+                            onChange={(e) => setInviteUsername(e.target.value)}
+                            placeholder="Start typing a username..."
+                            className="w-full rounded-xl"
+                            autoComplete="off"
+                            required
+                        />
+
+                        {/* Client-Side Filtered Results Dropdown */}
+                        {showUserSearchResults && inviteUsername.trim().length >= 1 && (
+                            <div
+                                ref={searchResultsRef}
+                                className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-lg max-h-64 overflow-y-auto"
+                            >
+                              {isLoadingUsers && !usersLoaded ? (
+                                  <div className="p-4 text-center text-gray-600">
+                                    <div
+                                        className="inline-block animate-spin h-4 w-4 border-2 border-[#3b3e88] border-t-transparent rounded-full mr-2"></div>
+                                    Loading users...
+                                  </div>
+                              ) : filteredUsers.length > 0 ? (
+                                  <ul>
+                                    {filteredUsers.map((user) => (
+                                        <li
+                                            key={user.userId}
+                                            onClick={() => handleSelectUser(user)}
+                                            className="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors text-[#3b3e88] font-medium border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl"
+                                        >
+                                          <span>{user.username}</span>
+                                        </li>
+                                    ))}
+                                  </ul>
+                              ) : usersLoaded ? (
+                                  <div className="p-4 text-center text-gray-600">
+                                    {allUsers.length > 0
+                                        ? "No matching users found"
+                                        : "No users available to invite"}
+                                  </div>
+                              ) : (
+                                  <div className="p-4 text-center text-gray-600">
+                                    Failed to load users for search
+                                  </div>
+                              )}
+                            </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end mt-6">
+                      <Button
+                          type="submit"
+                          className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
+                          disabled={isSubmittingInvite || !isValidUser}
+                      >
+                        {isSubmittingInvite ? "Sending..." : "Send Invitation"}
+                      </Button>
+                    </div>
+                  </form>
+              )}
+
+              <DialogFooter className="mt-4 border-t border-gray-100 pt-4">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsInviteDialogOpen(false)}
+                    className="rounded-xl"
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
 
@@ -1651,26 +1948,22 @@ const GroupsManagement: React.FC = () => {
                                   </p>
                                 </div>
                                 <div>
-                            <span className="text-[#838bad] text-sm">
-                              Members ({selectedGroup.members?.length ?? 0}):
-                            </span>
+  <span className="text-[#838bad] text-sm">
+    Members ({selectedGroup.members?.length ?? 0}):
+  </span>
                                   <ul className="text-[#3b3e88] space-y-1 max-h-40 overflow-y-auto pr-2 mt-1">
                                     {selectedGroup.members?.map((member) => (
                                         <li
                                             key={member.userId}
                                             className="flex items-center justify-between text-sm py-1"
                                         >
-                                  <span>
-                                    {member.username}
-                                    {member.userId ===
-                                        selectedGroup.creatorId && " (Creator)"}
-                                    {member.userId.toString() === userId &&
-                                        " (You)"}
-                                  </span>
-                                          {selectedGroup.creatorId ===
-                                              parseInt(userId || "-1") &&
-                                              member.userId !== selectedGroup.creatorId &&
-                                              (
+        <span>
+          {member.username}
+          {member.userId === selectedGroup.creatorId && " (Creator)"}
+          {member.userId.toString() === userId && " (You)"}
+        </span>
+                                          {selectedGroup.creatorId === parseInt(userId || "-1") &&
+                                              member.userId !== selectedGroup.creatorId && (
                                                   <Button
                                                       size="sm"
                                                       variant="outline"
@@ -1679,7 +1972,8 @@ const GroupsManagement: React.FC = () => {
                                                           handleRemoveMember(
                                                               selectedGroup.groupId,
                                                               member.userId,
-                                                          )}
+                                                          )
+                                                      }
                                                   >
                                                     Remove
                                                   </Button>
@@ -1687,17 +1981,35 @@ const GroupsManagement: React.FC = () => {
                                         </li>
                                     ))}
                                   </ul>
-                                  {/* Add Member button */}
+
+                                  {/* Update the Add Member button with enhanced styling */}
                                   <Button
                                       size="sm"
-                                      variant="outline"
-                                      className="mt-3 w-full border-violet-600 text-[#3b3e88] hover:bg-violet-50 rounded-xl"
+                                      className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl text-white flex items-center justify-center gap-2"
                                       onClick={() => {
                                         setSelectedGroupId(selectedGroup.groupId);
+                                        setInviteMethod("friends"); // Default to friends tab
+                                        setFriendSearchQuery(""); // Clear any previous search
+                                        setSelectedFriends([]); // Clear any previous selections
+                                        setInviteUsername(""); // Clear any previous search username
                                         setIsInviteDialogOpen(true);
                                       }}
                                   >
-                                    Add Member
+                                    <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                      ></path>
+                                    </svg>
+                                    Invite Members
                                   </Button>
                                 </div>
                               </div>
