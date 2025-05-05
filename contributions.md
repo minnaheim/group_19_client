@@ -7,7 +7,7 @@ one weekly TA meeting and another "Joker" to once skip continuous progress over
 the remaining weeks of the course. Please note that you cannot make up for
 "missed" continuous progress, but you can "work ahead" by completing twice the
 amount of work in one week to skip progress on a subsequent week without using
-your "Joker". Please communicate your planning **ahead of time**.
+your "Joker". Please communicate your planning. **ahead of time**.
 
 Note: If a team member fails to show continuous progress after using their
 Joker, they will individually fail the overall course (unless there is a valid
