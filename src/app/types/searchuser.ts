@@ -1,5 +1,5 @@
 export interface UserSearchResponse {
-    userId: number;
-    username: string;
-    // could include other basic user info as needed
+  userId: number;
+  username: string;
+  // could include other basic user info as needed
 }

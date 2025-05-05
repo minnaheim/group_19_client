@@ -8,10 +8,10 @@ import {
   Film,
   Home,
   ListChecks,
+  LogOut,
   Search,
   User,
   Users,
-  LogOut,
 } from "lucide-react";
 
 // Define all navigation item configurations with Lucide icons

@@ -37,7 +37,7 @@ export function useGroupPhase(groupId?: string | number): UseGroupPhaseResult {
       setPhase(data.phase);
     } catch (err: unknown) {
       let message = "Failed to fetch group details. Please try again.";
-      if (err && typeof err === 'object' && 'message' in err) {
+      if (err && typeof err === "object" && "message" in err) {
         message = (err as { message?: string }).message || message;
       }
       setError(message);

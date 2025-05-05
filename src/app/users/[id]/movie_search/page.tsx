@@ -13,7 +13,8 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import MovieList from "@/components/ui/movie_list";
 import SearchBar from "@/components/ui/search_bar";
-import { retry } from 'src/utils/retry';
+import { retry } from "src/utils/retry";
+import { RefreshCw } from "lucide-react"; // Add this import
 
 const SearchMovies: React.FC = () => {
   const { id } = useParams();
@@ -34,11 +35,16 @@ const SearchMovies: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // favorite movie selection
-  const [isSelectingFavoriteMovie, setIsSelectingFavoriteMovie] = useState<boolean>(false);
+  const [isSelectingFavoriteMovie, setIsSelectingFavoriteMovie] = useState<
+      boolean
+  >(false);
 
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+
+  // new state for recommendation loading
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false);
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -54,13 +60,18 @@ const SearchMovies: React.FC = () => {
 
       // Profile
       try {
-        dataUser = await retry(() => apiService.get(`/users/${id}/profile`)) as User;
-        showMessage('User profile loaded');
+        dataUser = await retry(() =>
+            apiService.get(`/users/${id}/profile`)
+        ) as User;
+        showMessage("User profile loaded");
       } catch (err: unknown) {
-        if (err instanceof Error && 'status' in err && (err as ApplicationError).status === 404) {
+        if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 404
+        ) {
           showMessage("Oops! We couldn't find your profile details.");
         } else {
-          setError('Failed to load user profile');
+          setError("Failed to load user profile");
         }
         setLoading(false);
         return;
@@ -68,35 +79,51 @@ const SearchMovies: React.FC = () => {
 
       // Watchlist
       try {
-        listWatch = await retry(() => apiService.get(`/users/${id}/watchlist`)) as Movie[];
-        showMessage('Watchlist loaded');
+        listWatch = await retry(() =>
+            apiService.get(`/users/${id}/watchlist`)
+        ) as Movie[];
+        showMessage("Watchlist loaded");
       } catch (err: unknown) {
-        const status = err instanceof Error && 'status' in err ? (err as ApplicationError).status : null;
+        const status = err instanceof Error && "status" in err
+            ? (err as ApplicationError).status
+            : null;
         if (status === 401) {
-          showMessage('Your session has expired. Please log in again to see your watchlist.');
+          showMessage(
+              "Your session has expired. Please log in again to see your watchlist.",
+          );
         } else if (status === 404) {
-          showMessage('Could not find the watchlist for this user.');
+          showMessage("Could not find the watchlist for this user.");
         } else {
-          setError('Failed to load watchlist');
+          setError("Failed to load watchlist");
         }
       }
 
       // Watched list
       try {
-        listWatched = await retry(() => apiService.get(`/users/${id}/watched`)) as Movie[];
-        showMessage('Watched list loaded');
+        listWatched = await retry(() =>
+            apiService.get(`/users/${id}/watched`)
+        ) as Movie[];
+        showMessage("Watched list loaded");
       } catch (err: unknown) {
-        const status = err instanceof Error && 'status' in err ? (err as ApplicationError).status : null;
+        const status = err instanceof Error && "status" in err
+            ? (err as ApplicationError).status
+            : null;
         if (status === 401) {
-          showMessage('Your session has expired. Please log in again to see your watched list.');
+          showMessage(
+              "Your session has expired. Please log in again to see your watched list.",
+          );
         } else if (status === 404) {
-          showMessage('Could not find the watched list for this user.');
+          showMessage("Could not find the watched list for this user.");
         } else {
-          setError('Failed to load watched list');
+          setError("Failed to load watched list");
         }
       }
 
-      setUser({ ...dataUser, watchlist: listWatch, watchedMovies: listWatched });
+      setUser({
+        ...dataUser,
+        watchlist: listWatch,
+        watchedMovies: listWatched,
+      });
       setLoading(false);
     };
 
@@ -105,10 +132,10 @@ const SearchMovies: React.FC = () => {
 
   // check if we're selecting a favorite movie (from query params)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const selectFavorite = urlParams.get('selectFavorite');
-      if (selectFavorite === 'true') {
+      const selectFavorite = urlParams.get("selectFavorite");
+      if (selectFavorite === "true") {
         setIsSelectingFavoriteMovie(true);
       }
     }
@@ -130,23 +157,27 @@ const SearchMovies: React.FC = () => {
         const queryString = `title=${encodeURIComponent(searchQuery)}`;
 
         // make api call with title parameter only
-        const results = await retry(() => apiService.get(`/movies?${queryString}`));
+        const results = await retry(() =>
+            apiService.get(`/movies?${queryString}`)
+        );
         if (Array.isArray(results)) {
           setSearchResults(results as Movie[]);
-          showMessage('Movie search results loaded');
+          showMessage("Movie search results loaded");
         } else {
           setSearchResults([]);
         }
       } catch (error: unknown) {
-        if (error instanceof Error && 'status' in error) {
+        if (error instanceof Error && "status" in error) {
           const appErr = error as ApplicationError;
           if (appErr.status === 400) {
-            showMessage('No movies found matching your search. Try different keywords.');
+            showMessage(
+                "No movies found matching your search. Try different keywords.",
+            );
           } else {
-            showMessage('Movie search failed. Please try again.');
+            showMessage("Movie search failed. Please try again.");
           }
         } else {
-          showMessage('Movie search failed. Please try again.');
+          showMessage("Movie search failed. Please try again.");
         }
         setSearchResults([]);
       }
@@ -160,17 +191,39 @@ const SearchMovies: React.FC = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, apiService]);
 
-  // get recommended movies based on user preferences
+  // Extract the recommendation function so it can be called separately
   const getRecommendedMovies = async () => {
     try {
-      const recommendedMovies = await retry(() => apiService.get(`/movies/suggestions/${id}`));
-      showMessage('Recommendations loaded');
-      return Array.isArray(recommendedMovies) ? recommendedMovies as Movie[] : [];
+      setIsLoadingRecommendations(true);
+      const recommendedMovies = await retry(() =>
+          apiService.get(`/movies/suggestions/${id}`)
+      );
+      showMessage("Recommendations loaded");
+      return Array.isArray(recommendedMovies)
+          ? recommendedMovies as Movie[]
+          : [];
     } catch (error: unknown) {
-      if (error instanceof Error && 'status' in error && (error as ApplicationError).status === 404) {
+      if (
+          error instanceof Error && "status" in error &&
+          (error as ApplicationError).status === 404
+      ) {
         showMessage("We couldn't fetch recommendations right now.");
       }
       return [];
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  // Add a function to handle refreshing recommendations
+  const handleRefreshRecommendations = async () => {
+    if (!isSearching) {
+      const recommendations = await getRecommendedMovies();
+      const uniqueRecommendations = Array.from(
+          new Map(recommendations.map((movie) => [movie.movieId, movie]))
+              .values(),
+      );
+      setDisplayMovies(uniqueRecommendations);
     }
   };
 
@@ -186,7 +239,7 @@ const SearchMovies: React.FC = () => {
 
   const handleSelectFavoriteMovie = (movie: Movie) => {
     // store the selected movie in session storage for the edit profile page
-    sessionStorage.setItem('selectedFavoriteMovie', JSON.stringify(movie));
+    sessionStorage.setItem("selectedFavoriteMovie", JSON.stringify(movie));
 
     // navigate back to the edit profile page
     router.push(`/users/${id}/edit_profile`);
@@ -199,19 +252,24 @@ const SearchMovies: React.FC = () => {
     }
 
     try {
-      const detailedMovie = await retry(() => apiService.get(`/movies/${movie.movieId}`));
-      if (detailedMovie && typeof detailedMovie === 'object') {
+      const detailedMovie = await retry(() =>
+          apiService.get(`/movies/${movie.movieId}`)
+      );
+      if (detailedMovie && typeof detailedMovie === "object") {
         setSelectedMovie(detailedMovie as Movie);
       } else {
         setSelectedMovie(movie);
       }
       setIsModalOpen(true);
-      showMessage('Movie details loaded');
+      showMessage("Movie details loaded");
     } catch (error: unknown) {
-      if (error instanceof Error && 'status' in error && (error as ApplicationError).status === 404) {
+      if (
+          error instanceof Error && "status" in error &&
+          (error as ApplicationError).status === 404
+      ) {
         showMessage("Sorry, we couldn't find details for that movie.");
       } else {
-        showMessage('Error loading movie details');
+        showMessage("Error loading movie details");
       }
     }
   };
@@ -226,7 +284,8 @@ const SearchMovies: React.FC = () => {
   };
 
   const isInSeenList = (movie: Movie) => {
-    return user?.watchedMovies.some((m) => m.movieId === movie.movieId) || false;
+    return user?.watchedMovies.some((m) => m.movieId === movie.movieId) ||
+        false;
   };
 
   const handleAddToWatchlist = async (movie: Movie) => {
@@ -248,26 +307,28 @@ const SearchMovies: React.FC = () => {
 
       showMessage("Added to watchlist");
     } catch (error) {
-      if (error instanceof Error && 'status' in error) {
+      if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            showMessage('Please log in again to add movies to your watchlist.');
+            showMessage("Please log in again to add movies to your watchlist.");
             break;
           case 403:
             showMessage("You don't have permission to modify this watchlist.");
             break;
           case 404:
-            showMessage('Could not find the user or movie to add to the watchlist.');
+            showMessage(
+                "Could not find the user or movie to add to the watchlist.",
+            );
             break;
           case 409:
-            showMessage('This movie is already on your watchlist.');
+            showMessage("This movie is already on your watchlist.");
             break;
           default:
-            showMessage('Failed to add movie to watchlist.');
+            showMessage("Failed to add movie to watchlist.");
         }
       } else {
-        showMessage('Failed to add movie to watchlist.');
+        showMessage("Failed to add movie to watchlist.");
       }
     }
   };
@@ -289,25 +350,31 @@ const SearchMovies: React.FC = () => {
         });
       }
 
-      showMessage('Added to watched list');
+      showMessage("Added to watched list");
     } catch (error) {
       if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            showMessage('Please log in again to add movies to your watched list.');
+            showMessage(
+                "Please log in again to add movies to your watched list.",
+            );
             break;
           case 403:
-            showMessage("You don't have permission to modify this watched list.");
+            showMessage(
+                "You don't have permission to modify this watched list.",
+            );
             break;
           case 404:
-            showMessage('Could not find the user or movie to add to the watched list.');
+            showMessage(
+                "Could not find the user or movie to add to the watched list.",
+            );
             break;
           case 409:
             showMessage("You've already marked this movie as watched.");
             break;
           default:
-            showMessage('Failed to add movie to watched list.');
+            showMessage("Failed to add movie to watched list.");
         }
       }
     }
@@ -332,7 +399,8 @@ const SearchMovies: React.FC = () => {
         const recommendations = await getRecommendedMovies();
 
         const uniqueRecommendations = Array.from(
-            new Map(recommendations.map(movie => [movie.movieId, movie])).values()
+            new Map(recommendations.map((movie) => [movie.movieId, movie]))
+                .values(),
         );
 
         setDisplayMovies(uniqueRecommendations);
@@ -383,9 +451,12 @@ const SearchMovies: React.FC = () => {
           {/* favorite movie selection info */}
           {isSelectingFavoriteMovie && (
               <div className="bg-[#f7f9ff] rounded-lg p-4 mb-6 border border-[#b9c0de]">
-                <h3 className="text-[#3b3e88] font-medium mb-2">Select your favorite movie</h3>
+                <h3 className="text-[#3b3e88] font-medium mb-2">
+                  Select your favorite movie
+                </h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  Click on a movie to set it as your favorite. This will be displayed on your profile.
+                  Click on a movie to set it as your favorite. This will be
+                  displayed on your profile.
                 </p>
                 <Button
                     variant="outline"
@@ -397,19 +468,32 @@ const SearchMovies: React.FC = () => {
               </div>
           )}
 
-          {/* content heading */}
-          <div className="mb-4">
+          {/* content heading with refresh button */}
+          <div className="mb-4 flex justify-between items-center">
             <h2 className="text-xl font-medium text-[#3b3e88]">
               {isSearching
                   ? `Search Results (${searchResults.length})`
-                  : "Browse movies based on your preferences"}
+                  : "Browse movies based on your favorites"}
             </h2>
+
+            {/* Add refresh button for recommendations */}
+            {!isSearching && (
+                <Button
+                    variant="outline"
+                    className="flex items-center gap-2 text-[#3b3e88] border-[#3b3e88]"
+                    onClick={handleRefreshRecommendations}
+                    disabled={isLoadingRecommendations}
+                >
+                  <RefreshCw size={16} className={isLoadingRecommendations ? "animate-spin" : ""} />
+                  Refresh Suggestions
+                </Button>
+            )}
           </div>
 
           {/* movie list component */}
           <MovieList
               movies={displayMovies}
-              isLoading={false}
+              isLoading={isLoadingRecommendations}
               isSearching={isSearching}
               onMovieClick={handleMovieClick}
               onClearSearch={clearSearch}
