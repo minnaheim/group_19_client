@@ -36,7 +36,7 @@ const SearchMovies: React.FC = () => {
 
   // favorite movie selection
   const [isSelectingFavoriteMovie, setIsSelectingFavoriteMovie] = useState<
-      boolean
+    boolean
   >(false);
 
   // action feedback
@@ -44,7 +44,9 @@ const SearchMovies: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
 
   // new state for recommendation loading
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<
+    boolean
+  >(false);
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -61,13 +63,13 @@ const SearchMovies: React.FC = () => {
       // Profile
       try {
         dataUser = await retry(() =>
-            apiService.get(`/users/${id}/profile`)
+          apiService.get(`/users/${id}/profile`)
         ) as User;
         showMessage("User profile loaded");
       } catch (err: unknown) {
         if (
-            err instanceof Error && "status" in err &&
-            (err as ApplicationError).status === 404
+          err instanceof Error && "status" in err &&
+          (err as ApplicationError).status === 404
         ) {
           showMessage("Oops! We couldn't find your profile details.");
         } else {
@@ -80,16 +82,16 @@ const SearchMovies: React.FC = () => {
       // Watchlist
       try {
         listWatch = await retry(() =>
-            apiService.get(`/users/${id}/watchlist`)
+          apiService.get(`/users/${id}/watchlist`)
         ) as Movie[];
         showMessage("Watchlist loaded");
       } catch (err: unknown) {
         const status = err instanceof Error && "status" in err
-            ? (err as ApplicationError).status
-            : null;
+          ? (err as ApplicationError).status
+          : null;
         if (status === 401) {
           showMessage(
-              "Your session has expired. Please log in again to see your watchlist.",
+            "Your session has expired. Please log in again to see your watchlist.",
           );
         } else if (status === 404) {
           showMessage("Could not find the watchlist for this user.");
@@ -101,16 +103,16 @@ const SearchMovies: React.FC = () => {
       // Watched list
       try {
         listWatched = await retry(() =>
-            apiService.get(`/users/${id}/watched`)
+          apiService.get(`/users/${id}/watched`)
         ) as Movie[];
         showMessage("Watched list loaded");
       } catch (err: unknown) {
         const status = err instanceof Error && "status" in err
-            ? (err as ApplicationError).status
-            : null;
+          ? (err as ApplicationError).status
+          : null;
         if (status === 401) {
           showMessage(
-              "Your session has expired. Please log in again to see your watched list.",
+            "Your session has expired. Please log in again to see your watched list.",
           );
         } else if (status === 404) {
           showMessage("Could not find the watched list for this user.");
@@ -158,7 +160,7 @@ const SearchMovies: React.FC = () => {
 
         // make api call with title parameter only
         const results = await retry(() =>
-            apiService.get(`/movies?${queryString}`)
+          apiService.get(`/movies?${queryString}`)
         );
         if (Array.isArray(results)) {
           setSearchResults(results as Movie[]);
@@ -171,7 +173,7 @@ const SearchMovies: React.FC = () => {
           const appErr = error as ApplicationError;
           if (appErr.status === 400) {
             showMessage(
-                "No movies found matching your search. Try different keywords.",
+              "No movies found matching your search. Try different keywords.",
             );
           } else {
             showMessage("Movie search failed. Please try again.");
@@ -196,16 +198,16 @@ const SearchMovies: React.FC = () => {
     try {
       setIsLoadingRecommendations(true);
       const recommendedMovies = await retry(() =>
-          apiService.get(`/movies/suggestions/${id}`)
+        apiService.get(`/movies/suggestions/${id}`)
       );
       showMessage("Recommendations loaded");
       return Array.isArray(recommendedMovies)
-          ? recommendedMovies as Movie[]
-          : [];
+        ? recommendedMovies as Movie[]
+        : [];
     } catch (error: unknown) {
       if (
-          error instanceof Error && "status" in error &&
-          (error as ApplicationError).status === 404
+        error instanceof Error && "status" in error &&
+        (error as ApplicationError).status === 404
       ) {
         showMessage("We couldn't fetch recommendations right now.");
       }
@@ -220,8 +222,8 @@ const SearchMovies: React.FC = () => {
     if (!isSearching) {
       const recommendations = await getRecommendedMovies();
       const uniqueRecommendations = Array.from(
-          new Map(recommendations.map((movie) => [movie.movieId, movie]))
-              .values(),
+        new Map(recommendations.map((movie) => [movie.movieId, movie]))
+          .values(),
       );
       setDisplayMovies(uniqueRecommendations);
     }
@@ -253,7 +255,7 @@ const SearchMovies: React.FC = () => {
 
     try {
       const detailedMovie = await retry(() =>
-          apiService.get(`/movies/${movie.movieId}`)
+        apiService.get(`/movies/${movie.movieId}`)
       );
       if (detailedMovie && typeof detailedMovie === "object") {
         setSelectedMovie(detailedMovie as Movie);
@@ -264,8 +266,8 @@ const SearchMovies: React.FC = () => {
       showMessage("Movie details loaded");
     } catch (error: unknown) {
       if (
-          error instanceof Error && "status" in error &&
-          (error as ApplicationError).status === 404
+        error instanceof Error && "status" in error &&
+        (error as ApplicationError).status === 404
       ) {
         showMessage("Sorry, we couldn't find details for that movie.");
       } else {
@@ -285,7 +287,7 @@ const SearchMovies: React.FC = () => {
 
   const isInSeenList = (movie: Movie) => {
     return user?.watchedMovies.some((m) => m.movieId === movie.movieId) ||
-        false;
+      false;
   };
 
   const handleAddToWatchlist = async (movie: Movie) => {
@@ -318,7 +320,7 @@ const SearchMovies: React.FC = () => {
             break;
           case 404:
             showMessage(
-                "Could not find the user or movie to add to the watchlist.",
+              "Could not find the user or movie to add to the watchlist.",
             );
             break;
           case 409:
@@ -357,17 +359,17 @@ const SearchMovies: React.FC = () => {
         switch (appErr.status) {
           case 401:
             showMessage(
-                "Please log in again to add movies to your watched list.",
+              "Please log in again to add movies to your watched list.",
             );
             break;
           case 403:
             showMessage(
-                "You don't have permission to modify this watched list.",
+              "You don't have permission to modify this watched list.",
             );
             break;
           case 404:
             showMessage(
-                "Could not find the user or movie to add to the watched list.",
+              "Could not find the user or movie to add to the watched list.",
             );
             break;
           case 409:
@@ -399,8 +401,8 @@ const SearchMovies: React.FC = () => {
         const recommendations = await getRecommendedMovies();
 
         const uniqueRecommendations = Array.from(
-            new Map(recommendations.map((movie) => [movie.movieId, movie]))
-                .values(),
+          new Map(recommendations.map((movie) => [movie.movieId, movie]))
+            .values(),
         );
 
         setDisplayMovies(uniqueRecommendations);
@@ -411,10 +413,10 @@ const SearchMovies: React.FC = () => {
 
   if (loading) {
     return (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-          </div>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
         </div>
+      </div>
     );
   }
 
@@ -423,118 +425,121 @@ const SearchMovies: React.FC = () => {
   }
 
   return (
-      <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
-        {/* sidebar */}
-        <Navigation userId={userId} activeItem="Search Movies" />
-        {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
+    <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
+      {/* sidebar */}
+      <Navigation userId={userId} activeItem="Search Movies" />
+      {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
 
-        {/* main content */}
-        <div className="flex-1 p-6 overflow-auto">
-          <div className="mb-8">
-            <h1 className="font-semibold text-[#3b3e88] text-3xl">
-              Search Movies
-            </h1>
-            <p className="text-[#b9c0de] mt-2">
-              Find movies to add to your watchlist!
-            </p>
-          </div>
-
-          {/* search bar component - simplified version */}
-          <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={handleSearchChange}
-              onClearSearch={clearSearch}
-              placeholder="Search for movie titles..."
-              className="mb-6"
-          />
-
-          {/* favorite movie selection info */}
-          {isSelectingFavoriteMovie && (
-              <div className="bg-[#f7f9ff] rounded-lg p-4 mb-6 border border-[#b9c0de]">
-                <h3 className="text-[#3b3e88] font-medium mb-2">
-                  Select your favorite movie
-                </h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Click on a movie to set it as your favorite. This will be
-                  displayed on your profile.
-                </p>
-                <Button
-                    variant="outline"
-                    className="text-[#3b3e88] border-[#3b3e88]"
-                    onClick={() => router.push(`/users/${id}/edit_profile`)}
-                >
-                  Cancel
-                </Button>
-              </div>
-          )}
-
-          {/* content heading with refresh button */}
-          <div className="mb-4 flex justify-between items-center">
-            <h2 className="text-xl font-medium text-[#3b3e88]">
-              {isSearching
-                  ? `Search Results (${searchResults.length})`
-                  : "Browse movies based on your favorites"}
-            </h2>
-
-            {/* Add refresh button for recommendations */}
-            {!isSearching && (
-                <Button
-                    variant="outline"
-                    className="flex items-center gap-2 text-[#3b3e88] border-[#3b3e88]"
-                    onClick={handleRefreshRecommendations}
-                    disabled={isLoadingRecommendations}
-                >
-                  <RefreshCw size={16} className={isLoadingRecommendations ? "animate-spin" : ""} />
-                  Refresh Suggestions
-                </Button>
-            )}
-          </div>
-
-          {/* movie list component */}
-          <MovieList
-              movies={displayMovies}
-              isLoading={isLoadingRecommendations}
-              isSearching={isSearching}
-              onMovieClick={handleMovieClick}
-              onClearSearch={clearSearch}
-              emptyMessage="No recommended movies available"
-              noResultsMessage="There are no movies that match your search"
-              isInWatchlistFn={isInWatchlist}
-              isInSeenListFn={isInSeenList}
-              isSelectingFavorite={isSelectingFavoriteMovie}
-          />
-
-          {/* back button */}
-          <Button
-              variant="destructive"
-              className="mt-6"
-              onClick={() => router.push(`/users/${id}/dashboard`)}
-          >
-            back to dashboard
-          </Button>
-
-          {/* movie details modal component */}
-          {selectedMovie && (
-              <MovieDetailsModal
-                  movie={selectedMovie}
-                  isOpen={isModalOpen}
-                  onClose={closeModal}
-                  isInWatchlist={isInWatchlist(selectedMovie)}
-                  isInSeenList={isInSeenList(selectedMovie)}
-                  onAddToWatchlist={handleAddToWatchlist}
-                  onMarkAsSeen={handleAddToSeenList}
-              />
-          )}
-
-          {/* action message component */}
-          <ActionMessage
-              message={actionMessage}
-              isVisible={showActionMessage}
-              onHide={() => setShowActionMessage(false)}
-              className="bg-green-500"
-          />
+      {/* main content */}
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-8">
+          <h1 className="font-semibold text-[#3b3e88] text-3xl">
+            Search Movies
+          </h1>
+          <p className="text-[#b9c0de] mt-2">
+            Find movies to add to your watchlist!
+          </p>
         </div>
+
+        {/* search bar component - simplified version */}
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onClearSearch={clearSearch}
+          placeholder="Search for movie titles..."
+          className="mb-6"
+        />
+
+        {/* favorite movie selection info */}
+        {isSelectingFavoriteMovie && (
+          <div className="bg-[#f7f9ff] rounded-lg p-4 mb-6 border border-[#b9c0de]">
+            <h3 className="text-[#3b3e88] font-medium mb-2">
+              Select your favorite movie
+            </h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Click on a movie to set it as your favorite. This will be
+              displayed on your profile.
+            </p>
+            <Button
+              variant="outline"
+              className="text-[#3b3e88] border-[#3b3e88]"
+              onClick={() => router.push(`/users/${id}/edit_profile`)}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+
+        {/* content heading with refresh button */}
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-medium text-[#3b3e88]">
+            {isSearching
+              ? `Search Results (${searchResults.length})`
+              : "Browse movies based on your favorites"}
+          </h2>
+
+          {/* Add refresh button for recommendations */}
+          {!isSearching && (
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 text-[#3b3e88] border-[#3b3e88]"
+              onClick={handleRefreshRecommendations}
+              disabled={isLoadingRecommendations}
+            >
+              <RefreshCw
+                size={16}
+                className={isLoadingRecommendations ? "animate-spin" : ""}
+              />
+              Refresh Suggestions
+            </Button>
+          )}
+        </div>
+
+        {/* movie list component */}
+        <MovieList
+          movies={displayMovies}
+          isLoading={isLoadingRecommendations}
+          isSearching={isSearching}
+          onMovieClick={handleMovieClick}
+          onClearSearch={clearSearch}
+          emptyMessage="No recommended movies available"
+          noResultsMessage="There are no movies that match your search"
+          isInWatchlistFn={isInWatchlist}
+          isInSeenListFn={isInSeenList}
+          isSelectingFavorite={isSelectingFavoriteMovie}
+        />
+
+        {/* back button */}
+        <Button
+          variant="destructive"
+          className="mt-6"
+          onClick={() => router.push(`/users/${id}/dashboard`)}
+        >
+          back to dashboard
+        </Button>
+
+        {/* movie details modal component */}
+        {selectedMovie && (
+          <MovieDetailsModal
+            movie={selectedMovie}
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            isInWatchlist={isInWatchlist(selectedMovie)}
+            isInSeenList={isInSeenList(selectedMovie)}
+            onAddToWatchlist={handleAddToWatchlist}
+            onMarkAsSeen={handleAddToSeenList}
+          />
+        )}
+
+        {/* action message component */}
+        <ActionMessage
+          message={actionMessage}
+          isVisible={showActionMessage}
+          onHide={() => setShowActionMessage(false)}
+          className="bg-green-500"
+        />
       </div>
+    </div>
   );
 };
 
