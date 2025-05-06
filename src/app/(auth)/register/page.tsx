@@ -109,23 +109,25 @@ const Register: React.FC = () => {
         const status = (error as ApplicationError).status;
         switch (status) {
           case 400:
-            setRegisterError("This username or email is already registered. Try logging in.");
+            setRegisterError(
+              "This username or email is already registered. Try logging in.",
+            );
             break;
           case 409:
             setRegisterError(
-                "This username or email is already registered. Try logging in."
+              "This username or email is already registered. Try logging in.",
             );
             break;
           default:
             setRegisterError(`Registration failed: ${error.message}`);
         }
       } else if (
-          error instanceof Error &&
-          (error.message.includes("Network Error") ||
-              error.message.includes("Failed to fetch"))
+        error instanceof Error &&
+        (error.message.includes("Network Error") ||
+          error.message.includes("Failed to fetch"))
       ) {
         setRegisterError(
-            "Network error. Please check your connection and try again."
+          "Network error. Please check your connection and try again.",
         );
       } else {
         setRegisterError("An unknown error occurred during registration");
@@ -136,214 +138,309 @@ const Register: React.FC = () => {
   };
 
   return (
-      <div className="bg-[#ebefff] min-h-screen flex flex-col">
-        {/* Header with Logo */}
-        <header className="p-4 sm:p-6">
-          <div
-              className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => router.push("/")}
-          >
-            <Image src="/Projector.png" alt="App Icon" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />
-            <div className="ml-2 sm:ml-4 font-semibold text-[#3b3e88] text-base sm:text-lg md:text-xl">
-              Movie Night
+    <div className="bg-[#ebefff] min-h-screen flex flex-col">
+      {/* Header with Logo */}
+      <header className="p-4 sm:p-6">
+        <div
+          className="flex items-center space-x-2 cursor-pointer"
+          onClick={() => router.push("/")}
+        >
+          <Image
+            src="/Projector.png"
+            alt="App Icon"
+            width={40}
+            height={40}
+            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12"
+          />
+          <div className="ml-2 sm:ml-4 font-semibold text-[#3b3e88] text-base sm:text-lg md:text-xl">
+            Movie Night
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center px-4 py-6 sm:py-8 md:py-12">
+        <div className="w-full max-w-md mx-auto">
+          {/* Decorative elements */}
+          <div className="relative mb-4 sm:mb-6 hidden sm:block">
+            <div className="absolute -top-10 -right-10 w-24 sm:w-32 h-24 sm:h-32 bg-rose-500 rounded-full transform rotate-12 opacity-20 blur-xl">
+            </div>
+            <div className="absolute bottom-10 -left-10 w-32 sm:w-40 h-32 sm:h-40 bg-orange-500 rounded-full opacity-20 blur-xl">
             </div>
           </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-6 sm:py-8 md:py-12">
-          <div className="w-full max-w-md mx-auto">
-            {/* Decorative elements */}
-            <div className="relative mb-4 sm:mb-6 hidden sm:block">
-              <div className="absolute -top-10 -right-10 w-24 sm:w-32 h-24 sm:h-32 bg-rose-500 rounded-full transform rotate-12 opacity-20 blur-xl"></div>
-              <div className="absolute bottom-10 -left-10 w-32 sm:w-40 h-32 sm:h-40 bg-orange-500 rounded-full opacity-20 blur-xl"></div>
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border-0 relative z-10">
+            {/* Decorative top bar */}
+            <div className="h-1 sm:h-2 bg-gradient-to-r from-orange-400 to-rose-500">
             </div>
 
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border-0 relative z-10">
-              {/* Decorative top bar */}
-              <div className="h-1 sm:h-2 bg-gradient-to-r from-orange-400 to-rose-500"></div>
+            <div className="p-5 sm:p-6 md:p-8">
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">
+                  Create Account
+                </h2>
+                <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
+                  Sign up and start planning your perfect movie nights
+                </p>
+              </div>
 
-              <div className="p-5 sm:p-6 md:p-8">
-                <div className="text-center mb-6 sm:mb-8">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">Create Account</h2>
-                  <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
-                    Sign up and start planning your perfect movie nights
-                  </p>
-                </div>
+              {registerError && (
+                <ErrorMessage
+                  message={registerError}
+                  onClose={() => setRegisterError("")}
+                />
+              )}
 
-                {registerError && (
-                    <ErrorMessage
-                        message={registerError}
-                        onClose={() => setRegisterError("")}
-                    />
-                )}
-
-                <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} className="space-y-4 sm:space-y-6">
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex flex-col space-y-1 sm:space-y-2">
-                      <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-[#3b3e88]">Email</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                          </svg>
-                        </div>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={formValues.email}
-                            onChange={handleInputChange}
-                            autoComplete="email"
-                            className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
-                            style={{ paddingLeft: "2.5rem" }}
-                        />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleRegister();
+                }}
+                className="space-y-4 sm:space-y-6"
+              >
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col space-y-1 sm:space-y-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-xs sm:text-sm font-medium text-[#3b3e88]"
+                    >
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          >
+                          </path>
+                        </svg>
                       </div>
-                      {errors.email && (
-                          <ErrorMessage
-                              message={errors.email}
-                              onClose={() => setErrors(prev => ({...prev, email: ""}))}
-                          />
-                      )}
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formValues.email}
+                        onChange={handleInputChange}
+                        autoComplete="email"
+                        className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
+                        style={{ paddingLeft: "2.5rem" }}
+                      />
                     </div>
-
-                    <div className="flex flex-col space-y-1 sm:space-y-2">
-                      <Label htmlFor="username" className="text-xs sm:text-sm font-medium text-[#3b3e88]">Username</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                          </svg>
-                        </div>
-                        <Input
-                            id="username"
-                            placeholder="Enter your username"
-                            value={formValues.username}
-                            onChange={handleInputChange}
-                            autoComplete="username"
-                            className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
-                            style={{ paddingLeft: "2.5rem" }}
-                        />
-                      </div>
-                      {errors.username && (
-                          <ErrorMessage
-                              message={errors.username}
-                              onClose={() => setErrors(prev => ({...prev, username: ""}))}
-                          />
-                      )}
-                    </div>
-
-                    <div className="flex flex-col space-y-1 sm:space-y-2">
-                      <Label htmlFor="password" className="text-xs sm:text-sm font-medium text-[#3b3e88]">Password</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                          </svg>
-                        </div>
-                        <Input
-                            id="password"
-                            type="password"
-                            placeholder="Create a password"
-                            value={formValues.password}
-                            onChange={handleInputChange}
-                            autoComplete="new-password"
-                            className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
-                            style={{ paddingLeft: "2.5rem" }}
-                        />
-                      </div>
-                      {errors.password && (
-                          <ErrorMessage
-                              message={errors.password}
-                              onClose={() => setErrors(prev => ({...prev, password: ""}))}
-                          />
-                      )}
-                    </div>
+                    {errors.email && (
+                      <ErrorMessage
+                        message={errors.email}
+                        onClose={() =>
+                          setErrors((prev) => ({ ...prev, email: "" }))}
+                      />
+                    )}
                   </div>
 
-                  <div className="pt-1 sm:pt-2">
-                    <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-orange-400 to-rose-500 hover:from-orange-500 hover:to-rose-600 text-white py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition duration-200 h-10 sm:h-12 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  <div className="flex flex-col space-y-1 sm:space-y-2">
+                    <Label
+                      htmlFor="username"
+                      className="text-xs sm:text-sm font-medium text-[#3b3e88]"
                     >
-                      {isLoading ? (
-                          <div className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Registering...
-                          </div>
-                      ) : "Create Account"}
-                    </Button>
-
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => router.push("/")}
-                        disabled={isLoading}
-                        className="w-full mt-3 sm:mt-4 border-[#3b3e88] text-[#3b3e88] hover:bg-[#3b3e88]/10 py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium h-10 sm:h-12"
-                    >
-                      Back to Home
-                    </Button>
+                      Username
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          >
+                          </path>
+                        </svg>
+                      </div>
+                      <Input
+                        id="username"
+                        placeholder="Enter your username"
+                        value={formValues.username}
+                        onChange={handleInputChange}
+                        autoComplete="username"
+                        className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
+                        style={{ paddingLeft: "2.5rem" }}
+                      />
+                    </div>
+                    {errors.username && (
+                      <ErrorMessage
+                        message={errors.username}
+                        onClose={() =>
+                          setErrors((prev) => ({ ...prev, username: "" }))}
+                      />
+                    )}
                   </div>
-                </form>
 
-                <div className="mt-6 sm:mt-8 text-center">
-                  <p className="text-[#b9c0de] text-sm sm:text-base">
-                    Already have an account?{" "}
-                    <a
-                        href="/login"
-                        className="font-medium text-orange-500 hover:text-orange-600"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          router.push("/login");
-                        }}
+                  <div className="flex flex-col space-y-1 sm:space-y-2">
+                    <Label
+                      htmlFor="password"
+                      className="text-xs sm:text-sm font-medium text-[#3b3e88]"
                     >
-                      Sign in
-                    </a>
-                  </p>
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9c0de]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          >
+                          </path>
+                        </svg>
+                      </div>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={formValues.password}
+                        onChange={handleInputChange}
+                        autoComplete="new-password"
+                        className="pl-10 p-2 sm:p-3 text-sm sm:text-base border border-[#b9c0de]/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-[#ebefff]/50"
+                        style={{ paddingLeft: "2.5rem" }}
+                      />
+                    </div>
+                    {errors.password && (
+                      <ErrorMessage
+                        message={errors.password}
+                        onClose={() =>
+                          setErrors((prev) => ({ ...prev, password: "" }))}
+                      />
+                    )}
+                  </div>
                 </div>
 
-                {/* Movie poster decoration */}
-                <div className="mt-6 sm:mt-8 flex justify-center space-x-2 hidden sm:flex">
-                  <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-[#3b3e88]/20 rounded-lg shadow-sm transform -rotate-6"></div>
-                  <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-rose-500/20 rounded-lg shadow-sm"></div>
-                  <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-orange-500/20 rounded-lg shadow-sm transform rotate-6"></div>
+                <div className="pt-1 sm:pt-2">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-orange-400 to-rose-500 hover:from-orange-500 hover:to-rose-600 text-white py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition duration-200 h-10 sm:h-12 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  >
+                    {isLoading
+                      ? (
+                        <div className="flex items-center justify-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            >
+                            </circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            >
+                            </path>
+                          </svg>
+                          Registering...
+                        </div>
+                      )
+                      : "Create Account"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/")}
+                    disabled={isLoading}
+                    className="w-full mt-3 sm:mt-4 border-[#3b3e88] text-[#3b3e88] hover:bg-[#3b3e88]/10 py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium h-10 sm:h-12"
+                  >
+                    Back to Home
+                  </Button>
+                </div>
+              </form>
+
+              <div className="mt-6 sm:mt-8 text-center">
+                <p className="text-[#b9c0de] text-sm sm:text-base">
+                  Already have an account?{" "}
+                  <a
+                    href="/login"
+                    className="font-medium text-orange-500 hover:text-orange-600"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push("/login");
+                    }}
+                  >
+                    Sign in
+                  </a>
+                </p>
+              </div>
+
+              {/* Movie poster decoration */}
+              <div className="mt-6 sm:mt-8 flex justify-center space-x-2 hidden sm:flex">
+                <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-[#3b3e88]/20 rounded-lg shadow-sm transform -rotate-6">
+                </div>
+                <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-rose-500/20 rounded-lg shadow-sm">
+                </div>
+                <div className="w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 bg-orange-500/20 rounded-lg shadow-sm transform rotate-6">
                 </div>
               </div>
             </div>
           </div>
-        </main>
+        </div>
+      </main>
 
-        {/* Footer */}
-        <footer className="bg-white py-4 sm:py-6 px-4 sm:px-6 mt-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-1 sm:gap-2 mb-2 md:mb-0">
-              <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-1 rounded">
-                <svg
-                    className="w-3 h-3 sm:w-4 sm:h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+      {/* Footer */}
+      <footer className="bg-white py-4 sm:py-6 px-4 sm:px-6 mt-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center gap-1 sm:gap-2 mb-2 md:mb-0">
+            <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-1 rounded">
+              <svg
+                className="w-3 h-3 sm:w-4 sm:h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
                 >
-                  <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-                  ></path>
-                </svg>
-              </div>
-              <span className="text-xs sm:text-sm font-medium text-[#3b3e88]">
+                </path>
+              </svg>
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-[#3b3e88]">
               Movie Night Planner{" "}
             </span>
-            </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
+    </div>
   );
 };
 

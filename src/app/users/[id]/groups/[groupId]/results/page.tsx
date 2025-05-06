@@ -21,12 +21,14 @@ interface MovieAverageRankDTO {
   averageRank: number | null;
 }
 
-interface RankingResultGetDTO {
+// Combined result from server
+interface RankingResultsDTO {
   resultId: number;
   groupId: number;
   calculatedAt: string;
   winningMovie: Movie;
   numberOfVoters: number;
+  detailedResults: MovieAverageRankDTO[];
 }
 
 const Results: React.FC = () => {
@@ -42,7 +44,7 @@ const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<
-    RankingResultGetDTO | null
+    RankingResultsDTO | null
   >(null);
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>(
     [],
@@ -63,23 +65,23 @@ const Results: React.FC = () => {
     }
   }, [apiService, rankingResult]);
 
-  // Fetch ranking result
+  // Fetch combined results once RESULTS phase
   useEffect(() => {
-    const fetchRankingResult = async () => {
+    const fetchCombined = async () => {
       if (!groupId || !id || phaseFromHook !== "RESULTS") return;
       try {
         setLoading(true);
         const response = await retry(() =>
-          apiService.get<RankingResultGetDTO>(
-            `/groups/${groupId}/rankings/result`,
+          apiService.get<RankingResultsDTO>(
+            `/groups/${groupId}/rankings/results`,
           )
         );
         setRankingResult(response);
-        // Success feedback
+        setDetailedResults(response.detailedResults);
         setActionMessage("Results loaded successfully");
         setShowActionMessage(true);
       } catch (err: unknown) {
-        console.error("Failed to fetch ranking result:", err);
+        console.error("Failed to fetch combined results:", err);
         if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (appErr.status === 404) {
@@ -88,11 +90,9 @@ const Results: React.FC = () => {
             );
           } else if (appErr.status === 409) {
             setError("Results can only be viewed after voting has ended.");
-          } else {
-            setError(
+          } else {setError(
               "An error occurred while loading results. Please try again.",
-            );
-          }
+            );}
         } else {
           setError(
             "An error occurred while loading results. Please try again.",
@@ -102,47 +102,8 @@ const Results: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchRankingResult();
+    fetchCombined();
   }, [apiService, groupId, id, phaseFromHook]);
-
-  // Fetch detailed ranking results
-  useEffect(() => {
-    const fetchDetailedResults = async () => {
-      if (!groupId || phaseFromHook !== "RESULTS") return;
-      try {
-        const response = await retry(() =>
-          apiService.get<MovieAverageRankDTO[]>(
-            `/groups/${groupId}/rankings/details`,
-          )
-        );
-        setDetailedResults(response);
-        // Success feedback
-        setActionMessage("Detailed results loaded successfully");
-        setShowActionMessage(true);
-      } catch (err: unknown) {
-        console.error("Failed to fetch detailed ranking results:", err);
-        if (err instanceof Error && "status" in err) {
-          const appErr = err as ApplicationError;
-          if (appErr.status === 404) {
-            setError("The specified group could not be found.");
-          } else if (appErr.status === 409) {
-            setError(
-              "Detailed results can only be viewed after voting has ended.",
-            );
-          } else {
-            setError(
-              "An error occurred while loading detailed results. Please try again.",
-            );
-          }
-        } else {
-          setError(
-            "An error occurred while loading detailed results. Please try again.",
-          );
-        }
-      }
-    };
-    fetchDetailedResults();
-  }, [apiService, groupId, phaseFromHook]);
 
   useEffect(() => {
     if (phaseLoading) return;
