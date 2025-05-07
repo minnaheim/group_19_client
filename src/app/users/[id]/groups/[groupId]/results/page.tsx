@@ -124,14 +124,27 @@ const Results: React.FC = () => {
 
       setActionMessage("Added winning movie to your watched list!");
       setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
-    } catch (error) {
+    }catch (error) {
       console.error("Error adding movie to watched list:", error);
-      setActionMessage("Failed to add movie to your watched list");
+
+      // ANI CHANGE: Check for the specific error that indicates the movie is already in the watched list
+      if (error instanceof Error && "status" in error) {
+        const appErr = error as ApplicationError;
+        if (appErr.status === 409) {
+          setActionMessage("This movie is already in your watched list!");
+          setMovieAddedToWatchedList(true); // Mark as added since it's already there
+        } else {
+          setActionMessage("Failed to add movie to your watched list");
+        }
+      } else {
+        setActionMessage("Failed to add movie to your watched list");
+      }
     } finally {
       setIsAddingToWatchedList(false);
       setShowActionMessage(true);
     }
   };
+
 
   useEffect(() => {
     if (phaseLoading) return;
