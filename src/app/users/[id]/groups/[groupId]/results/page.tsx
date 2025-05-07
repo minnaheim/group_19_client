@@ -113,7 +113,7 @@ const Results: React.FC = () => {
     if (!fullWinningMovie || isAddingToWatchedList || movieAddedToWatchedList) return;
 
     setIsAddingToWatchedList(true);
-    setActionMessage("Adding movie to your watched list...");
+    setActionMessage("Marking movie as seen. Please wait...");
     setShowActionMessage(true);
 
     try {
@@ -122,22 +122,22 @@ const Results: React.FC = () => {
       // Add movie to user's watched list
       await apiService.post(`/users/${userId}/watched/${movieId}`);
 
-      setActionMessage("Added winning movie to your watched list!");
+      setActionMessage("Marked winning movie as seen!");
       setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
     }catch (error) {
-      console.error("Error adding movie to watched list:", error);
+      console.error("Error marking movie as seen:", error);
 
       // ANI CHANGE: Check for the specific error that indicates the movie is already in the watched list
       if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         if (appErr.status === 409) {
-          setActionMessage("This movie is already in your watched list!");
+          setActionMessage("This movie is already marked as seen in your profile page!");
           setMovieAddedToWatchedList(true); // Mark as added since it's already there
         } else {
-          setActionMessage("Failed to add movie to your watched list");
+          setActionMessage("Failed to mark movie as seen");
         }
       } else {
-        setActionMessage("Failed to add movie to your watched list");
+        setActionMessage("Failed to mark movie as seen");
       }
     } finally {
       setIsAddingToWatchedList(false);
@@ -274,7 +274,7 @@ const Results: React.FC = () => {
                                     disabled={!fullWinningMovie || loading || !!error || movieAddedToWatchedList || isAddingToWatchedList}
                                     className="bg-indigo-600 hover:bg-indigo-700"
                                 >
-                                  {movieAddedToWatchedList ? "Added to Your Watched List ✓" : "Add to My Watched List"}
+                                  {movieAddedToWatchedList ? "Movie marked as seen ✓" : "Mark movie as seen"}
                                 </Button>
                               </div>
                             </>
