@@ -51,7 +51,7 @@ const SearchMovies: React.FC = () => {
   // ANI CHANGE: Added a state to track ongoing movie addition to prevent simultaneous operations
   const [isAddingMovie, setIsAddingMovie] = useState<boolean>(false);
   // ANI CHANGE: Added state to track which list is being modified
-  const [activeListOperation, setActiveListOperation] = useState<string | null>(null);
+  // ANI error prone line const [activeListOperation, setActiveListOperation] = useState<string | null>(null);
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -310,7 +310,7 @@ const SearchMovies: React.FC = () => {
     try {
       // ANI CHANGE: Set the flags to prevent simultaneous operations
       setIsAddingMovie(true);
-      setActiveListOperation("watchlist");
+      //ANI error prone line setActiveListOperation("watchlist");
 
       await apiService.post(`/users/${id}/watchlist/${movie.movieId}`, {});
 
@@ -350,7 +350,7 @@ const SearchMovies: React.FC = () => {
     } finally {
       // ANI CHANGE: Reset flags when operation is complete
       setIsAddingMovie(false);
-      setActiveListOperation(null);
+      // ANI errorprone line setActiveListOperation(null);
     }
   };
 
@@ -369,7 +369,7 @@ const SearchMovies: React.FC = () => {
     try {
       // ANI CHANGE: Set the flags to prevent simultaneous operations
       setIsAddingMovie(true);
-      setActiveListOperation("watched");
+      // ANI error prone line setActiveListOperation("watched");
 
       await apiService.post(`/users/${id}/watched/${movie.movieId}`, {});
 
@@ -411,7 +411,7 @@ const SearchMovies: React.FC = () => {
     } finally {
       // ANI CHANGE: Reset flags when operation is complete
       setIsAddingMovie(false);
-      setActiveListOperation(null);
+      // error prone line setActiveListOperation(null);
     }
   };
 
