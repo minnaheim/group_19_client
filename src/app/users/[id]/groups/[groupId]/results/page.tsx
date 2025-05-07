@@ -120,7 +120,7 @@ const Results: React.FC = () => {
       const movieId = fullWinningMovie.movieId;
 
       // Add movie to user's watched list
-      await apiService.post(`/users/${userId}/watched/${movieId}`);
+      await apiService.post(`/users/${userId}/watched/${movieId}`, {});
 
       setActionMessage("Marked winning movie as seen!");
       setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
