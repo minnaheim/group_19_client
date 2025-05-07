@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react"; // ANI CHANGE: Added useState to manage loading states
 import { Movie } from "@/app/types/movie";
-import { Eye, Play, Plus, X } from "lucide-react";
+import { Eye, Play, Plus, X, Loader } from "lucide-react"; // ANI CHANGE: Added Loader icon
 import { Button } from "./button";
 
 interface MovieDetailsModalProps {
@@ -26,6 +26,11 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
   onRemoveFromWatchlist,
   onRemoveFromSeenList,
 }) => {
+    // ANI CHANGE: Added state to track loading states for each action
+    const [isAddingToWatchlist, setIsAddingToWatchlist] = useState(false);
+    const [isMarkingAsSeen, setIsMarkingAsSeen] = useState(false);
+    const [isRemovingFromWatchlist, setIsRemovingFromWatchlist] = useState(false);
+    const [isRemovingFromSeenList, setIsRemovingFromSeenList] = useState(false);
   // Handle ESC key press to close modal
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -43,11 +48,58 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
     };
   }, [isOpen, onClose]);
 
+    // ANI CHANGE: Reset loading states when modal is closed or opened
+    useEffect(() => {
+        setIsAddingToWatchlist(false);
+        setIsMarkingAsSeen(false);
+        setIsRemovingFromWatchlist(false);
+        setIsRemovingFromSeenList(false);
+    }, [isOpen]);
+
   if (!isOpen || !movie) return null;
 
   const handleWatchTrailer = () => {
     globalThis.open(movie.trailerURL, "_blank");
   };
+
+    // ANI CHANGE: Added handlers with loading states
+    const handleAddToWatchlist = async () => {
+        if (isMarkingAsSeen) return; // ANI CHANGE: Prevent action if another action is in progress
+        setIsAddingToWatchlist(true);
+        if (onAddToWatchlist) {
+            await onAddToWatchlist(movie);
+            setIsAddingToWatchlist(false);
+            onClose();
+        }
+    };
+
+    const handleMarkAsSeen = async () => {
+        if (isAddingToWatchlist) return; // ANI CHANGE: Prevent action if another action is in progress
+        setIsMarkingAsSeen(true);
+        if (onMarkAsSeen) {
+            await onMarkAsSeen(movie);
+            setIsMarkingAsSeen(false);
+            onClose();
+        }
+    };
+
+    const handleRemoveFromWatchlist = async () => {
+        setIsRemovingFromWatchlist(true);
+        if (onRemoveFromWatchlist) {
+            await onRemoveFromWatchlist(movie);
+            setIsRemovingFromWatchlist(false);
+            onClose();
+        }
+    };
+
+    const handleRemoveFromSeenList = async () => {
+        setIsRemovingFromSeenList(true);
+        if (onRemoveFromSeenList) {
+            await onRemoveFromSeenList(movie);
+            setIsRemovingFromSeenList(false);
+            onClose();
+        }
+    };
 
   return (
     <>
@@ -121,12 +173,13 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                   <Button
                     variant="secondary"
                     className="flex items-center gap-1"
-                    onClick={() => {
-                      onAddToWatchlist(movie);
-                      onClose();
-                    }}
-                  >
-                    <Plus size={16} /> Add to Watchlist
+                    onClick={handleAddToWatchlist}
+                                        disabled={isAddingToWatchlist || isMarkingAsSeen} // ANI CHANGE: Disable when loading or other action in progress
+                                    >
+                                        {isAddingToWatchlist ? (
+                                            <Loader size={16} className="animate-spin" /> // ANI CHANGE: Show loading indicator
+                                        ) : (
+                    <Plus size={16} />)}{" "} Add to Watchlist
                   </Button>
                 )}
 
@@ -134,12 +187,13 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                   <Button
                     variant="destructive"
                     className="flex items-center gap-1"
-                    onClick={() => {
-                      onRemoveFromWatchlist(movie);
-                      onClose();
-                    }}
-                  >
-                    <X size={16} /> Remove from Watchlist
+                    onClick={handleRemoveFromWatchlist}
+                                        disabled={isRemovingFromWatchlist} // ANI CHANGE: Disable when loading
+                                    >
+                                        {isRemovingFromWatchlist ? (
+                                            <Loader size={16} className="animate-spin" /> // ANI CHANGE: Show loading indicator
+                                        ) : (
+                    <X size={16} />)}{" "} Remove from Watchlist
                   </Button>
                 )}
 
@@ -149,13 +203,13 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                     className={`flex items-center gap-1 ${
                       isInSeenList ? "opacity-50" : ""
                     }`}
-                    onClick={() => {
-                      onMarkAsSeen(movie);
-                      onClose();
-                    }}
-                    disabled={isInSeenList}
-                  >
-                    <Eye size={16} />
+                    onClick={handleMarkAsSeen}
+                                        disabled={isInSeenList || isMarkingAsSeen || isAddingToWatchlist} // ANI CHANGE: Disable when loading or other action in progress
+                                    >
+                                        {isMarkingAsSeen ? (
+                                            <Loader size={16} className="animate-spin" /> // ANI CHANGE: Show loading indicator
+                                        ) : (
+                    <Eye size={16} />)}
                     {isInSeenList ? "Already Seen" : "Mark as Seen"}
                   </Button>
                 )}
@@ -164,12 +218,13 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                   <Button
                     variant="destructive"
                     className="flex items-center gap-1"
-                    onClick={() => {
-                      onRemoveFromSeenList(movie);
-                      onClose();
-                    }}
-                  >
-                    <X size={16} /> Remove from Seen List
+                    onClick={handleRemoveFromSeenList}
+                                        disabled={isRemovingFromSeenList} // ANI CHANGE: Disable when loading
+                                    >
+                                        {isRemovingFromSeenList ? (
+                                            <Loader size={16} className="animate-spin" /> // ANI CHANGE: Show loading indicator
+                                        ) : (
+                    <X size={16} />)}{" "} Remove from Seen List
                   </Button>
                 )}
               </div>

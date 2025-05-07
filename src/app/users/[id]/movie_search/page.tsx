@@ -14,7 +14,7 @@ import MovieDetailsModal from "@/components/ui/movie_details";
 import MovieList from "@/components/ui/movie_list";
 import SearchBar from "@/components/ui/search_bar";
 import { retry } from "src/utils/retry";
-import { RefreshCw } from "lucide-react"; // Add this import
+import { RefreshCw } from "lucide-react";
 
 const SearchMovies: React.FC = () => {
   const { id } = useParams();
@@ -47,6 +47,11 @@ const SearchMovies: React.FC = () => {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<
     boolean
   >(false);
+
+  // ANI CHANGE: Added a state to track ongoing movie addition to prevent simultaneous operations
+  const [isAddingMovie, setIsAddingMovie] = useState<boolean>(false);
+  // ANI CHANGE: Added state to track which list is being modified
+  const [activeListOperation, setActiveListOperation] = useState<string | null>(null);
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -291,12 +296,22 @@ const SearchMovies: React.FC = () => {
   };
 
   const handleAddToWatchlist = async (movie: Movie) => {
+    // ANI CHANGE: Added check to prevent simultaneous operations to watchlist and watched list
+    if (isAddingMovie) {
+      showMessage("Please wait while the current operation completes");
+      return;
+    }
+
     if (isInWatchlist(movie)) {
       showMessage("Movie already in your watchlist");
       return;
     }
 
     try {
+      // ANI CHANGE: Set the flags to prevent simultaneous operations
+      setIsAddingMovie(true);
+      setActiveListOperation("watchlist");
+
       await apiService.post(`/users/${id}/watchlist/${movie.movieId}`, {});
 
       // update local state
@@ -332,16 +347,30 @@ const SearchMovies: React.FC = () => {
       } else {
         showMessage("Failed to add movie to watchlist.");
       }
+    } finally {
+      // ANI CHANGE: Reset flags when operation is complete
+      setIsAddingMovie(false);
+      setActiveListOperation(null);
     }
   };
 
   const handleAddToSeenList = async (movie: Movie) => {
+    // ANI CHANGE: Added check to prevent simultaneous operations to watchlist and watched list
+    if (isAddingMovie) {
+      showMessage("Please wait while the current operation completes");
+      return;
+    }
+
     if (isInSeenList(movie)) {
       showMessage("Movie already in your seen list");
       return;
     }
 
     try {
+      // ANI CHANGE: Set the flags to prevent simultaneous operations
+      setIsAddingMovie(true);
+      setActiveListOperation("watched");
+
       await apiService.post(`/users/${id}/watched/${movie.movieId}`, {});
 
       // update local state
@@ -379,6 +408,10 @@ const SearchMovies: React.FC = () => {
             showMessage("Failed to add movie to watched list.");
         }
       }
+    } finally {
+      // ANI CHANGE: Reset flags when operation is complete
+      setIsAddingMovie(false);
+      setActiveListOperation(null);
     }
   };
 
