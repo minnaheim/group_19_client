@@ -41,7 +41,6 @@ const Results: React.FC = () => {
   const { phase: phaseFromHook, loading: phaseLoading, error: phaseError } =
       useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
-  const { value: token } = useLocalStorage<string>("token", ""); // ANI CHANGE: Added token
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<
       RankingResultsDTO | null
