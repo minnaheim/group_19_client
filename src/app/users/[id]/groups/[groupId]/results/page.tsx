@@ -12,7 +12,6 @@ import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ActionMessage from "@/components/ui/action_message";
 import type { ApplicationError } from "@/app/types/error";
-import { User } from "@/app/types/user"; // ANI CHANGE: Added User import
 
 // Define interfaces for the data coming from the backend
 interface MovieAverageRankDTO {
@@ -132,11 +131,6 @@ const Results: React.FC = () => {
       setIsAddingToWatchedList(false);
       setShowActionMessage(true);
     }
-  };
-
-// ANI CHANGE: Helper function to check if buttons should be disabled
-  const isAddButtonDisabled = () => {
-    return !fullWinningMovie || loading || !!error;
   };
 
   useEffect(() => {
