@@ -54,8 +54,10 @@ const Results: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
   const apiService = useApi();
 
-  // ANI CHANGE: Added state to track adding movies to watchedlists
-  const [isAddingToWatchedlists, setIsAddingToWatchedlists] = useState<boolean>(false);
+  // ANI CHANGE: Added state to track adding movies to watched list
+  const [isAddingToWatchedList, setIsAddingToWatchedList] = useState<boolean>(false);
+  // ANI CHANGE: Added state to track if movie was already added to watched list
+  const [movieAddedToWatchedList, setMovieAddedToWatchedList] = useState<boolean>(false);
 
   // Full winning movie details (fetch for posterURL)
   const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
@@ -107,38 +109,34 @@ const Results: React.FC = () => {
     fetchCombined();
   }, [apiService, groupId, id, phaseFromHook]);
 
-  // ANI CHANGE: Added function to add movie to all members' watchedlists
-  const addMovieToAllMembersWatchedlists = async () => {
-    if (!fullWinningMovie || isAddingToWatchedlists) return;
+  // ANI CHANGE: New function to add the winning movie to the current user's watched list
+  const addToMyWatchedList = async () => {
+    if (!fullWinningMovie || isAddingToWatchedList || movieAddedToWatchedList) return;
 
-    setIsAddingToWatchedlists(true);
-    setActionMessage("Adding movie to all members' watchedlists...");
+    setIsAddingToWatchedList(true);
+    setActionMessage("Adding movie to your watched list...");
     setShowActionMessage(true);
 
     try {
-      // Get group members
-      const members = await apiService.get<User[]>(`/groups/${groupId}/members`);
       const movieId = fullWinningMovie.movieId;
-      let successCount = 0;
 
-      // Add movie to each member's watched list
-      for (const member of members) {
-        try {
-          await apiService.post(`/users/${member.userId}/watched/${movieId}`);
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to add movie to ${member.username}'s watched list:`, error);
-        }
-      }
+      // Add movie to user's watched list
+      await apiService.post(`/users/${userId}/watched/${movieId}`);
 
-      setActionMessage(`Added winning movie to ${successCount} of ${members.length} members' watchedlists`);
+      setActionMessage("Added winning movie to your watched list!");
+      setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
     } catch (error) {
-      console.error("Error adding movie to watchedlists:", error);
-      setActionMessage("Failed to add movie to members' watchedlists");
+      console.error("Error adding movie to watched list:", error);
+      setActionMessage("Failed to add movie to your watched list");
     } finally {
-      setIsAddingToWatchedlists(false);
+      setIsAddingToWatchedList(false);
       setShowActionMessage(true);
     }
+  };
+
+// ANI CHANGE: Helper function to check if buttons should be disabled
+  const isAddButtonDisabled = () => {
+    return !fullWinningMovie || loading || !!error;
   };
 
   useEffect(() => {
@@ -265,13 +263,11 @@ const Results: React.FC = () => {
                               {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
                               <div className="mt-6">
                                 <Button
-                                    onClick={addMovieToAllMembersWatchedlists}
-                                    disabled={isAddingToWatchedlists}
-                                    className="bg-green-500 hover:bg-green-600 text-white"
+                                    onClick={addToMyWatchedList}
+                                    disabled={!fullWinningMovie || loading || !!error || movieAddedToWatchedList || isAddingToWatchedList}
+                                    className="bg-indigo-600 hover:bg-indigo-700"
                                 >
-                                  {isAddingToWatchedlists
-                                      ? "Adding to watchedlists..."
-                                      : "Add to all members' watchedlists"}
+                                  {movieAddedToWatchedList ? "Added to Your Watched List ✓" : "Add to My Watched List"}
                                 </Button>
                               </div>
                             </>
