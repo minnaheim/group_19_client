@@ -54,8 +54,8 @@ const Results: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
   const apiService = useApi();
 
-  // ANI CHANGE: Added state to track adding movies to watchlists
-  const [isAddingToWatchlists, setIsAddingToWatchlists] = useState<boolean>(false);
+  // ANI CHANGE: Added state to track adding movies to watchedlists
+  const [isAddingToWatchedlists, setIsAddingToWatchedlists] = useState<boolean>(false);
 
   // Full winning movie details (fetch for posterURL)
   const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
@@ -107,12 +107,12 @@ const Results: React.FC = () => {
     fetchCombined();
   }, [apiService, groupId, id, phaseFromHook]);
 
-  // ANI CHANGE: Added function to add movie to all members' watchlists
-  const addMovieToAllMembersWatchlists = async () => {
-    if (!fullWinningMovie || isAddingToWatchlists) return;
+  // ANI CHANGE: Added function to add movie to all members' watchedlists
+  const addMovieToAllMembersWatchedlists = async () => {
+    if (!fullWinningMovie || isAddingToWatchedlists) return;
 
-    setIsAddingToWatchlists(true);
-    setActionMessage("Adding movie to all members' watchlists...");
+    setIsAddingToWatchedlists(true);
+    setActionMessage("Adding movie to all members' watchedlists...");
     setShowActionMessage(true);
 
     try {
@@ -121,22 +121,22 @@ const Results: React.FC = () => {
       const movieId = fullWinningMovie.movieId;
       let successCount = 0;
 
-      // Add movie to each member's watchlist
+      // Add movie to each member's watched list
       for (const member of members) {
         try {
-          await apiService.post(`/users/${member.userId}/watchlist/${movieId}`);
+          await apiService.post(`/users/${member.userId}/watched/${movieId}`);
           successCount++;
         } catch (error) {
-          console.error(`Failed to add movie to ${member.username}'s watchlist:`, error);
+          console.error(`Failed to add movie to ${member.username}'s watched list:`, error);
         }
       }
 
-      setActionMessage(`Added winning movie to ${successCount} of ${members.length} members' watchlists`);
+      setActionMessage(`Added winning movie to ${successCount} of ${members.length} members' watchedlists`);
     } catch (error) {
-      console.error("Error adding movie to watchlists:", error);
-      setActionMessage("Failed to add movie to members' watchlists");
+      console.error("Error adding movie to watchedlists:", error);
+      setActionMessage("Failed to add movie to members' watchedlists");
     } finally {
-      setIsAddingToWatchlists(false);
+      setIsAddingToWatchedlists(false);
       setShowActionMessage(true);
     }
   };
@@ -262,16 +262,16 @@ const Results: React.FC = () => {
                                 group members
                               </p>
 
-                              {/* ANI CHANGE: Added button to add winning movie to all members' watchlists */}
+                              {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
                               <div className="mt-6">
                                 <Button
-                                    onClick={addMovieToAllMembersWatchlists}
-                                    disabled={isAddingToWatchlists}
+                                    onClick={addMovieToAllMembersWatchedlists}
+                                    disabled={isAddingToWatchedlists}
                                     className="bg-green-500 hover:bg-green-600 text-white"
                                 >
-                                  {isAddingToWatchlists
-                                      ? "Adding to watchlists..."
-                                      : "Add to all members' watchlists"}
+                                  {isAddingToWatchedlists
+                                      ? "Adding to watchedlists..."
+                                      : "Add to all members' watchedlists"}
                                 </Button>
                               </div>
                             </>
