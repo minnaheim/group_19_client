@@ -155,6 +155,26 @@ const EditProfile: React.FC = () => {
     }
   };
 
+  const handleResetFavoriteActors = () => {
+    setFavoriteActors([]);
+    // Show a brief confirmation message
+    setSuccessMessage("Favorite actors have been reset");
+    setShowSuccessMessage(true);
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
+
+  const handleResetFavoriteDirectors = () => {
+    setFavoriteDirectors([]);
+    // Show a brief confirmation message
+    setSuccessMessage("Favorite directors have been reset");
+    setShowSuccessMessage(true);
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
+
   const handleToggleGenreSelection = () => {
     setIsSelectingGenre(!isSelectingGenre);
   };
@@ -549,9 +569,21 @@ const EditProfile: React.FC = () => {
 
             {/* Favorite Actors */}
             <div className="mt-4">
-              <p className="block text-[#3b3e88] text-sm font-medium mb-2">
-                Favorite Actors
-              </p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="block text-[#3b3e88] text-sm font-medium">
+                  Favorite Actors
+                </p>
+                {favoriteActors.length > 0 && (
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleResetFavoriteActors}
+                        className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
+                    >
+                      Reset favorite actors
+                    </Button>
+                )}
+              </div>
               <p className="text-md text-gray-600 mb-2">
                 {/* Added mb-2 */}
                 {favoriteActors.length > 0
@@ -656,9 +688,21 @@ const EditProfile: React.FC = () => {
 
             {/* Favorite Directors */}
             <div className="mt-4">
-              <p className="block text-[#3b3e88] text-sm font-medium mb-2">
-                Favorite Directors
-              </p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="block text-[#3b3e88] text-sm font-medium">
+                  Favorite Directors
+                </p>
+                {favoriteDirectors.length > 0 && (
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleResetFavoriteDirectors}
+                        className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
+                    >
+                      Reset favorite directors
+                    </Button>
+                )}
+              </div>
               <p className="text-md text-gray-600 mb-2">
                 {/* Added mb-2 */}
                 {favoriteDirectors.length > 0
