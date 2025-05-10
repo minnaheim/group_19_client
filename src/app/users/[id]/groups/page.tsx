@@ -136,15 +136,13 @@ const GroupsManagement: React.FC = () => {
   // Ref for click outside handling
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
-  // --- Function to fetch all users once ---
   const fetchAllUsers = useCallback(async () => {
-    if (usersLoaded) return; // Don't fetch again if already loaded
+    if (usersLoaded || isLoadingUsers) return;
 
     setIsLoadingUsers(true);
     try {
-      // Fetch all users
       const users = await retry(() =>
-        apiService.get<UserSearchResponse[]>("/users/all")
+          apiService.get<UserSearchResponse[]>("/users/all")
       );
 
       if (Array.isArray(users)) {
@@ -156,15 +154,14 @@ const GroupsManagement: React.FC = () => {
       }
     } catch (err) {
       console.error("Error fetching all users:", err);
-      // Fall back to regular search if we can't get all users
       setInviteError(
-        "Could not load user search. Using regular search instead.",
+          "Could not load user search. Using regular search instead."
       );
       setUsersLoaded(false);
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [apiService, usersLoaded]);
+  }, []);
 
   // --- Filter Users Client-Side ---
   const filterUsers = useCallback((searchTerm: string) => {
@@ -538,52 +535,32 @@ const GroupsManagement: React.FC = () => {
     [apiService, fetchUserById, isGroupDetailDialogOpen],
   ); // Dependencies
 
-  const fetchGroupsData = useCallback(async () => {
-    if (!userId) return; // Don't fetch if userId isn't available
-    setLoading(true);
-    setError(null); // Clear previous page errors before fetch
+  const refreshGroupsData = useCallback(async () => {
+    if (!userId) return;
 
     try {
-      // Use Promise.all to fetch concurrently
       const [groupsData, receivedData, sentData] = await Promise.all([
         retry(() => apiService.get<Group[]>("/groups")),
         retry(() =>
-          apiService.get<GroupInvitation[]>("/groups/invitations/received")
+            apiService.get<GroupInvitation[]>("/groups/invitations/received")
         ),
         retry(() =>
-          apiService.get<GroupInvitation[]>("/groups/invitations/sent")
+            apiService.get<GroupInvitation[]>("/groups/invitations/sent")
         ),
       ]);
 
-      // Process results
       setGroups(
-        Array.isArray(groupsData)
-          ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
-          : [],
+          Array.isArray(groupsData)
+              ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
+              : []
       );
       setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
       setSentInvitations(Array.isArray(sentData) ? sentData : []);
     } catch (err: unknown) {
-      console.error("Error loading initial groups/invitations data:", err);
-      let message =
-        "Failed to load groups or invitations. Please try refreshing the page.";
-      if (
-        err instanceof Error && "status" in err &&
-        (err as ApplicationError).status === 401
-      ) {
-        message = "Your session has expired. Please log in again.";
-        // Optional: Add redirect to login here
-      } else {
-        message = getErrorMessage(err, message);
-      }
-      setError(message); // Set page-level error for critical load failure
-      setGroups([]); // Clear data to reflect error state
-      setReceivedInvitations([]);
-      setSentInvitations([]);
-    } finally {
-      setLoading(false);
+      console.error("Error refreshing groups data:", err);
+      // Handle error as needed
     }
-  }, [apiService, userId]); // Dependencies
+  }, [apiService, userId]);
 
   const enhanceGroupsWithDetails = useCallback(async () => {
     if (groups.length === 0) {
@@ -629,13 +606,71 @@ const GroupsManagement: React.FC = () => {
   }, [inviteUsername]);
 
   useEffect(() => {
-    fetchGroupsData();
+    let mounted = true;
 
-    // Load all users when component mounts
+    const fetchGroupsData = async () => {
+      if (!userId) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [groupsData, receivedData, sentData] = await Promise.all([
+          retry(() => apiService.get<Group[]>("/groups")),
+          retry(() =>
+              apiService.get<GroupInvitation[]>("/groups/invitations/received")
+          ),
+          retry(() =>
+              apiService.get<GroupInvitation[]>("/groups/invitations/sent")
+          ),
+        ]);
+
+        if (mounted) {
+          setGroups(
+              Array.isArray(groupsData)
+                  ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
+                  : []
+          );
+          setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
+          setSentInvitations(Array.isArray(sentData) ? sentData : []);
+        }
+      } catch (err: unknown) {
+        console.error("Error loading initial groups/invitations data:", err);
+        if (mounted) {
+          let message =
+              "Failed to load groups or invitations. Please try refreshing the page.";
+          if (
+              err instanceof Error && "status" in err &&
+              (err as ApplicationError).status === 401
+          ) {
+            message = "Your session has expired. Please log in again.";
+          } else {
+            message = getErrorMessage(err, message);
+          }
+          setError(message);
+          setGroups([]);
+          setReceivedInvitations([]);
+          setSentInvitations([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchGroupsData(); // Call the local function, not refreshGroupsData
+
+    return () => {
+      mounted = false;
+    };
+  }, [userId]); // Only depend on userId
+
+  useEffect(() => {
     if (!usersLoaded && !isLoadingUsers) {
       fetchAllUsers();
     }
-  }, [fetchGroupsData, fetchAllUsers, usersLoaded, isLoadingUsers]);
+  }, []);
 
   useEffect(() => {
     enhanceGroupsWithDetails();
@@ -672,7 +707,7 @@ const GroupsManagement: React.FC = () => {
       await retry(() =>
         apiService.post("/groups", { groupName: newGroupName })
       );
-      await fetchGroupsData(); // Refresh lists is crucial
+      await refreshGroupsData(); // Refresh lists is crucial
       showSuccessMessage(`Group "${newGroupName}" created successfully`);
       setNewGroupName("");
       setIsCreateGroupDialogOpen(false);
@@ -790,7 +825,7 @@ const GroupsManagement: React.FC = () => {
     );
     try {
       await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
-      await fetchGroupsData(); // Refresh everything
+      await refreshGroupsData(); // Refresh everything
       showSuccessMessage("Group invitation accepted"); // Show success message (will likely be cleared by state update)
     } catch (err: unknown) {
       console.error("Error accepting invitation:", err);
@@ -925,7 +960,7 @@ const GroupsManagement: React.FC = () => {
     if (!window.confirm("Are you sure you want to leave this group?")) return;
     try {
       await apiService.delete(`/groups/${groupId}/leave`);
-      await fetchGroupsData(); // Refresh lists
+      await refreshGroupsData(); // Refresh lists
       showSuccessMessage("Left group successfully");
       setIsGroupDetailDialogOpen(false);
       setSelectedGroup(null);
@@ -968,7 +1003,7 @@ const GroupsManagement: React.FC = () => {
     ) return;
     try {
       await apiService.delete(`/groups/${groupId}`);
-      await fetchGroupsData(); // Refresh lists
+      await refreshGroupsData(); // Refresh lists
       showSuccessMessage("Group deleted successfully");
       setIsGroupDetailDialogOpen(false);
       setSelectedGroup(null);
@@ -1010,7 +1045,7 @@ const GroupsManagement: React.FC = () => {
       // Refresh details in the dialog
       const refreshedGroup = await loadGroupDetails(groupId);
       setSelectedGroup(refreshedGroup);
-      fetchGroupsData(); // Refresh main list (for member counts, etc.)
+      refreshGroupsData(); // Refresh main list (for member counts, etc.)
     } catch (err: unknown) {
       console.error("Error removing member:", err);
       let specificErrorMessage = "An error occurred while removing the member.";
@@ -1055,7 +1090,7 @@ const GroupsManagement: React.FC = () => {
       const refreshedGroup = await loadGroupDetails(groupId);
       setSelectedGroup(refreshedGroup);
       input.value = newName; // Reflect change in input
-      fetchGroupsData(); // Refresh main list
+      refreshGroupsData(); // Refresh main list
     } catch (err: unknown) {
       console.error("Error updating group name:", err);
       let specificErrorMessage =
@@ -1200,7 +1235,7 @@ const GroupsManagement: React.FC = () => {
             <Button
               onClick={() => {
                 setError(null);
-                fetchGroupsData();
+                refreshGroupsData();
               }}
               className="mt-6 bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
             >
