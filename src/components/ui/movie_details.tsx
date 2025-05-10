@@ -106,11 +106,13 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
     };
 
     // ANI Empty values CHANGE: Helper function to check if array is empty and return appropriate message
-    const displayArray = (arr: string[] | undefined) => {
+    const displayArray = (arr: string[] | undefined, limit?: number) => {
         if (!arr || arr.length === 0) {
             return <em className="text-gray-500">No information available via the external API: TMDB</em>;
         }
-        return arr.join(", ");
+        // If a limit is specified, slice the array to that limit
+        const displayArr = limit ? arr.slice(0, limit) : arr;
+        return displayArr.join(", ");
     };
 
     // ANI Empty values CHANGE: Helper function to check if string is empty and return appropriate message in frontend
@@ -172,7 +174,7 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                         <h3 className="text-[#3b3e88] font-medium mb-1">Genres</h3>
                         <p className="text-gray-700 text-sm">
                             {/* ANI Empty values CHANGE: Using helper function for genres array */}
-                            {displayArray(movie.genres)}
+                            {displayArray(movie.genres, 5)}
                         </p>
                     </div>
 
@@ -180,7 +182,7 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                         <h3 className="text-[#3b3e88] font-medium mb-1">Directors</h3>
                         <p className="text-gray-700 text-sm">
                             {/* ANI Empty values CHANGE: Using helper function for directors array */}
-                            {displayArray(movie.directors)}
+                            {displayArray(movie.directors, 5)}
                         </p>
                     </div>
 
@@ -188,7 +190,7 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                         <h3 className="text-[#3b3e88] font-medium mb-1">Actors</h3>
                         <p className="text-gray-700 text-sm">
                             {/* ANI Empty values CHANGE: Using helper function for actors array */}
-                            {displayArray(movie.actors)}
+                            {displayArray(movie.actors, 5)}
                         </p>
                     </div>
 
