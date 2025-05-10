@@ -516,8 +516,8 @@ const EditProfile: React.FC = () => {
                     Please select amongst the actors în your favorite movie and in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {actorOptions.map((name) => (
-                      <button
+                    {[...actorOptions].sort((a, b) => a.localeCompare(b)).map((name) => (
+                        <button
                         key={name}
                         type="button"
                         onClick={() => {
@@ -571,8 +571,8 @@ const EditProfile: React.FC = () => {
                     Please select amongst the directors în your favorite movie and in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {directorOptions.map((name) => (
-                      <button
+                    {[...directorOptions].sort((a, b) => a.localeCompare(b)).map((name) => (
+                        <button
                         key={name}
                         type="button"
                         onClick={() => {
