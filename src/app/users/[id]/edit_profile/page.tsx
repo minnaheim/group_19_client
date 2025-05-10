@@ -356,6 +356,66 @@ const EditProfile: React.FC = () => {
     );
   }
 
+  // state variables for person lookup for favorite actors & directors
+  const [actorSearchQuery, setActorSearchQuery] = useState("");
+  const [actorSearchResults, setActorSearchResults] = useState<{ actorId: number, actorName: string }[]>([]);
+  const [actorSearchLoading, setActorSearchLoading] = useState(false);
+  const [actorSearchError, setActorSearchError] = useState("");
+
+  const [directorSearchQuery, setDirectorSearchQuery] = useState("");
+  const [directorSearchResults, setDirectorSearchResults] = useState<{ directorId: number, directorName: string }[]>([]);
+  const [directorSearchLoading, setDirectorSearchLoading] = useState(false);
+  const [directorSearchError, setDirectorSearchError] = useState("");
+
+  const handleActorSearch = async () => {
+    if (!actorSearchQuery.trim()) return;
+
+    setActorSearchLoading(true);
+    setActorSearchError("");
+
+    try {
+      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/actors?actorname=${encodeURIComponent(actorSearchQuery)}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.reason || "Failed to search for actors");
+      }
+
+      const data = await response.json();
+      setActorSearchResults(data);
+    } catch (error) {
+      setActorSearchError(error instanceof Error ? error.message : "An error occurred while searching for actors");
+      setActorSearchResults([]);
+    } finally {
+      setActorSearchLoading(false);
+    }
+  };
+
+  const handleDirectorSearch = async () => {
+    if (!directorSearchQuery.trim()) return;
+
+    setDirectorSearchLoading(true);
+    setDirectorSearchError("");
+
+    try {
+      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/directors?directorname=${encodeURIComponent(directorSearchQuery)}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.reason || "Failed to search for directors");
+      }
+
+      const data = await response.json();
+      setDirectorSearchResults(data);
+    } catch (error) {
+      setDirectorSearchError(error instanceof Error ? error.message : "An error occurred while searching for directors");
+      setDirectorSearchResults([]);
+    } finally {
+      setDirectorSearchLoading(false);
+    }
+  };
+
+
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
       {/* Sidebar */}
@@ -536,6 +596,58 @@ const EditProfile: React.FC = () => {
                         {name}
                       </button>
                     ))}
+                    </div>
+
+                    {/* Actor Search */}
+                    <div className="mt-4 border-t pt-4">
+                      <p className="text-sm text-gray-600 mb-2">Search for additional actors:</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                            type="text"
+                            value={actorSearchQuery}
+                            onChange={(e) => setActorSearchQuery(e.target.value)}
+                            placeholder="Enter actor name..."
+                            className="p-2 border rounded-md flex-grow"
+                        />
+                        <Button
+                            type="button"
+                            onClick={handleActorSearch}
+                            className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
+                        >
+                          Search
+                        </Button>
+                      </div>
+
+                      {actorSearchLoading && <p className="text-sm text-gray-500">Searching...</p>}
+                      {actorSearchError && <p className="text-sm text-red-500">{actorSearchError}</p>}
+
+                      {actorSearchResults.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600 mb-2">Search results:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {actorSearchResults.map((actor) => (
+                                  <button
+                                      key={actor.actorId}
+                                      type="button"
+                                      onClick={() => {
+                                        setFavoriteActors((prev) =>
+                                            prev.includes(actor.actorName)
+                                                ? prev.filter((n) => n !== actor.actorName)
+                                                : [...prev, actor.actorName]
+                                        );
+                                      }}
+                                      className={`px-3 py-1 rounded-full border ${
+                                          favoriteActors.includes(actor.actorName)
+                                              ? "bg-[#AFB3FF] text-white"
+                                              : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                                      }`}
+                                  >
+                                    {actor.actorName}
+                                  </button>
+                              ))}
+                            </div>
+                          </div>
+                      )}
                   </div>
                 </div>
               )}
@@ -591,6 +703,58 @@ const EditProfile: React.FC = () => {
                         {name}
                       </button>
                     ))}
+                    </div>
+
+                    {/* Director Search */}
+                    <div className="mt-4 border-t pt-4">
+                      <p className="text-sm text-gray-600 mb-2">Search for additional directors:</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                            type="text"
+                            value={directorSearchQuery}
+                            onChange={(e) => setDirectorSearchQuery(e.target.value)}
+                            placeholder="Enter director name..."
+                            className="p-2 border rounded-md flex-grow"
+                        />
+                        <Button
+                            type="button"
+                            onClick={handleDirectorSearch}
+                            className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
+                        >
+                          Search
+                        </Button>
+                      </div>
+
+                      {directorSearchLoading && <p className="text-sm text-gray-500">Searching...</p>}
+                      {directorSearchError && <p className="text-sm text-red-500">{directorSearchError}</p>}
+
+                      {directorSearchResults.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600 mb-2">Search results:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {directorSearchResults.map((director) => (
+                                  <button
+                                      key={director.directorId}
+                                      type="button"
+                                      onClick={() => {
+                                        setFavoriteDirectors((prev) =>
+                                            prev.includes(director.directorName)
+                                                ? prev.filter((n) => n !== director.directorName)
+                                                : [...prev, director.directorName]
+                                        );
+                                      }}
+                                      className={`px-3 py-1 rounded-full border ${
+                                          favoriteDirectors.includes(director.directorName)
+                                              ? "bg-[#AFB3FF] text-white"
+                                              : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                                      }`}
+                                  >
+                                    {director.directorName}
+                                  </button>
+                              ))}
+                            </div>
+                          </div>
+                      )}
                   </div>
                 </div>
               )}
