@@ -62,6 +62,19 @@ const EditProfile: React.FC = () => {
   const [isSelectingActors, setIsSelectingActors] = useState(false);
   const [isSelectingDirectors, setIsSelectingDirectors] = useState(false);
 
+  // state variables for actor search
+  const [actorSearchQuery, setActorSearchQuery] = useState("");
+  const [actorSearchResults, setActorSearchResults] = useState<{ actorId: number, actorName: string }[]>([]);
+  const [actorSearchLoading, setActorSearchLoading] = useState(false);
+  const [actorSearchError, setActorSearchError] = useState("");
+
+  // state variables for director search
+  const [directorSearchQuery, setDirectorSearchQuery] = useState("");
+  const [directorSearchResults, setDirectorSearchResults] = useState<{ directorId: number, directorName: string }[]>([]);
+  const [directorSearchLoading, setDirectorSearchLoading] = useState(false);
+  const [directorSearchError, setDirectorSearchError] = useState("");
+
+
   // Track if we've already processed movie from session storage
   const [hasProcessedStoredMovie, setHasProcessedStoredMovie] = useState(false);
 
@@ -92,6 +105,54 @@ const EditProfile: React.FC = () => {
 
     // Use the correct route name
     router.push(`/users/${id}/movie_search?selectFavorite=true`);
+  };
+
+  const handleActorSearch = async () => {
+    if (!actorSearchQuery.trim()) return;
+
+    setActorSearchLoading(true);
+    setActorSearchError("");
+
+    try {
+      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/actors?actorname=${encodeURIComponent(actorSearchQuery)}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.reason || "Failed to search for actors");
+      }
+
+      const data = await response.json();
+      setActorSearchResults(data);
+    } catch (error) {
+      setActorSearchError(error instanceof Error ? error.message : "An error occurred while searching for actors");
+      setActorSearchResults([]);
+    } finally {
+      setActorSearchLoading(false);
+    }
+  };
+
+  const handleDirectorSearch = async () => {
+    if (!directorSearchQuery.trim()) return;
+
+    setDirectorSearchLoading(true);
+    setDirectorSearchError("");
+
+    try {
+      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/directors?directorname=${encodeURIComponent(directorSearchQuery)}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.reason || "Failed to search for directors");
+      }
+
+      const data = await response.json();
+      setDirectorSearchResults(data);
+    } catch (error) {
+      setDirectorSearchError(error instanceof Error ? error.message : "An error occurred while searching for directors");
+      setDirectorSearchResults([]);
+    } finally {
+      setDirectorSearchLoading(false);
+    }
   };
 
   const handleToggleGenreSelection = () => {
@@ -355,66 +416,6 @@ const EditProfile: React.FC = () => {
       </div>
     );
   }
-
-  // state variables for person lookup for favorite actors & directors
-  const [actorSearchQuery, setActorSearchQuery] = useState("");
-  const [actorSearchResults, setActorSearchResults] = useState<{ actorId: number, actorName: string }[]>([]);
-  const [actorSearchLoading, setActorSearchLoading] = useState(false);
-  const [actorSearchError, setActorSearchError] = useState("");
-
-  const [directorSearchQuery, setDirectorSearchQuery] = useState("");
-  const [directorSearchResults, setDirectorSearchResults] = useState<{ directorId: number, directorName: string }[]>([]);
-  const [directorSearchLoading, setDirectorSearchLoading] = useState(false);
-  const [directorSearchError, setDirectorSearchError] = useState("");
-
-  const handleActorSearch = async () => {
-    if (!actorSearchQuery.trim()) return;
-
-    setActorSearchLoading(true);
-    setActorSearchError("");
-
-    try {
-      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/actors?actorname=${encodeURIComponent(actorSearchQuery)}`);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.reason || "Failed to search for actors");
-      }
-
-      const data = await response.json();
-      setActorSearchResults(data);
-    } catch (error) {
-      setActorSearchError(error instanceof Error ? error.message : "An error occurred while searching for actors");
-      setActorSearchResults([]);
-    } finally {
-      setActorSearchLoading(false);
-    }
-  };
-
-  const handleDirectorSearch = async () => {
-    if (!directorSearchQuery.trim()) return;
-
-    setDirectorSearchLoading(true);
-    setDirectorSearchError("");
-
-    try {
-      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/directors?directorname=${encodeURIComponent(directorSearchQuery)}`);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.reason || "Failed to search for directors");
-      }
-
-      const data = await response.json();
-      setDirectorSearchResults(data);
-    } catch (error) {
-      setDirectorSearchError(error instanceof Error ? error.message : "An error occurred while searching for directors");
-      setDirectorSearchResults([]);
-    } finally {
-      setDirectorSearchLoading(false);
-    }
-  };
-
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
