@@ -113,7 +113,7 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
         return arr.join(", ");
     };
 
-    // ANI Empty values CHANGE: Helper function to check if string is empty and return appropriate message
+    // ANI Empty values CHANGE: Helper function to check if string is empty and return appropriate message in frontend
     const displayText = (text: string | undefined) => {
         if (!text || text.trim() === "") {
             return <em className="text-gray-500">No information available via the external API: TMDB</em>;
