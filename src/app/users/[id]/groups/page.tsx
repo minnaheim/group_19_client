@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/types/user";
 import { Movie } from "@/app/types/movie";
+import { PoolEntry } from "@/app/types/poolEntry";
 import { useApi } from "@/app/hooks/useApi";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { Button } from "@/components/ui/button";
@@ -498,9 +499,17 @@ const GroupsManagement: React.FC = () => {
         const members: User[] = await apiService.get<User[]>(
           `/groups/${groupId}/members`,
         );
-        const movies: Movie[] = await apiService.get<Movie[]>(
+        
+        // Get pool entries (with movie and addedBy properties)
+        const poolEntries: PoolEntry[] = await apiService.get<PoolEntry[]>(
           `/groups/${groupId}/pool`,
         );
+        
+        // Extract just the movies from pool entries
+        const movies: Movie[] = Array.isArray(poolEntries) 
+          ? poolEntries.map(entry => entry.movie)
+          : [];
+          
         const creator = group.creator; // fetchUserById handles its own errors/placeholders
 
         // Construct the detailed object
@@ -1404,7 +1413,7 @@ const GroupsManagement: React.FC = () => {
                                     className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
                                   >
                                     <img
-                                      src={movie.posterURL}
+                                      src={movie.posterURL && movie.posterURL.startsWith('http') ? movie.posterURL : movie.posterURL ? `https://image.tmdb.org/t/p/w500${movie.posterURL}` : "/placeholder.png"}
                                       alt={movie.title}
                                       className="w-full h-full object-cover"
                                     />
@@ -2143,7 +2152,7 @@ const GroupsManagement: React.FC = () => {
                                 >
                                   <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0">
                                     <img
-                                      src={movie.posterURL}
+                                      src={movie.posterURL && movie.posterURL.startsWith('http') ? movie.posterURL : movie.posterURL ? `https://image.tmdb.org/t/p/w500${movie.posterURL}` : "/placeholder.png"}
                                       alt={movie.title}
                                       className="w-full h-full object-cover"
                                     />
