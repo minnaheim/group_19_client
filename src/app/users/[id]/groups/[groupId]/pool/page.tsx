@@ -5,15 +5,15 @@ import Navigation from "@/components/ui/navigation";
 import { User } from "@/app/types/user";
 import { Movie } from "@/app/types/movie";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import ActionMessage from "@/components/ui/action_message";
-import type { ApplicationError } from "@/app/types/error";
 import { PoolEntry } from "@/app/types/poolEntry";
+import type { ApplicationError } from "@/app/types/error"; // Re-added to handle typed errors
 
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import { useEffect, useState } from "react";
 
 import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
-import MovieCardSimple from "@/components/ui/movie_card_simple";
+import MovieCard from "@/components/ui/Movie_card";
+import MovieDetailsModal from "@/components/ui/movie_details";
 import { Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,11 @@ const MoviePool: React.FC = () => {
   const apiService = useApi();
   const [moviePool, setMoviePool] = useState<PoolEntry[]>([]);
   const [userWatchlist, setUserWatchlist] = useState<Movie[]>([]);
+  const [userWatched, setUserWatched] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isAddingWatchlist, setIsAddingWatchlist] = useState<boolean>(false);
+  const [isMarkingSeen, setIsMarkingSeen] = useState<boolean>(false);
   const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } =
     useGroupPhase(groupId as string);
 
@@ -50,6 +55,27 @@ const MoviePool: React.FC = () => {
     }
   }, [phase, phaseLoading, phaseError, router, userId, groupId]);
 
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => setShowSuccessMessage(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
+
+  // Navigation functions
+  const navigateToGroupPool = (groupId: number) => {
+    router.push(`/users/${userId}/groups/${groupId}/pool`);
+  };
+  const navigateToGroupVoting = (groupId: number) => {
+    router.push(`/users/${userId}/groups/${groupId}/vote`);
+  };
+  const navigateToGroupResults = (groupId: number) => {
+    router.push(`/users/${userId}/groups/${groupId}/results`);
+  };
+  const navigateToMovieSearch = () => {
+    router.push(`/users/${userId}/movie_search`);
+  };
+
   // Fetch user's watchlist
   useEffect(() => {
     const fetchWatchlist = async () => {
@@ -61,8 +87,14 @@ const MoviePool: React.FC = () => {
           response && typeof response === "object" && "watchlist" in response
         ) {
           setUserWatchlist((response as User).watchlist);
+          if ("watchedMovies" in response) {
+            setUserWatched((response as User).watchedMovies);
+          } else {
+            setUserWatched([]);
+          }
         } else {
           setUserWatchlist([]);
+          setUserWatched([]);
         }
       } catch (err: unknown) {
         console.error("Failed to fetch watchlist:", err);
@@ -124,88 +156,64 @@ const MoviePool: React.FC = () => {
     fetchMoviePool();
   }, [groupId, apiService]);
 
-  const handleAddToPool = (movie: Movie) => {
-    setSelectedMovies((prev) => {
-      // If the movie is already selected, deselect it
-      if (prev.some((m) => m.movieId === movie.movieId)) {
-        return prev.filter((m) => m.movieId !== movie.movieId);
-      } // Otherwise select it, but enforce single selection
-      else {
-        // We want to only allow one movie at a time
-        return [movie]; // Replace previous selection with just this movie
-      }
-    });
-  };
-
-  const handleAddMovieToPool = async () => {
-    if (selectedMovies.length === 0) {
-      setSubmitError("Please select at least one movie to add.");
+  // Modified to add movie directly to pool on click
+  const handleAddToPool = async (movie: Movie) => {
+    if (phase !== "POOL") {
+      setSubmitError("You can only add movies during the POOL phase.");
       return;
     }
 
     setSubmitError("");
     setSuccessMessage("");
     setShowSuccessMessage(false);
-    let lastResponse: PoolEntry[] | null = null;
-
-    for (const movie of selectedMovies) {
-      try {
-        const response = await apiService.post<PoolEntry[]>(
-          `/groups/${groupId}/pool/${movie.movieId}`,
-          {},
-        );
-        if (response && Array.isArray(response)) {
-          lastResponse = response; // Capture the latest state of the pool
+    
+    try {
+      const response = await apiService.post<PoolEntry[]>(
+        `/groups/${groupId}/pool/${movie.movieId}`,
+        {},
+      );
+      if (response && Array.isArray(response)) {
+        setMoviePool(response);
+        setSuccessMessage(`Added '${movie.title}'`);
+        setShowSuccessMessage(true);
+      }
+    } catch (err: unknown) {
+      console.error(`Failed to add movie ${movie.movieId} to pool:`, err);
+      if (err instanceof Error && "status" in err) {
+        const appErr = err as ApplicationError;
+        let specificError = "";
+        switch (appErr.status) {
+          case 403:
+            specificError = `You have already added the maximum number of movies (2).`;
+            break;
+          case 404:
+            specificError = `Movie with ID ${movie.movieId} not found or group not found.`;
+            break;
+          case 409:
+            specificError = `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOL phase.`;
+            break;
+          default:
+            specificError = `Failed to add '${movie.title}'.`;
         }
-      } catch (err: unknown) {
-        console.error(`Failed to add movie ${movie.movieId} to pool:`, err);
-        if (err instanceof Error && "status" in err) {
-          const appErr = err as ApplicationError;
-          let specificError = "";
-          switch (appErr.status) {
-            case 403:
-              specificError = `You have already added the maximum number of movies (2).`;
-              break;
-            case 404:
-              specificError = `Movie with ID ${movie.movieId} not found or group not found.`;
-              break;
-            case 409:
-              specificError = `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOL phase.`;
-              break;
-            default:
-              specificError = `Failed to add '${movie.title}'.`;
-          }
-          setSubmitError(
-            (prev) =>
-              prev + (prev ? "\n" : "") + specificError,
-          );
-        } else {
-          setSubmitError(
-            (prev) =>
-              prev + (prev ? "\n" : "") + `An unknown error occurred while adding '${movie.title}'.`,
-          );
-        }
+        setSubmitError(specificError);
+      } else {
+        setSubmitError(`An unknown error occurred while adding '${movie.title}'.`);
       }
     }
+  };
 
-    if (lastResponse) {
-      setMoviePool(lastResponse); // Set the pool to the state after the last successful addition
-    }
-    setSelectedMovies([]); // Clear selection after attempting to add
-
-    if (!submitError && lastResponse) { // only show success if no errors occurred for any movie and we got a response
-      setSuccessMessage("Selected movies processed!");
-      setShowSuccessMessage(true);
-    } else if (!submitError && selectedMovies.length > 0 && !lastResponse) {
-      // This case might happen if all additions failed but didn't set submitError correctly, or no movies were actually processed
-      // Or if the server did not return the pool after adding (though our backend does)
-      // To be safe, one might refetch the pool here.
-      // fetchMoviePool();
-    }
+  // Function has been merged into handleAddToPool
+  // Keeping this as a stub for compatibility
+  const handleAddMovieToPool = async () => {
+    // This function is no longer used since movies are added directly on click
+    // If needed, this is where we would add batch processing logic
   };
 
   // Function to remove movie from pool
   const handleRemoveFromPool = async (movieId: number) => {
+    // Capture removed movie title for message
+    const removedEntry = moviePool.find((e) => e.movie.movieId === movieId);
+    const removedTitle = removedEntry?.movie.title;
     setSubmitError("");
     setSuccessMessage("");
     setShowSuccessMessage(false);
@@ -215,7 +223,11 @@ const MoviePool: React.FC = () => {
       setMoviePool((prevPool) =>
         prevPool.filter((entry) => entry.movie.movieId !== movieId),
       );
-      setSuccessMessage("Movie removed successfully!");
+      setSuccessMessage(
+        removedTitle
+          ? `Removed '${removedTitle}'`
+          : "Movie removed successfully!"
+      );
       setShowSuccessMessage(true);
     } catch (err: unknown) {
       console.error("Failed to remove movie from pool:", err);
@@ -239,6 +251,61 @@ const MoviePool: React.FC = () => {
     }
   };
 
+  const handleMovieClick = async (movie: Movie) => {
+    try {
+      const detailed = await apiService.get<Movie>(`/movies/${movie.movieId}`);
+      setSelectedMovie(detailed && typeof detailed === 'object' ? detailed as Movie : movie);
+      setIsModalOpen(true);
+    } catch {
+      // fallback to basic
+      setSelectedMovie(movie);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleAddToWatchlist = async (movie: Movie) => {
+    if (isAddingWatchlist) {
+      setSuccessMessage("Please wait while current operation completes");
+      setShowSuccessMessage(true);
+      return;
+    }
+    if (userWatchlist.some((m) => m.movieId === movie.movieId)) {
+      setSuccessMessage("Movie already in your watchlist");
+      setShowSuccessMessage(true);
+      return;
+    }
+    try {
+      setIsAddingWatchlist(true);
+      await apiService.post(`/users/${userId}/watchlist/${movie.movieId}`, {});
+      setUserWatchlist((prev) => [...prev, movie]);
+      setSuccessMessage("Movie added to your watchlist!");
+      setShowSuccessMessage(true);
+    } catch {
+      setSubmitError("Failed to add movie to watchlist.");
+    } finally {
+      setIsAddingWatchlist(false);
+    }
+  };
+
+  const handleMarkAsSeen = async (movie: Movie) => {
+    if (isMarkingSeen) {
+      setSuccessMessage("Please wait while current operation completes");
+      setShowSuccessMessage(true);
+      return;
+    }
+    try {
+      setIsMarkingSeen(true);
+      await apiService.post(`/users/${userId}/seen/${movie.movieId}`, {});
+      setUserWatched((prev) => [...prev, movie]);
+      setSuccessMessage("Movie marked as seen!");
+      setShowSuccessMessage(true);
+    } catch {
+      setSubmitError("Failed to mark movie as seen.");
+    } finally {
+      setIsMarkingSeen(false);
+    }
+  };
+
   return (
     <>
       {submitError && (
@@ -247,12 +314,14 @@ const MoviePool: React.FC = () => {
           onClose={() => setSubmitError("")}
         />
       )}
-      <ActionMessage
-        message={successMessage}
-        isVisible={showSuccessMessage}
-        onHide={() => setShowSuccessMessage(false)}
-        className="bg-green-500"
-      />
+      {/* Centered overlay for success messages */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+            {successMessage}
+          </div>
+        </div>
+      )}
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation */}
         <Navigation userId={userId} activeItem="Movie Groups" />
@@ -273,8 +342,13 @@ const MoviePool: React.FC = () => {
           {/* Show User's Watchlist */}
           <div className="mb-8">
             <h2 className="font-semibold text-[#3b3e88] text-xl">
-              Choose up to two Movies from your Watchlist to Add to the Pool
+              Your Watchlist
             </h2>
+            {userWatchlist.length > 0 && (
+              <p className="mt-1 text-sm text-[#3C3F88]">
+                Click on a movie to add it to the pool.
+              </p>
+            )}
           </div>
           <div className="overflow-x-auto mb-8">
             <MovieListHorizontal
@@ -284,89 +358,70 @@ const MoviePool: React.FC = () => {
               noResultsMessage="No movies match your search"
               hasOuterContainer={false}
               selectedMovieIds={selectedMovies.map((m) => m.movieId)}
+              onAddMovieClick={navigateToMovieSearch}
             />
           </div>
-          {/* Selected Movie Info */}
-          <p className="text-center mt-4 text-sm text-[#3C3F88]">
-            {selectedMovies.length > 0
-              ? `You selected: ${selectedMovies[0].title}`
-              : "No movie selected"}
-          </p>
-
-          {/* Add to Pool Button */}
-          <div className="flex justify-end mt-4">
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
-              onClick={handleAddMovieToPool}
-              disabled={phase !== "POOL"}
-            >
-              Add to Pool
-            </Button>
-            {phase !== "POOL" && (
+          {/* Informational message for non-pool phase */}
+          {phase !== "POOL" && (
+            <div className="flex justify-center mt-4">
               <ErrorMessage
                 message="You can only add movies during the POOL phase."
                 onClose={() => setSubmitError("")}
               />
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Movie Pool */}
           <div className="mb-8">
-            <h2 className="font-semibold text-[#3b3e88] text-xl">
+            <h2 className="mt-15 font-semibold text-[#3b3e88] text-xl">
               Current Movie Pool
             </h2>
-            {/* Optionally, display how many movies the current user has added */}
-            {moviePool.filter((entry) => entry.addedBy === parseInt(userId || "0")).length >= 2 && (
-              <p className="text-sm text-orange-600">
-                You have added{" "}
-                {moviePool.filter((entry) => entry.addedBy === parseInt(userId || "0")).length}/2 movies.
-              </p>
+            {/* Always show added count; text is orange when full */}
+            <p className={`text-sm ${moviePool.filter((entry) => entry.addedBy === parseInt(userId || "0")).length === 2 ? "text-orange-600" : "text-[#3C3F88]"}`}>
+              You have added {moviePool.filter((entry) => entry.addedBy === parseInt(userId || "0")).length}/2 movies.
+            </p>
+          </div>
+
+          {/* Display movie pool or placeholder */}
+          <div className="overflow-x-auto mb-8">
+            {moviePool.length === 0 ? (
+              <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded">
+                <p className="text-gray-500">No movies in the pool yet.</p>
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                {moviePool.map((entry) => (
+                  <div key={entry.movie.movieId} className="relative flex-shrink-0">
+                    <MovieCard
+                      movie={entry.movie}
+                      onClick={handleMovieClick}
+                    />
+                    {phase === "POOL" && entry.addedBy === parseInt(userId || "0") && (
+                      <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => handleRemoveFromPool(entry.movie.movieId)}
+                        className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
+                        title="Remove from pool"
+                      >
+                        <Trash2 size={16} className="text-red-500" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Display movie pool in horizontal list, just like the watchlist */}
-          <div className="flex overflow-x-auto mb-8 gap-4">
-            {moviePool.map((entry) => (
-              <div key={entry.movie.movieId} className="relative flex-shrink-0">
-                <MovieCardSimple movie={entry.movie} onClick={() => {}} />
-                {phase === "POOL" && (
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => handleRemoveFromPool(entry.movie.movieId)}
-                    className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
-                    title="Remove from pool"
-                  >
-                    <Trash2
-                      size={16}
-                      className={`text-red-500 ${
-                        entry.addedBy !== parseInt(userId || "0")
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    />
-                  </button>
-                )}
-                {/* Optionally display who added the movie if not the current user */}
-                {entry.addedBy !== parseInt(userId || "0") && (
-                  <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs p-1 rounded">
-                    Added by user {entry.addedBy}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
           <div className="flex justify-between items-center mt-8 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/users/${userId}/groups`)}
-            >
+            {/* Back to dashboard (left) */}
+            <Button variant="outline" onClick={() => router.push(`/users/${userId}/groups`)}>
               Back to group overview
             </Button>
-            {/* Start Voting button for group creator */}
+            {/* Start Voting (creator only, right) */}
             {phase === "POOL" && phaseGroup && String(phaseGroup.creatorId) === String(userId) && (
               <Button
-                className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm mt-2"
+                variant="secondary"
+                disabled={moviePool.length < 2}
                 onClick={async () => {
                   try {
                     await apiService.post(`/groups/${groupId}/start-voting`, {});
@@ -405,12 +460,23 @@ const MoviePool: React.FC = () => {
                   }
                 }}
               >
-                Start Voting
+                End Pooling & Start Voting
               </Button>
             )}
           </div>
         </div>
       </div>
+      {/* Movie details modal */}
+      {selectedMovie && (
+        <MovieDetailsModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          isInWatchlist={userWatchlist.some((m) => m.movieId === selectedMovie.movieId)}
+          isInSeenList={userWatched.some((m) => m.movieId === selectedMovie.movieId)}
+          onAddToWatchlist={handleAddToWatchlist}
+        />
+      )}
     </>
   );
 };
