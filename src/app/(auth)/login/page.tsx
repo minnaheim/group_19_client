@@ -383,29 +383,13 @@ const Login: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white py-4 sm:py-6 px-4 sm:px-6 mt-auto">
+      <footer className="bg-white py-8 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center gap-1 sm:gap-2 mb-2 md:mb-0">
-            <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-1 rounded">
-              <svg
-                className="w-3 h-3 sm:w-4 sm:h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-                >
-                </path>
-              </svg>
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-[#3b3e88]">
-              Movie Night Planner{" "}
-            </span>
+          <div className="flex items-center gap-2 mb-4 md:mb-0">
+            <Image src="/Projector.png" alt="App Icon" width={30} height={30}/>
+            <span className="text-sm font-medium text-[#3b3e88]">
+        Movie Night Planner{" "}
+      </span>
           </div>
         </div>
       </footer>
