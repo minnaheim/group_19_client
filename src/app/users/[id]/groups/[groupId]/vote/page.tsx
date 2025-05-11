@@ -10,7 +10,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/app/hooks/useApi";
-import { Trash2, RefreshCw } from "lucide-react"; // Import icons
+import { Trash2 } from "lucide-react"; // Import icons
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 import { VoteStateDTO } from "@/app/types/vote";
@@ -120,7 +120,7 @@ const Vote: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [selectingForRank, setSelectingForRank] = useState<number | null>(null);
-  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [setHistory] = useState<HistoryState[]>([]);
 
   // Detect if we're on mobile
   useEffect(() => {
@@ -440,7 +440,7 @@ const Vote: React.FC = () => {
             break;
           case 404:
             setError(
-              "We couldn't find the user or group for submitting ranks."
+              "We couldn&apos;t find the user or group for submitting ranks."
             );
             break;
           case 409:

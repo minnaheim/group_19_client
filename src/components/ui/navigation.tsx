@@ -57,13 +57,6 @@ type NavItemProps = {
   href: string;
 };
 
-type MobileNavItemProps = {
-  id: string;
-  Icon: React.ElementType;
-  active: boolean;
-  href: string;
-};
-
 type NavigationProps = {
   userId: string;
   activeItem?: string;
@@ -88,27 +81,6 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
         {active && (
           <div className="absolute right-0 w-1 h-6 bg-[#1657ff] rounded-full shadow-[-2px_0px_10px_2px_#0038ff26]" />
         )}
-      </div>
-    </Link>
-  );
-};
-
-const MobileNavItem = ({ id, Icon, active, href }: MobileNavItemProps) => {
-  return (
-    <Link href={href} className="block w-1/4">
-      <div className="flex flex-col items-center justify-center">
-        <Icon
-          size={20}
-          stroke={active ? "#1657FF" : "#B9C0DE"}
-          className={active ? "text-[#1657FF]" : "text-[#B9C0DE]"}
-        />
-        <div
-          className={`text-xs mt-1 ${
-            active ? "text-[#1657ff]" : "text-[#b9c0de]"
-          }`}
-        >
-          {id.split(" ")[0]}
-        </div>
       </div>
     </Link>
   );
