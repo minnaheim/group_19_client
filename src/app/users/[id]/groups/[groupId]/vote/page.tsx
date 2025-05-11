@@ -120,7 +120,7 @@ const Vote: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [selectingForRank, setSelectingForRank] = useState<number | null>(null);
-  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [, setHistory] = useState<HistoryState[]>([]);
 
   // Detect if we're on mobile
   useEffect(() => {
