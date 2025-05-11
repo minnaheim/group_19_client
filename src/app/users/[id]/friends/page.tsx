@@ -84,14 +84,12 @@ const FriendsManagement: React.FC = () => {
 
   // --- Fetch All Users Once ---
   const fetchAllUsers = useCallback(async () => {
-    if (usersLoaded) return; // Don't fetch again if already loaded
+    if (usersLoaded || isLoadingUsers) return;
 
     setIsLoadingUsers(true);
     try {
-      // This assumes you have an endpoint that returns all users
-      // If you don't, you may need to adjust this to fetch a large number of users
       const users = await retry(() =>
-        apiService.get<UserSearchResponse[]>("/users/all")
+          apiService.get<UserSearchResponse[]>("/users/all")
       );
 
       if (Array.isArray(users)) {
@@ -103,13 +101,12 @@ const FriendsManagement: React.FC = () => {
       }
     } catch (err) {
       console.error("Error fetching all users:", err);
-      // Fall back to regular search if we can't get all users
       setError("Could not load user search. Using regular search instead.");
       setUsersLoaded(false);
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [apiService, usersLoaded]);
+  }, []);
 
   // --- Filter Users Client-Side ---
   const filterUsers = useCallback((searchTerm: string) => {
@@ -129,31 +126,24 @@ const FriendsManagement: React.FC = () => {
     // Get existing friend IDs and usernames of pending requests
     const existingFriendIds = friends.map((friend) => friend.userId);
     const existingSentRequestUsernames = sentRequests.map((req) =>
-      req.receiver.username
+        req.receiver.username
     );
 
     // Filter users
     const filtered = allUsers.filter((user) =>
-      // Contains search term
-      user.username.toLowerCase().includes(normalizedSearch) &&
-      // Not already a friend
-      !existingFriendIds.includes(user.userId) &&
-      // Not already sent a request to
-      !existingSentRequestUsernames.includes(user.username) &&
-      // Not the current user
-      user.userId !== parseInt(userId) // Add this line
+        // Contains search term
+        user.username.toLowerCase().includes(normalizedSearch) &&
+        // Not already a friend
+        !existingFriendIds.includes(user.userId) &&
+        // Not already sent a request to
+        !existingSentRequestUsernames.includes(user.username) &&
+        // Not the current user
+        user.userId !== parseInt(userId)
     );
 
     setFilteredUsers(filtered);
     setShowUserSearchResults(filtered.length > 0);
-  }, [
-    allUsers,
-    friends,
-    sentRequests,
-    usersLoaded,
-    isLoadingUsers,
-    fetchAllUsers,
-  ]);
+  }, [allUsers, friends, sentRequests, userId]); // Remove fetchAllUsers and loading states
 
   // Listen for outside clicks to close dropdown
   useEffect(() => {
@@ -174,108 +164,121 @@ const FriendsManagement: React.FC = () => {
 
   // --- Fetch Friends Data Effect ---
   useEffect(() => {
+    let mounted = true;
+
     const fetchFriendsData = async () => {
-      // Existing fetch logic unchanged
       if (!id) return;
 
       try {
         setLoading(true);
-        setError(null); // Clear previous errors on new fetch attempt
+        setError(null);
 
-        // --- Block: Fetch friends list ---
+        // Fetch friends list
         try {
-          const friendsData = await retry(() =>
-            apiService.get<User[]>("/friends")
-          );
-          const sortedFriends = Array.isArray(friendsData)
-            ? [...friendsData].sort((a, b) =>
-              a.username.localeCompare(b.username)
-            )
-            : [];
-          setFriends(sortedFriends);
-          showSuccessMessageFn("Friends list loaded"); // Success
+          const friendsData = await retry(() => apiService.get<User[]>("/friends"));
+          if (mounted) {
+            const sortedFriends = Array.isArray(friendsData)
+                ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
+                : [];
+            setFriends(sortedFriends);
+            showSuccessMessageFn("Friends list loaded");
+          }
         } catch (friendsError: unknown) {
           console.error("Error fetching friends list:", friendsError);
-          if (friendsError instanceof Error && "status" in friendsError) {
-            const status = (friendsError as ApplicationError).status;
-            if (status === 401) {
-              setError("Your session has expired. Please log in again.");
-            } else if (status === 404) {
-              setError("Could not find your user account.");
+          if (mounted) {
+            if (friendsError instanceof Error && "status" in friendsError) {
+              const status = (friendsError as ApplicationError).status;
+              if (status === 401) {
+                setError("Your session has expired. Please log in again.");
+              } else if (status === 404) {
+                setError("Could not find your user account.");
+              } else {
+                setError("Failed to load friends list. Please try again later.");
+              }
             } else {
               setError("Failed to load friends list. Please try again later.");
             }
-          } else {
-            setError("Failed to load friends list. Please try again later.");
           }
           setLoading(false);
-          return; // Stop fetching if primary data failed
+          return;
         }
 
-        // --- Block: Get received friend requests ---
+        // Get received friend requests
         try {
           const receivedRequestsData = await retry(() =>
-            apiService.get<FriendRequest[]>("/friends/friendrequests/received")
+              apiService.get<FriendRequest[]>("/friends/friendrequests/received")
           );
-          setReceivedRequests(
-            Array.isArray(receivedRequestsData) ? receivedRequestsData : [],
-          );
+          if (mounted) {
+            setReceivedRequests(
+                Array.isArray(receivedRequestsData) ? receivedRequestsData : []
+            );
+          }
         } catch (receivedRequestsError: unknown) {
-          console.error(
-            "Error fetching received friend requests:",
-            receivedRequestsError,
-          );
-          if (
-            receivedRequestsError instanceof Error &&
-            "status" in receivedRequestsError &&
-            (receivedRequestsError as ApplicationError).status === 401
-          ) {
-            setError("Session expired. Cannot load received requests.");
-          } else {
-            setError("Failed to load received friend requests.");
+          console.error("Error fetching received friend requests:", receivedRequestsError);
+          if (mounted) {
+            if (
+                receivedRequestsError instanceof Error &&
+                "status" in receivedRequestsError &&
+                (receivedRequestsError as ApplicationError).status === 401
+            ) {
+              setError("Session expired. Cannot load received requests.");
+            } else {
+              setError("Failed to load received friend requests.");
+            }
           }
         }
 
-        // --- Block: Get sent friend requests ---
+        // Get sent friend requests
         try {
           const sentRequestsData = await retry(() =>
-            apiService.get<FriendRequest[]>("/friends/friendrequests/sent")
+              apiService.get<FriendRequest[]>("/friends/friendrequests/sent")
           );
-          setSentRequests(
-            Array.isArray(sentRequestsData) ? sentRequestsData : [],
-          );
+          if (mounted) {
+            setSentRequests(
+                Array.isArray(sentRequestsData) ? sentRequestsData : []
+            );
+          }
         } catch (sentRequestsError: unknown) {
-          console.error(
-            "Error fetching sent friend requests:",
-            sentRequestsError,
-          );
-          if (
-            sentRequestsError instanceof Error &&
-            "status" in sentRequestsError &&
-            (sentRequestsError as ApplicationError).status === 401
-          ) {
-            setError("Session expired. Cannot load sent requests.");
-          } else {
-            setError("Failed to load sent friend requests.");
+          console.error("Error fetching sent friend requests:", sentRequestsError);
+          if (mounted) {
+            if (
+                sentRequestsError instanceof Error &&
+                "status" in sentRequestsError &&
+                (sentRequestsError as ApplicationError).status === 401
+            ) {
+              setError("Session expired. Cannot load sent requests.");
+            } else {
+              setError("Failed to load sent friend requests.");
+            }
           }
         }
       } catch (error) {
         console.error("Critical error loading friends data:", error);
-        setError("Failed to load friends data. Server may be unavailable.");
+        if (mounted) {
+          setError("Failed to load friends data. Server may be unavailable.");
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchFriendsData();
 
-    // Load all users for client-side filtering when component mounts
+    return () => {
+      mounted = false;
+    };
+  }, [id]); // Only depend on id
+
+  useEffect(() => {
+    // Only fetch if not already loaded or loading
     if (!usersLoaded && !isLoadingUsers) {
       fetchAllUsers();
     }
-  }, [id, apiService, fetchAllUsers, usersLoaded, isLoadingUsers]);
+  }, []); //
 
-  // --- Filter Friends Effect (Unchanged) ---
+  // --- Filter Friends Effect ---
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredFriends(friends);

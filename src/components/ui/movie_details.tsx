@@ -61,7 +61,9 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
   if (!isOpen || !movie) return null;
 
   const handleWatchTrailer = () => {
-    globalThis.open(movie.trailerURL, "_blank");
+      if (movie.trailerURL) {
+          globalThis.open(movie.trailerURL, "_blank");
+      }
   };
 
     // ANI CHANGE: Added handlers with loading states
@@ -105,6 +107,24 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
         }
     };
 
+    // ANI Empty values CHANGE: Helper function to check if array is empty and return appropriate message
+    const displayArray = (arr: string[] | undefined, limit?: number) => {
+        if (!arr || arr.length === 0) {
+            return <em className="text-gray-500">No information available via the external API: TMDB</em>;
+        }
+        // If a limit is specified, slice the array to that limit
+        const displayArr = limit ? arr.slice(0, limit) : arr;
+        return displayArr.join(", ");
+    };
+
+    // ANI Empty values CHANGE: Helper function to check if string is empty and return appropriate message in frontend
+    const displayText = (text: string | undefined) => {
+        if (!text || text.trim() === "") {
+            return <em className="text-gray-500">No information available via the external API: TMDB</em>;
+        }
+        return text;
+    };
+
   return (
     <>
       {/* Modal Overlay */}
@@ -143,25 +163,38 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                 src={movie.posterURL}
               />
             </div>
-            <div className="flex-grow">
-              <p className="mb-2">{movie.description}</p>
+              <div className="px-6 pb-6">
+                    <div className="mb-4">
+                        <h3 className="text-[#3b3e88] font-medium mb-1">Description</h3>
+                        <p className="text-gray-700 text-sm">
+                            {/* ANI Empty values CHANGE: Using helper function for description */}
+                            {displayText(movie.description)}
+                        </p>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                <div>
-                  <span className="font-medium">Genre:</span>{" "}
-                  {movie.genres.join(", ")}
-                </div>
-                <div>
-                  <span className="font-medium">Director:</span>{" "}
-                  {movie.directors && movie.directors.slice(0, 2).join(", ")}
-                  {movie.directors && movie.directors.length > 2}
-                </div>
-                <div className="col-span-2">
-                  <span className="font-medium">Cast:</span>{" "}
-                  {movie.actors && movie.actors.slice(0, 4).join(", ")}
-                  {movie.actors && movie.actors.length > 4}
-                </div>
-              </div>
+                    <div className="mb-4">
+                        <h3 className="text-[#3b3e88] font-medium mb-1">Genres</h3>
+                        <p className="text-gray-700 text-sm">
+                            {/* ANI Empty values CHANGE: Using helper function for genres array */}
+                            {displayArray(movie.genres, 5)}
+                        </p>
+                    </div>
+
+                    <div className="mb-4">
+                        <h3 className="text-[#3b3e88] font-medium mb-1">Directors</h3>
+                        <p className="text-gray-700 text-sm">
+                            {/* ANI Empty values CHANGE: Using helper function for directors array */}
+                            {displayArray(movie.directors, 5)}
+                        </p>
+                    </div>
+
+                    <div className="mb-6">
+                        <h3 className="text-[#3b3e88] font-medium mb-1">Actors</h3>
+                        <p className="text-gray-700 text-sm">
+                            {/* ANI Empty values CHANGE: Using helper function for actors array */}
+                            {displayArray(movie.actors, 5)}
+                        </p>
+                    </div>
 
               <div className="flex flex-wrap gap-2 mt-4">
                 <Button
@@ -169,10 +202,18 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                   className="flex items-center gap-1"
                   onClick={handleWatchTrailer}
                 >
-                  <Play size={16} /> Watch Trailer
+                    {movie.trailerURL ? (
+                          <>
+                            <Play size={16} />
+                            Watch Trailer
+                          </>
+                    ) : (
+                        "No Trailer Available for this Movie"
+                    )}
                 </Button>
 
-                {/* Conditional buttons based on what actions are available */}
+
+                  {/* Conditional buttons based on what actions are available */}
                 {onAddToWatchlist && !isInWatchlist && (
                   <Button
                     variant="secondary"

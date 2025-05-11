@@ -360,7 +360,7 @@ const MovieFavorites: React.FC = () => {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/genre_favorites")}
+          onClick={() => router.push("/favorite_genres")}
           className="border-[#3b3e88] text-[#3b3e88] hover:bg-[#3b3e88]/10 rounded-xl"
         >
           Back

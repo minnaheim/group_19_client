@@ -139,7 +139,7 @@ const GenreFavorites: React.FC = () => {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/register")}
           disabled={isLoading}
           className="border-[#3b3e88] text-[#3b3e88] hover:bg-[#3b3e88]/10 rounded-xl"
         >
