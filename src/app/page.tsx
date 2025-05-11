@@ -64,7 +64,7 @@ const LandingPage = () => {
       <main className="flex-1 flex flex-col md:flex-row items-center justify-center px-6 md:px-12 lg:px-24 py-12 gap-8 md:gap-12">
         <div className="md:w-1/2 space-y-6 text-center md:text-left">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[#3b3e88]">
-            No More Movie Night
+            <span className="text-rose-500">No</span> More Movie Night
             <span className="block text-rose-500">Debates</span>
           </h2>
           <p className="text-lg md:text-xl text-[#b9c0de] max-w-lg">
@@ -253,26 +253,10 @@ const LandingPage = () => {
       <footer className="bg-white py-8 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-1 rounded">
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-                >
-                </path>
-              </svg>
-            </div>
+            <Image src="/Projector.png" alt="App Icon" width={30} height={30}/>
             <span className="text-sm font-medium text-[#3b3e88]">
-              Movie Night Planner{" "}
-            </span>
+        Movie Night Planner{" "}
+      </span>
           </div>
         </div>
       </footer>
