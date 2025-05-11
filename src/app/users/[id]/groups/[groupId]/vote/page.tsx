@@ -514,8 +514,8 @@ const Vote: React.FC = () => {
                   Then tap on a movie from the pool to assign it to that rank
                 </li>
                 <li>
-                  To change a movie's rank, first remove it, then select a new
-                  rank
+                  To change a movie&apos;s rank, first remove it, then select a
+                  new rank
                 </li>
               </ol>
             </div>
