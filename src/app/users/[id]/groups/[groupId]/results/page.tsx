@@ -5,7 +5,7 @@ import useLocalStorage from "@/app/hooks/useLocalStorage";
 import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; // Added useEffect
 import { useApi } from "@/app/hooks/useApi";
 import { retry } from "src/utils/retry";
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
@@ -37,7 +37,7 @@ const Results: React.FC = () => {
   };
   if (Array.isArray(id)) id = id[0];
   if (Array.isArray(groupId)) groupId = groupId[0];
-  const { phase: phaseFromHook, loading: phaseLoading, error: phaseError } =
+  const { group: phaseGroup, phase: phaseFromHook, loading: phaseLoading, error: phaseError } =
     useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
@@ -111,6 +111,41 @@ const Results: React.FC = () => {
     };
     fetchCombined();
   }, [apiService, groupId, id, phaseFromHook]);
+
+  // ANI CHANGE: useEffect to check if the movie is already in the watched list on load
+  useEffect(() => {
+    const checkIfMovieIsWatched = async () => {
+      if (fullWinningMovie && userId && apiService) { // Ensure apiService is defined
+        try {
+          // Assuming apiService.get returns the data directly or data wrapped in a response object
+          // Adjust based on your apiService implementation
+          const response = await apiService.get(`/users/${userId}/watched`);
+          // ANI CHANGE: Refactor watchedMovies assignment to safely access response.data
+          let watchedMoviesList: any[] = [];
+          if (Array.isArray(response)) {
+            watchedMoviesList = response;
+          } else if (response && typeof response === 'object' && Array.isArray((response as any).data)) {
+            watchedMoviesList = (response as any).data;
+          }
+
+          if (fullWinningMovie.movieId) {
+            const isWatched = watchedMoviesList.some(
+              (movie: any) => movie.movieId === fullWinningMovie.movieId || movie.id === fullWinningMovie.movieId // Check both movieId and id just in case
+            );
+            if (isWatched) {
+              setMovieAddedToWatchedList(true);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching watched movies:", err);
+          //setActionMessage("Could not verify watched status.");
+          //setShowActionMessage(true);
+        }
+      }
+    };
+
+    checkIfMovieIsWatched();
+  }, [fullWinningMovie, userId, apiService]); // Dependencies for the useEffect hook
 
   // ANI CHANGE: New function to add the winning movie to the current user's watched list
   const addToMyWatchedList = async () => {
@@ -199,7 +234,9 @@ const Results: React.FC = () => {
         <div className="mb-8 flex items-center">
           <div>
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
-              Movie Ranking Results
+            {phaseGroup
+                ? `${phaseGroup.groupName} - Final Movie Ranking`
+                : "Final Movie Ranking"}
             </h1>
             <p className="text-[#b9c0de] mt-2">
               See what your group has chosen to watch
@@ -280,7 +317,7 @@ const Results: React.FC = () => {
                     onClick={addToMyWatchedList}
                     disabled={!fullWinningMovie || loading || !!error ||
                       movieAddedToWatchedList || isAddingToWatchedList}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-[#7824ec] hover:bg-opacity-90"
                   >
                     {movieAddedToWatchedList
                       ? "Movie marked as seen ✓"

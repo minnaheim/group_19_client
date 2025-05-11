@@ -134,6 +134,22 @@ const GroupsManagement: React.FC = () => {
     Friend[]
   >([]);
 
+  // Track pool and vote counts for enabling phase transitions
+  const [poolCount, setPoolCount] = useState<number>(0);
+  const [voteCount, setVoteCount] = useState<number>(0);
+
+  // Fetch counts when a group is selected
+  useEffect(() => {
+    if (selectedGroup) {
+      apiService.get(`/groups/${selectedGroup.groupId}/pool`)
+        .then((res: any) => Array.isArray(res) && setPoolCount(res.length))
+        .catch(() => setPoolCount(0));
+      apiService.get(`/groups/${selectedGroup.groupId}/votes`)
+        .then((res: any) => Array.isArray(res) && setVoteCount(res.length))
+        .catch(() => setVoteCount(0));
+    }
+  }, [selectedGroup, apiService]);
+
   // Ref for click outside handling
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
@@ -2183,7 +2199,8 @@ const GroupsManagement: React.FC = () => {
                         {/* Action buttons */}
                         <div className="flex flex-col gap-3 mt-4">
                           <Button
-                            className="bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm"
+                            variant="secondary"
+                            className="bg-[#7824ec] hover:bg-opacity-90"
                             onClick={() => {
                               const phase = selectedGroup.phase;
                               if (phase === "POOL") {
@@ -2198,7 +2215,7 @@ const GroupsManagement: React.FC = () => {
                             }}
                           >
                             {selectedGroup.phase === "POOL"
-                              ? "Add/View Movie Pool"
+                              ? "View & Edit Movie Pool"
                               : selectedGroup.phase === "VOTING"
                               ? "Go to Voting"
                               : "View Results"}
@@ -2207,7 +2224,10 @@ const GroupsManagement: React.FC = () => {
                               parseInt(userId || "-1") &&
                             selectedGroup.phase !== "RESULTS" && (
                             <Button
-                              className="bg-violet-600 hover:bg-violet-700 rounded-xl text-sm"
+                              variant="secondary"
+                              disabled={
+                                selectedGroup.phase === "POOL" && poolCount < 2
+                              }
                               onClick={() =>
                                 handleAdvancePhase(
                                   selectedGroup.groupId,
@@ -2215,7 +2235,7 @@ const GroupsManagement: React.FC = () => {
                                 )}
                             >
                               {selectedGroup.phase === "POOL"
-                                ? "Start Voting Phase"
+                                ? "End Pooling & Start Voting"
                                 : "End Voting & Show Results"}
                             </Button>
                           )}
