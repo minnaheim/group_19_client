@@ -734,8 +734,76 @@ const Vote: React.FC = () => {
             </div>
           </DndContext>
         )}
-
         {/* Buttons */}
+        <div className="flex justify-between items-center mt-4">
+          {/* <div className="flex gap-2"> */}
+          <Button
+            onClick={handleSubmitRanking}
+            disabled={
+              isSubmitting ||
+              phase !== "VOTING" ||
+              !isSubmitEnabled() ||
+              hasSubmitted
+            }
+          >
+            {hasSubmitted
+              ? "Submitted"
+              : isSubmitting
+                ? "Submitting..."
+                : "Submit Rankings"}
+          </Button>
+          {phase === "VOTING" &&
+            phaseGroup &&
+            String(phaseGroup.creatorId) === String(userId) && (
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    await apiService.post(
+                      `/groups/${groupId}/show-results`,
+                      {}
+                    );
+                    setSuccessMessage(
+                      "Voting ended, results are now available."
+                    );
+                    setShowSuccessMessage(true);
+                  } catch (err: unknown) {
+                    if (err instanceof Error && "status" in err) {
+                      const appErr = err as ApplicationError;
+                      switch (appErr.status) {
+                        case 403:
+                          setError(
+                            "Only the group creator can end voting and show results."
+                          );
+                          break;
+                        case 404:
+                          setError("The specified group could not be found.");
+                          break;
+                        case 409:
+                          setError(
+                            "This action can only be performed when voting is active for this group."
+                          );
+                          break;
+                        default:
+                          setError(
+                            "An error occurred while ending voting. Please try again."
+                          );
+                      }
+                    } else {
+                      setError(
+                        "An error occurred while ending voting. Please try again."
+                      );
+                    }
+                    return;
+                  }
+                  router.replace(`/users/${userId}/groups/${groupId}/results`);
+                }}
+              >
+                End Voting & Show Results
+              </Button>
+            )}
+          {/* </div> */}
+        </div>
         <div className="flex justify-between items-center mt-4">
           <Button
             variant="outline"
@@ -743,75 +811,6 @@ const Vote: React.FC = () => {
           >
             Back to group overview
           </Button>
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSubmitRanking}
-              disabled={
-                isSubmitting ||
-                phase !== "VOTING" ||
-                !isSubmitEnabled() ||
-                hasSubmitted
-              }
-            >
-              {hasSubmitted
-                ? "Submitted"
-                : isSubmitting
-                  ? "Submitting..."
-                  : "Submit Rankings"}
-            </Button>
-            {phase === "VOTING" &&
-              phaseGroup &&
-              String(phaseGroup.creatorId) === String(userId) && (
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    try {
-                      await apiService.post(
-                        `/groups/${groupId}/show-results`,
-                        {}
-                      );
-                      setSuccessMessage(
-                        "Voting ended, results are now available."
-                      );
-                      setShowSuccessMessage(true);
-                    } catch (err: unknown) {
-                      if (err instanceof Error && "status" in err) {
-                        const appErr = err as ApplicationError;
-                        switch (appErr.status) {
-                          case 403:
-                            setError(
-                              "Only the group creator can end voting and show results."
-                            );
-                            break;
-                          case 404:
-                            setError("The specified group could not be found.");
-                            break;
-                          case 409:
-                            setError(
-                              "This action can only be performed when voting is active for this group."
-                            );
-                            break;
-                          default:
-                            setError(
-                              "An error occurred while ending voting. Please try again."
-                            );
-                        }
-                      } else {
-                        setError(
-                          "An error occurred while ending voting. Please try again."
-                        );
-                      }
-                      return;
-                    }
-                    router.replace(
-                      `/users/${userId}/groups/${groupId}/results`
-                    );
-                  }}
-                >
-                  End Voting & Show Results
-                </Button>
-              )}
-          </div>
         </div>
 
         {/* Ranking requirement message */}
