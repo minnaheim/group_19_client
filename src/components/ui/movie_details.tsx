@@ -61,7 +61,9 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
   if (!isOpen || !movie) return null;
 
   const handleWatchTrailer = () => {
-    globalThis.open(movie.trailerURL, "_blank");
+      if (movie.trailerURL) {
+          globalThis.open(movie.trailerURL, "_blank");
+      }
   };
 
     // ANI CHANGE: Added handlers with loading states
@@ -200,10 +202,18 @@ const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({
                   className="flex items-center gap-1"
                   onClick={handleWatchTrailer}
                 >
-                  <Play size={16} /> Watch Trailer
+                    {movie.trailerURL ? (
+                          <>
+                            <Play size={16} />
+                            Watch Trailer
+                          </>
+                    ) : (
+                        "No Trailer Available for this Movie"
+                    )}
                 </Button>
 
-                {/* Conditional buttons based on what actions are available */}
+
+                  {/* Conditional buttons based on what actions are available */}
                 {onAddToWatchlist && !isInWatchlist && (
                   <Button
                     variant="secondary"
