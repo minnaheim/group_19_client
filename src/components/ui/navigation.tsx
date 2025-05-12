@@ -15,8 +15,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { ApiService } from "@/app/api/apiService";
-import { useApi } from "@/app/hooks/useApi";
 
 // Define all navigation item configurations with Lucide icons
 const NAV_ITEMS = [
@@ -94,10 +92,9 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   usePathname();
-  const apiService = useApi();
+
   const handleLogout = async () => {
     try {
-      apiService.post("/logout",{});
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       router.push("/login");
