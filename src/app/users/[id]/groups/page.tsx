@@ -149,19 +149,15 @@ const GroupsManagement: React.FC = () => {
     Friend[]
   >([]);
 
-  // Track pool and vote counts for enabling phase transitions
+  // Track pool count for enabling phase transitions
   const [poolCount, setPoolCount] = useState<number>(0);
-  const [voteCount, setVoteCount] = useState<number>(0);
 
   // Fetch counts when a group is selected
   useEffect(() => {
     if (selectedGroup) {
-      apiService.get(`/groups/${selectedGroup.groupId}/pool`)
-        .then((res: any) => Array.isArray(res) && setPoolCount(res.length))
+      apiService.get<unknown[]>(`/groups/${selectedGroup.groupId}/pool`)
+        .then((res) => Array.isArray(res) && setPoolCount(res.length))
         .catch(() => setPoolCount(0));
-      apiService.get(`/groups/${selectedGroup.groupId}/votes`)
-        .then((res: any) => Array.isArray(res) && setVoteCount(res.length))
-        .catch(() => setVoteCount(0));
     }
   }, [selectedGroup, apiService]);
 

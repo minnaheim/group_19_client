@@ -46,9 +46,6 @@ const WatchList: React.FC = () => {
   const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(
     null,
   );
-  const [confirmDialogAction, setConfirmDialogAction] = useState<
-    () => Promise<void>
-  >(() => Promise.resolve());
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -215,14 +212,6 @@ const WatchList: React.FC = () => {
     // If the movie is in the watchlist, show confirmation dialog
     if (movieIsInWatchlist) {
       setConfirmDialogMovie(movie);
-      setConfirmDialogAction(() => async () => {
-        try {
-          await completeMarkAsSeen(movie, true); // Keep in watchlist
-        } catch (error) {
-          console.error("Failed to mark movie as seen:", error);
-          setActionError("Error marking movie as seen. Please try again.");
-        }
-      });
       setShowConfirmDialog(true);
     } else {
       // Not in watchlist, just mark as seen

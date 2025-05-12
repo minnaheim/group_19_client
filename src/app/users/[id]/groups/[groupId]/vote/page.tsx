@@ -113,7 +113,7 @@ const Vote: React.FC = () => {
   // PHASE GUARD: fetch and check phase
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [, setIsSubmitting] = useState<boolean>(false);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");

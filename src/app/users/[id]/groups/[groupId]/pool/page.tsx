@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
 const MoviePool: React.FC = () => {
-  const [selectedMovies, setSelectedMovies] = useState<Movie[]>([]);
+  const [selectedMovies] = useState<Movie[]>([]);
   const params = useParams();
   let groupId = params.groupId;
   if (Array.isArray(groupId)) groupId = groupId[0];
@@ -36,7 +36,6 @@ const MoviePool: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAddingWatchlist, setIsAddingWatchlist] = useState<boolean>(false);
-  const [isMarkingSeen, setIsMarkingSeen] = useState<boolean>(false);
   const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } =
     useGroupPhase(groupId as string);
 
@@ -64,16 +63,7 @@ const MoviePool: React.FC = () => {
     }
   }, [showSuccessMessage]);
 
-  // Navigation functions
-  const navigateToGroupPool = (groupId: number) => {
-    router.push(`/users/${userId}/groups/${groupId}/pool`);
-  };
-  const navigateToGroupVoting = (groupId: number) => {
-    router.push(`/users/${userId}/groups/${groupId}/vote`);
-  };
-  const navigateToGroupResults = (groupId: number) => {
-    router.push(`/users/${userId}/groups/${groupId}/results`);
-  };
+  // Navigation function
   const navigateToMovieSearch = () => {
     router.push(`/users/${userId}/movie_search`);
   };
@@ -224,13 +214,6 @@ const MoviePool: React.FC = () => {
     }
   };
 
-  // Function has been merged into handleAddToPool
-  // Keeping this as a stub for compatibility
-  const handleAddMovieToPool = async () => {
-    // This function is no longer used since movies are added directly on click
-    // If needed, this is where we would add batch processing logic
-  };
-
   // Function to remove movie from pool
   const handleRemoveFromPool = async (movieId: number) => {
     // Capture removed movie title for message
@@ -315,30 +298,6 @@ const MoviePool: React.FC = () => {
       // setIsModalOpen(false); // Optionally keep modal open on error
     } finally {
       setIsAddingWatchlist(false);
-    }
-  };
-
-  const handleMarkAsSeen = async (movie: Movie) => {
-    if (isMarkingSeen) {
-      setSuccessMessage("Please wait while current operation completes");
-      setShowSuccessMessage(true);
-      return;
-    }
-    try {
-      setIsMarkingSeen(true);
-      await apiService.post(`/users/${userId}/seen/${movie.movieId}`, {});
-      setUserWatched((prev) => [...prev, movie]);
-      setSuccessMessage("Movie marked as seen!");
-      setShowSuccessMessage(true);
-      setSubmitError(""); // Clear error on success
-      setIsModalOpen(false);
-    } catch {
-      setSubmitError("Failed to mark movie as seen.");
-      setShowSuccessMessage(false); // Clear success message on new error
-      setSuccessMessage("");
-      // setIsModalOpen(false); // Optionally keep modal open on error
-    } finally {
-      setIsMarkingSeen(false);
     }
   };
 

@@ -29,6 +29,12 @@ interface RankingResultsDTO {
   detailedResults: MovieAverageRankDTO[];
 }
 
+// Define interface for watched movies without using any
+interface WatchedMovieDTO {
+  movieId: number;
+  id?: number;
+}
+
 const Results: React.FC = () => {
   const params = useParams();
   let { id, groupId } = params as {
@@ -130,19 +136,19 @@ const Results: React.FC = () => {
           // Adjust based on your apiService implementation
           const response = await apiService.get(`/users/${userId}/watched`);
           // ANI CHANGE: Refactor watchedMovies assignment to safely access response.data
-          let watchedMoviesList: any[] = [];
+          let watchedMoviesList: WatchedMovieDTO[] = [];
           if (Array.isArray(response)) {
             watchedMoviesList = response;
           } else if (
             response && typeof response === "object" &&
-            Array.isArray((response as any).data)
+            Array.isArray((response as { data: WatchedMovieDTO[] }).data)
           ) {
-            watchedMoviesList = (response as any).data;
+            watchedMoviesList = (response as { data: WatchedMovieDTO[] }).data;
           }
 
           if (fullWinningMovie.movieId) {
             const isWatched = watchedMoviesList.some(
-              (movie: any) =>
+              (movie: WatchedMovieDTO) =>
                 movie.movieId === fullWinningMovie.movieId ||
                 movie.id === fullWinningMovie.movieId, // Check both movieId and id just in case
             );
