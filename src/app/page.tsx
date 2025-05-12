@@ -2,10 +2,29 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const LandingPage = () => {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const rawUid = localStorage.getItem("userId");
+    if (token && rawUid) {
+      setIsLoggedIn(true);
+      // strip extra quotes if present
+      const cleanUid = rawUid.replace(/^\"|\"$/g, "");
+      setUserId(cleanUid);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    router.push("/login");
+  };
 
   // Auth navigation
   const handleLogin = () => {
@@ -44,19 +63,41 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button
-            variant="ghost"
-            className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
-            onClick={handleLogin}
-          >
-            Login
-          </Button>
-          <Button
-            className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
-            onClick={handleSignUp}
-          >
-            Sign Up
-          </Button>
+          {isLoggedIn
+            ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={() => router.push(`/users/${userId}/profile`)}
+                >
+                  My Profile
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            )
+            : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={handleLogin}
+                >
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleSignUp}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
         </div>
       </header>
 

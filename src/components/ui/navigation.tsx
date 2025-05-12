@@ -111,7 +111,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
           <div className="flex items-center mb-12">
             <div
               className="absolute top-4 left-4 flex items-center space-x-2 cursor-pointer"
-              onClick={() => router.push("/")}
+              onClick={() => router.push(`/users/${userId}/dashboard`)}
             >
               <Image
                 src="/Projector.png"
@@ -120,7 +120,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 height={50}
               />
               <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-                Movie Night
+                Movie Night Planner
               </div>
             </div>
           </div>
@@ -155,10 +155,13 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm p-4">
         <div className="flex justify-between items-center">
-          <div className="flex items-center" onClick={() => router.push("/")}>
+          <div
+            className="flex items-center"
+            onClick={() => router.push(`/users/${userId}/dashboard`)}
+          >
             <Image src="/Projector.png" alt="App Icon" width={30} height={30} />
             <div className="ml-2 font-semibold text-[#3b3e88] text-lg">
-              Movie Night
+              Movie Night Planner
             </div>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
