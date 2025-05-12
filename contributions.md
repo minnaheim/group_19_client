@@ -166,7 +166,6 @@ reason).
 | **Student**  | **Date**   | **Link to Commit**                                                        | **Description**                                                           | **Relevance**                                                             |
 | ------------ | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | BeneJung     | Joker | Joker                                            |Joker                          | Joker                              |
-| BeneJung     | Joker | Joker                                            |Joker                          | Joker                              |
 | ellaruby0    | Joker  | Joker                                                       | Joker                                        | Joker                                     |
 | AnabelNigsch | 20.04.2025 | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description |
 | AnabelNigsch | Joker      | Joker                                                                     | Joker                                                                     | Joker                                                                     |
