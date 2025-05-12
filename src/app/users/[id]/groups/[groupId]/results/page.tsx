@@ -258,9 +258,9 @@ const Results: React.FC = () => {
                 ? `${phaseGroup.groupName} - Final Movie Ranking`
                 : "Final Movie Ranking"}
             </h1>
-            <p className="text-[#b9c0de] mt-2">
+            {/* <p className="text-[#b9c0de] mt-2">
               See what your group has chosen to watch
-            </p>
+            </p> */}
           </div>
         </div>
 

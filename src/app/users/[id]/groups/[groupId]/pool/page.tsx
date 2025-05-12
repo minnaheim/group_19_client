@@ -356,9 +356,9 @@ const MoviePool: React.FC = () => {
                 ? `${phaseGroup.groupName} - Movie Pool`
                 : "Movie Pool"}
             </h1>
-            <p className="text-[#b9c0de] mt-2">
+            {/* <p className="text-[#b9c0de] mt-2">
               Choose Movies to Vote and Watch
-            </p>
+            </p> */}
           </div>
 
           {/* Show User's Watchlist */}
