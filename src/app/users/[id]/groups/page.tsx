@@ -2228,9 +2228,15 @@ const GroupsManagement: React.FC = () => {
                                 </li>
                               ))}
                               {sentInvitations
-                                .filter(inv => inv.group.groupId === selectedGroup.groupId && !inv.accepted)
-                                .map(inv => (
-                                  <li key={inv.invitationId} className="italic text-xs leading-none py-0.5">
+                                .filter((inv) =>
+                                  inv.group.groupId === selectedGroup.groupId &&
+                                  !inv.accepted
+                                )
+                                .map((inv) => (
+                                  <li
+                                    key={inv.invitationId}
+                                    className="italic text-xs leading-none py-0.5"
+                                  >
                                     {inv.receiver.username} (invited)
                                   </li>
                                 ))}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Movie Night Planner",
   description: "Plan your next movie night as a group.",
-  manifest: "/site.webmanifest"
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
