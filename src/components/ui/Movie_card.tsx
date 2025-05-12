@@ -1,36 +1,37 @@
 import React from "react";
 import { Movie } from "@/app/types/movie";
-import { Eye, Film } from "lucide-react";
+import { Eye, Film, XCircle } from "lucide-react";
 
 interface MovieCardProps {
   movie: Movie;
   isEditing?: boolean;
-  isSelected?: boolean;
   isInWatchlist?: boolean;
   isInSeenList?: boolean;
   isSelectingFavorite?: boolean;
   isFavorite?: boolean;
   onClick: (movie: Movie) => void;
-  onSelect?: (movieId: number) => void;
+  onRemovePress?: (movie: Movie) => void;
 }
 
 const MovieCard: React.FC<MovieCardProps> = ({
   movie,
   isEditing = false,
-  isSelected = false,
   isInWatchlist = false,
   isInSeenList = false,
   isSelectingFavorite = false,
   isFavorite = false,
   onClick,
-  onSelect,
+  onRemovePress,
 }) => {
   const handleClick = () => {
-    if (isEditing && onSelect) {
-      onSelect(movie.movieId);
-    } else {
+    if (!isEditing || !onRemovePress) {
       onClick(movie);
     }
+  };
+
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemovePress?.(movie);
   };
 
   return (
@@ -40,16 +41,23 @@ const MovieCard: React.FC<MovieCardProps> = ({
     >
       <img
         className={`w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md ${
-          isEditing
-            ? "opacity-50 hover:opacity-80"
-            : "group-hover:opacity-75 transition-opacity"
-        } ${isEditing && isSelected ? "border-2 border-destructive" : ""}
-        ${isSelectingFavorite ? "border border-gray-300" : ""}`}
+          isEditing ? "opacity-60" : "group-hover:opacity-75 transition-opacity"
+        } ${isSelectingFavorite ? "border border-gray-300" : ""}`}
         alt={movie.title}
         src={movie.posterURL}
       />
 
-      {isEditing && isSelected && (
+      {isEditing && onRemovePress && (
+        <button
+          onClick={handleRemoveClick}
+          className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 hover:bg-red-700 transition-colors z-10"
+          aria-label="Remove movie"
+        >
+          <XCircle size={20} />
+        </button>
+      )}
+
+      {isEditing && (
         <div className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 text-xs sm:p-1.5 md:p-2 md:text-sm">
           ✕
         </div>

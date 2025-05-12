@@ -13,7 +13,7 @@ import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import { retry } from "@/utils/retry";
+import { retry } from "@/utils/retry"; // Assuming retry is in utils, adjust if needed
 
 const SeenList: React.FC = () => {
   const { id } = useParams();
@@ -24,9 +24,7 @@ const SeenList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<
-    number[]
-  >([]);
+  // selectedMoviesToRemove state is removed
 
   // search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -40,6 +38,7 @@ const SeenList: React.FC = () => {
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+  const [actionError, setActionError] = useState<string | null>(null); // Added state for action errors
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -54,13 +53,13 @@ const SeenList: React.FC = () => {
           apiService.get(`/users/${id}/profile`)
         );
         setUser(userData as User);
-        showMessage("User profile loaded");
+        // showMessage("User profile loaded"); // Optional
       } catch (error: unknown) {
         if (
           error instanceof Error && "status" in error &&
           (error as ApplicationError).status === 404
         ) {
-          showMessage("Oops! We couldn't find your profile details.");
+          setError("Oops! We couldn't find your profile details.");
         } else {
           setError("Failed to load user data");
         }
@@ -70,12 +69,13 @@ const SeenList: React.FC = () => {
     };
 
     fetchUserData();
-  }, [id, token, apiService]);
+  }, [id, token, apiService]); // Removed showMessage from dependencies
 
   // filter movies based on search query - now only searching by title
   useEffect(() => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
+      setFilteredMovies(user?.watchedMovies || []);
       return;
     }
 
@@ -94,7 +94,7 @@ const SeenList: React.FC = () => {
     if (userId === id) {
       router.push(`/users/${id}/movie_search`);
     } else {
-      showMessage("You can only edit your own movie lists!");
+      setActionError("You can only edit your own movie lists!"); // Changed to setActionError
     }
   };
 
@@ -104,76 +104,58 @@ const SeenList: React.FC = () => {
       setSearchQuery("");
       setIsSearching(false);
     } else {
-      showMessage("You can only edit your own movie lists!");
+      setActionError("You can only edit your own movie lists!"); // Changed to setActionError
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedMoviesToRemove([]);
   };
 
-  const handleMovieSelect = (movieId: number) => {
-    if (selectedMoviesToRemove.includes(movieId)) {
-      setSelectedMoviesToRemove(
-        selectedMoviesToRemove.filter((id) => id !== movieId),
-      );
-    } else {
-      setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
-    }
-  };
+  // handleMovieSelect function is removed
 
   const handleMovieClick = (movie: Movie) => {
-    // if in editing mode, select/deselect the movie
-    if (isEditing) {
-      handleMovieSelect(movie.movieId);
-      return;
-    }
-
-    // else open the details modal
     setSelectedMovie(movie);
     setIsModalOpen(true);
   };
 
-  const handleSaveChanges = async () => {
-    if (!user) return;
-    for (const movieId of selectedMoviesToRemove) {
-      try {
-        await apiService.delete(`/users/${id}/watched/${movieId}`, {});
-        showMessage("Movie removed from watched list");
-      } catch (error: unknown) {
-        if (error instanceof Error && "status" in error) {
-          const status = (error as ApplicationError).status;
-          switch (status) {
-            case 401:
-              showMessage(
-                "Please log in again to remove movies from your watched list.",
-              );
-              break;
-            case 403:
-              showMessage(
-                "You don't have permission to modify this watched list.",
-              );
-              break;
-            case 404:
-              showMessage(
-                "Could not find the user, movie, or watched list entry.",
-              );
-              break;
-            default:
-              showMessage("Failed to remove movie from watched list.");
-          }
-        } else {
-          showMessage("Failed to remove movie from watched list.");
-        }
-      }
+  // handleSaveChanges function is removed
+
+  // New function for direct removal from MovieCard or Modal
+  const handleDirectRemoveFromSeenList = async (movieToRemove: Movie) => {
+    if (userId !== id) {
+      setActionError("You can only edit your own seen list!"); // Changed to setActionError
+      return;
     }
-    const updatedMovies = user.watchedMovies.filter(
-      (movie) => !selectedMoviesToRemove.includes(movie.movieId),
-    );
-    setUser({ ...user, watchedMovies: updatedMovies });
-    setIsEditing(false);
-    setSelectedMoviesToRemove([]);
+    try {
+      // Corrected API endpoint
+      await apiService.delete(
+        `/users/${userId}/watched/${movieToRemove.movieId}`,
+      );
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        return {
+          ...prevUser,
+          watchedMovies: prevUser.watchedMovies?.filter(
+            (movie) => movie.movieId !== movieToRemove.movieId,
+          ) || [],
+        };
+      });
+      // Update filteredMovies as well if currently searching
+      if (isSearching) {
+        setFilteredMovies((prevFiltered) =>
+          prevFiltered.filter((movie) =>
+            movie.movieId !== movieToRemove.movieId
+          )
+        );
+      }
+      showMessage(
+        `Successfully removed '${movieToRemove.title}' from seen list.`,
+      ); // Success message
+    } catch (error) {
+      console.error("Failed to remove movie from seen list:", error);
+      setActionError("Error removing movie from seen list. Please try again."); // Changed to setActionError
+    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,19 +168,20 @@ const SeenList: React.FC = () => {
   };
 
   const closeModal = () => {
+    setSelectedMovie(null);
     setIsModalOpen(false);
-    setTimeout(() => setSelectedMovie(null), 300);
   };
 
-  const handleRemoveFromSeenlist = (movie: Movie) => {
-    setIsEditing(true);
-    setSelectedMoviesToRemove([movie.movieId]);
-    closeModal();
+  const handleRemoveFromSeenlist = async (movie: Movie) => {
+    // This function is called from the modal
+    await handleDirectRemoveFromSeenList(movie);
+    closeModal(); // Close modal after action
   };
 
   const showMessage = (message: string) => {
     setActionMessage(message);
     setShowActionMessage(true);
+    setActionError(null); // Clear any previous error when a success message is shown
     setTimeout(() => {
       setShowActionMessage(false);
     }, 3000);
@@ -225,8 +208,8 @@ const SeenList: React.FC = () => {
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
       {/* Sidebar */}
-      <Navigation userId={userId} activeItem="Profile Page" />
-      {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
+      <Navigation userId={userId} activeItem="Seen List" />{" "}
+      {/* Corrected activeItem */}
       {/* Main content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="mb-8">
@@ -234,7 +217,7 @@ const SeenList: React.FC = () => {
             Already Seen
           </h1>
           <p className="text-[#b9c0de] mt-2">
-            these movies will not be recommended to you
+            These movies will not be recommended to you in groups.
           </p>
         </div>
 
@@ -255,10 +238,11 @@ const SeenList: React.FC = () => {
           isLoading={loading}
           isEditing={isEditing}
           isSearching={isSearching}
-          selectedMovieIds={selectedMoviesToRemove}
+          // selectedMovieIds prop removed
           onMovieClick={handleMovieClick}
-          onMovieSelect={handleMovieSelect}
-          onAddMovieClick={handleAddMovie}
+          // onMovieSelect prop removed
+          onCardRemoveClick={handleDirectRemoveFromSeenList} // New prop for card remove button
+          onAddMovieClick={handleAddMovie} // Retain if you want an "Add more to Seen List" type button (e.g. from search)
           onClearSearch={clearSearch}
           emptyMessage="Your seen list is empty"
           noResultsMessage="None of the movies on your seen list match your search"
@@ -273,31 +257,24 @@ const SeenList: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex justify-between">
+        <div className="mt-8 flex justify-end space-x-4">
+          {/* Changed justify-between to justify-end */}
           {isEditing
             ? (
-              <>
-                <Button
-                  variant="destructive"
-                  onClick={handleCancelEdit}
-                >
-                  cancel
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleSaveChanges}
-                  disabled={selectedMoviesToRemove.length === 0}
-                >
-                  remove {selectedMoviesToRemove.length} movie(s)
-                </Button>
-              </>
+              <Button
+                variant="secondary"
+                onClick={handleCancelEdit}
+              >
+                Done Editing
+              </Button>
+              // Removed the bulk "Remove X movie(s)" button
             )
             : (
               <Button
                 variant="secondary"
                 onClick={handleEdit}
               >
-                edit
+                Edit Seen List
               </Button>
             )}
         </div>
@@ -308,8 +285,16 @@ const SeenList: React.FC = () => {
           className="mt-4"
           onClick={() => router.push(`/users/${id}/profile`)}
         >
-          back to profile page
+          Back to Profile Page
         </Button>
+
+        {/* Display Action Error Message */}
+        {actionError && (
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
+        )}
 
         {/* Movie Details Modal */}
         {selectedMovie && (
@@ -317,8 +302,8 @@ const SeenList: React.FC = () => {
             movie={selectedMovie}
             isOpen={isModalOpen}
             onClose={closeModal}
-            isInSeenList={true}
-            onRemoveFromSeenList={handleRemoveFromSeenlist}
+            isInSeenList={true} // Simplified: if it's in selectedMovie, it's from the seen list on this page
+            onRemoveFromSeenList={handleRemoveFromSeenlist} // This now calls the direct removal logic
           />
         )}
 

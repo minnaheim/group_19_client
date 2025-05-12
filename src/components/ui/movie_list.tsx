@@ -8,9 +8,8 @@ interface MovieListProps {
   isLoading?: boolean;
   isEditing?: boolean;
   isSearching?: boolean;
-  selectedMovieIds?: number[];
   onMovieClick: (movie: Movie) => void;
-  onMovieSelect?: (movieId: number) => void;
+  onCardRemoveClick?: (movie: Movie) => void;
   onAddMovieClick?: () => void;
   onClearSearch?: () => void;
   emptyMessage?: string;
@@ -26,9 +25,8 @@ const MovieList: React.FC<MovieListProps> = ({
   isLoading = false,
   isEditing = false,
   isSearching = false,
-  selectedMovieIds = [],
   onMovieClick,
-  onMovieSelect,
+  onCardRemoveClick,
   onAddMovieClick,
   onClearSearch,
   emptyMessage = "No movies found",
@@ -83,11 +81,10 @@ const MovieList: React.FC<MovieListProps> = ({
             key={movie.movieId}
             movie={movie}
             isEditing={isEditing}
-            isSelected={selectedMovieIds.includes(movie.movieId)}
             isInWatchlist={isInWatchlistFn(movie)}
             isInSeenList={isInSeenListFn(movie)}
             onClick={onMovieClick}
-            onSelect={onMovieSelect}
+            onRemovePress={onCardRemoveClick}
           />
         ))}
 

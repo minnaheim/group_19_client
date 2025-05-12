@@ -386,10 +386,10 @@ const Login: React.FC = () => {
       <footer className="bg-white py-8 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <Image src="/Projector.png" alt="App Icon" width={30} height={30}/>
+            <Image src="/Projector.png" alt="App Icon" width={30} height={30} />
             <span className="text-sm font-medium text-[#3b3e88]">
-        Movie Night Planner{" "}
-      </span>
+              Movie Night Planner{" "}
+            </span>
           </div>
         </div>
       </footer>

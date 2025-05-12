@@ -65,6 +65,7 @@ const Dashboard: React.FC = () => {
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // get user ID from local storage
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -89,7 +90,7 @@ const Dashboard: React.FC = () => {
             err instanceof Error && "status" in err &&
             (err as ApplicationError).status === 404
           ) {
-            showMessage(
+            setError(
               "Welcome! We couldn't fetch your profile details right now.",
             );
           } else {
@@ -123,19 +124,8 @@ const Dashboard: React.FC = () => {
           }
           showMessage("Received friend requests loaded");
         } catch (err: unknown) {
-          console.error("Error fetching friend requests:", err);
-          if (
-            err instanceof Error && "status" in err &&
-            (err as ApplicationError).status === 401
-          ) {
-            showMessage(
-              "Your session has expired. Please log in again to see friend requests.",
-            );
-          } else {
-            showMessage(
-              "Failed to load friend requests. Please try again later.",
-            );
-          }
+          console.error("Error loading friend requests:", err);
+          setActionError("Error loading friend requests");
         }
 
         // Get group invitations
@@ -160,21 +150,10 @@ const Dashboard: React.FC = () => {
               });
             });
           }
-          showMessage("Received group invitations loaded");
+          showMessage("Group invitations loaded");
         } catch (err: unknown) {
-          console.error("Error fetching group invitations:", err);
-          if (
-            err instanceof Error && "status" in err &&
-            (err as ApplicationError).status === 401
-          ) {
-            showMessage(
-              "Your session has expired. Please log in again to see group invitations.",
-            );
-          } else {
-            showMessage(
-              "Failed to load group invitations. Please try again later.",
-            );
-          }
+          console.error("Error loading group invitations:", err);
+          setActionError("Error loading group invitations");
         }
 
         // Set all notifications at once
@@ -194,9 +173,10 @@ const Dashboard: React.FC = () => {
   const showMessage = (message: string) => {
     setActionMessage(message);
     setShowActionMessage(true);
+    setActionError(null);
     setTimeout(() => {
       setShowActionMessage(false);
-    }, 3000);
+    }, 5000);
   };
 
   // Handle notification actions
@@ -214,36 +194,8 @@ const Dashboard: React.FC = () => {
           );
           showMessage("Friend request accepted");
         } catch (err: unknown) {
-          console.error(
-            `Error accepting friend request ID ${notification.requestId}:`,
-            err,
-          );
-          if (err instanceof Error && "status" in err) {
-            const appErr = err as ApplicationError;
-            switch (appErr.status) {
-              case 400:
-                showMessage("This friend request appears to be invalid.");
-                break;
-              case 401:
-                showMessage(
-                  "Your session has expired. Please log in again to accept requests.",
-                );
-                break;
-              case 404:
-                showMessage(
-                  "This friend request could not be found. It might have been cancelled.",
-                );
-                break;
-              default:
-                showMessage(
-                  "An error occurred while accepting the friend request. Please try again.",
-                );
-            }
-          } else {
-            showMessage(
-              "An error occurred while accepting the friend request. Please try again.",
-            );
-          }
+          console.error("Error accepting friend request:", err);
+          setActionError("Error accepting friend request");
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -256,41 +208,10 @@ const Dashboard: React.FC = () => {
             `/groups/invitations/${notification.invitationId}/accept`,
             {}, // empty data object
           );
-          showMessage("Group invitation accepted");
+          showMessage("Group invite accepted");
         } catch (err: unknown) {
-          console.error(
-            `Error accepting group invitation ID ${notification.invitationId}:`,
-            err,
-          );
-          if (err instanceof Error && "status" in err) {
-            const appErr = err as ApplicationError;
-            switch (appErr.status) {
-              case 400:
-                showMessage("This group invitation appears to be invalid.");
-                break;
-              case 401:
-                showMessage(
-                  "Your session has expired. Please log in again to accept invitations.",
-                );
-                break;
-              case 403:
-                showMessage("You cannot accept this invitation.");
-                break;
-              case 404:
-                showMessage(
-                  "This group invitation could not be found. It might have been cancelled.",
-                );
-                break;
-              default:
-                showMessage(
-                  "An error occurred while accepting the group invitation. Please try again.",
-                );
-            }
-          } else {
-            showMessage(
-              "An error occurred while accepting the group invitation. Please try again.",
-            );
-          }
+          console.error("Error accepting group invite:", err);
+          setActionError("Error accepting group invite");
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -298,7 +219,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error("Critical error in accept notification process:", error);
-      showMessage("Failed to process the request due to a server error.");
+      setActionError("Failed to process the request due to a server error.");
     }
   };
 
@@ -314,38 +235,10 @@ const Dashboard: React.FC = () => {
             `/friends/friendrequest/${notification.requestId}/reject`,
             {},
           );
-          showMessage("Friend request rejected");
+          showMessage("Friend request declined");
         } catch (err: unknown) {
-          console.error(
-            `Error rejecting friend request ID ${notification.requestId}:`,
-            err,
-          );
-          if (err instanceof Error && "status" in err) {
-            const appErr = err as ApplicationError;
-            switch (appErr.status) {
-              case 400:
-                showMessage("This friend request appears to be invalid.");
-                break;
-              case 401:
-                showMessage(
-                  "Your session has expired. Please log in again to reject requests.",
-                );
-                break;
-              case 404:
-                showMessage(
-                  "This friend request could not be found. It might have been cancelled.",
-                );
-                break;
-              default:
-                showMessage(
-                  "An error occurred while rejecting the friend request. Please try again.",
-                );
-            }
-          } else {
-            showMessage(
-              "An error occurred while rejecting the friend request. Please try again.",
-            );
-          }
+          console.error("Error declining friend request:", err);
+          setActionError("Error declining friend request");
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -358,41 +251,10 @@ const Dashboard: React.FC = () => {
             `/groups/invitations/${notification.invitationId}/reject`,
             {},
           );
-          showMessage("Group invitation rejected");
+          showMessage("Group invite declined");
         } catch (err: unknown) {
-          console.error(
-            `Error rejecting group invitation ID ${notification.invitationId}:`,
-            err,
-          );
-          if (err instanceof Error && "status" in err) {
-            const appErr = err as ApplicationError;
-            switch (appErr.status) {
-              case 400:
-                showMessage("This group invitation appears to be invalid.");
-                break;
-              case 401:
-                showMessage(
-                  "Your session has expired. Please log in again to reject invitations.",
-                );
-                break;
-              case 403:
-                showMessage("You cannot reject this invitation.");
-                break;
-              case 404:
-                showMessage(
-                  "This group invitation could not be found. It might have been cancelled.",
-                );
-                break;
-              default:
-                showMessage(
-                  "An error occurred while rejecting the group invitation. Please try again.",
-                );
-            }
-          } else {
-            showMessage(
-              "An error occurred while rejecting the group invitation. Please try again.",
-            );
-          }
+          console.error("Error declining group invite:", err);
+          setActionError("Error declining group invite");
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -400,7 +262,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error("Critical error in decline notification process:", error);
-      showMessage("Failed to process the request due to a server error.");
+      setActionError("Failed to process the request due to a server error.");
     }
   };
 
@@ -649,6 +511,14 @@ const Dashboard: React.FC = () => {
           onHide={() => setShowActionMessage(false)}
           className="bg-green-500"
         />
+
+        {/* Display Action Error Message */}
+        {actionError && (
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
+        )}
       </div>
     </div>
   );

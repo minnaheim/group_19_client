@@ -9,10 +9,10 @@ import {
   Home,
   ListChecks,
   LogOut,
+  Menu,
   Search,
   User,
   Users,
-  Menu,
   X,
 } from "lucide-react";
 
@@ -162,11 +162,9 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
             </div>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? (
-              <X size={24} className="text-[#3b3e88]" />
-            ) : (
-              <Menu size={24} className="text-[#3b3e88]" />
-            )}
+            {mobileMenuOpen
+              ? <X size={24} className="text-[#3b3e88]" />
+              : <Menu size={24} className="text-[#3b3e88]" />}
           </button>
         </div>
       </div>

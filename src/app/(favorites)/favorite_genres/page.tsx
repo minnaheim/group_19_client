@@ -26,8 +26,10 @@ const GenreFavorites: React.FC = () => {
       .then(setGenres)
       .catch(() => {
         setError(
-          "We couldn't load movie genres right now. Please try again later.",
+          "We couldn't load movie genres right now. Please try again.",
         );
+        setShowSuccessMessage(false);
+        setSuccessMessage("");
         setGenres([]);
       });
   }, [apiService]);
@@ -45,6 +47,8 @@ const GenreFavorites: React.FC = () => {
       setError(
         "Your session has expired. Please log in again to save favorites.",
       );
+      setShowSuccessMessage(false);
+      setSuccessMessage("");
       router.push("/login");
       return;
     }
@@ -53,17 +57,22 @@ const GenreFavorites: React.FC = () => {
       setError(
         "Your session has expired. Please log in again to save favorites.",
       );
+      setShowSuccessMessage(false);
+      setSuccessMessage("");
       router.push("/login");
       return;
     }
 
     setIsLoading(true);
     setError("");
+    setShowSuccessMessage(false);
+    setSuccessMessage("");
 
     try {
       await apiService.saveUserGenres(Number(userId), selectedGenres);
       setSuccessMessage("Genre favorites saved successfully");
       setShowSuccessMessage(true);
+      setError("");
       router.push("/favorite_movies");
     } catch (error: unknown) {
       if (error instanceof Error && "status" in error) {
@@ -73,27 +82,39 @@ const GenreFavorites: React.FC = () => {
             setError(
               "An invalid genre was selected. Please check your choices.",
             );
+            setShowSuccessMessage(false);
+            setSuccessMessage("");
             break;
           case 401:
             setError(
               "Your session has expired. Please log in again to save favorites.",
             );
+            setShowSuccessMessage(false);
+            setSuccessMessage("");
             break;
           case 403:
             setError("You don't have permission to change these favorites.");
+            setShowSuccessMessage(false);
+            setSuccessMessage("");
             break;
           case 404:
             setError("We couldn't find your user account to save favorites.");
+            setShowSuccessMessage(false);
+            setSuccessMessage("");
             break;
           default:
             setError(
               "An error occurred while saving your favorites. Please try again.",
             );
+            setShowSuccessMessage(false);
+            setSuccessMessage("");
         }
       } else {
         setError(
           "An error occurred while saving your favorites. Please try again.",
         );
+        setShowSuccessMessage(false);
+        setSuccessMessage("");
       }
     } finally {
       setIsLoading(false);

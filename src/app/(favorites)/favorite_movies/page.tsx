@@ -47,6 +47,9 @@ const MovieFavorites: React.FC = () => {
   useEffect(() => {
     const fetchMoviesByGenres = async () => {
       setIsLoading(true);
+      setError(""); // Clear previous errors
+      setShowSuccessMessage(false); // Clear previous success
+      setSuccessMessage("");
       try {
         if (selectedGenres && selectedGenres.length > 0) {
           // Join selected genres for query
@@ -96,6 +99,9 @@ const MovieFavorites: React.FC = () => {
           );
         }
         setGenreMovies([]);
+        // setError will be set by the catch block, ensure success is cleared
+        setShowSuccessMessage(false);
+        setSuccessMessage("");
       } finally {
         setIsLoading(false);
       }
@@ -113,6 +119,9 @@ const MovieFavorites: React.FC = () => {
     }
 
     setIsSearching(true);
+    setError(""); // Clear previous errors
+    setShowSuccessMessage(false); // Clear previous success
+    setSuccessMessage("");
 
     const searchMovies = async () => {
       try {
@@ -168,6 +177,9 @@ const MovieFavorites: React.FC = () => {
   };
 
   const handleNext = async () => {
+    setError(""); // Clear previous errors
+    setShowSuccessMessage(false); // Clear previous success
+    setSuccessMessage("");
     setIsSubmitting(true);
     const effectiveUserId = userId || id;
 
@@ -196,9 +208,7 @@ const MovieFavorites: React.FC = () => {
             );
             break;
           case 404:
-            setError(
-              "We couldn't find your user account to save your favorite movie.",
-            );
+            setError("User or movie not found. Please try again.");
             break;
           default:
             setError(
@@ -210,6 +220,8 @@ const MovieFavorites: React.FC = () => {
           "An error occurred while saving your favorites. Please try again.",
         );
       }
+      setShowSuccessMessage(false); // Clear success on error
+      setSuccessMessage("");
     } finally {
       setIsSubmitting(false);
     }
