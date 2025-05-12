@@ -1957,7 +1957,7 @@ const GroupsManagement: React.FC = () => {
                       <div className="flex justify-end">
                         <Button
                           type="button"
-                          className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl text-sm"
+                          className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-sm"
                           onClick={handleInviteSelectedFriends}
                           disabled={isSubmittingInvite ||
                             selectedFriends.length === 0}
@@ -2078,7 +2078,7 @@ const GroupsManagement: React.FC = () => {
                 <div className="flex justify-end mt-6">
                   <Button
                     type="submit"
-                    className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
+                    className="bg-[#3b3e88] hover:bg-[#3b3e88]/90"
                     disabled={isSubmittingInvite || !isValidUser}
                   >
                     {isSubmittingInvite ? "Sending..." : "Send Invitation"}
@@ -2130,7 +2130,8 @@ const GroupsManagement: React.FC = () => {
                         </p>
                       </div>
                       {/* Admin Actions (Rename/Delete) or Leave Button */}
-                      {selectedGroup.creatorId === parseInt(userId || "-1")
+                      {selectedGroup.creatorId ===
+                          parseInt(userId || "-1")
                         ? (
                           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                             <div className="flex items-center gap-2 flex-grow">
@@ -2141,23 +2142,19 @@ const GroupsManagement: React.FC = () => {
                                 aria-label="Edit Group Name"
                               />
                               <Button
-                                size="sm"
                                 onClick={() =>
                                   handleRenameGroup(
                                     selectedGroup.groupId,
                                     `editGroupName-${selectedGroup.groupId}`,
                                   )}
-                                className="flex-shrink-0"
                               >
                                 Rename
                               </Button>
                             </div>
                             <Button
-                              size="sm"
-                              variant="destructive"
+                              className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
                               onClick={() =>
                                 handleDeleteGroup(selectedGroup.groupId)}
-                              className="w-full sm:w-auto"
                             >
                               Delete Group
                             </Button>
@@ -2165,8 +2162,7 @@ const GroupsManagement: React.FC = () => {
                         )
                         : (
                           <Button
-                            size="sm"
-                            variant="destructive"
+                            className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
                             onClick={() =>
                               handleLeaveGroup(selectedGroup.groupId)}
                           >
@@ -2199,7 +2195,7 @@ const GroupsManagement: React.FC = () => {
                             <span className="text-[#838bad] text-sm">
                               Members ({selectedGroup.members?.length ?? 0}):
                             </span>
-                            <ul className="text-[#3b3e88] space-y-1 max-h-40 overflow-y-auto pr-2 mt-1">
+                            <ul className="text-[#3b3e88] space-y-0.5 max-h-40 overflow-y-auto pr-2 mt-1">
                               {selectedGroup.members?.map((member) => (
                                 <li
                                   key={member.userId}
@@ -2231,12 +2227,18 @@ const GroupsManagement: React.FC = () => {
                                     )}
                                 </li>
                               ))}
+                              {sentInvitations
+                                .filter(inv => inv.group.groupId === selectedGroup.groupId && !inv.accepted)
+                                .map(inv => (
+                                  <li key={inv.invitationId} className="italic text-xs leading-none py-0.5">
+                                    {inv.receiver.username} (invited)
+                                  </li>
+                                ))}
                             </ul>
 
                             {/* Update the Add Member button with enhanced styling */}
                             <Button
-                              size="sm"
-                              className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl text-white flex items-center justify-center gap-2"
+                              className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-white"
                               onClick={() => {
                                 setSelectedGroupId(selectedGroup.groupId);
                                 setInviteMethod("friends"); // Default to friends tab
@@ -2246,21 +2248,6 @@ const GroupsManagement: React.FC = () => {
                                 setIsInviteDialogOpen(true);
                               }}
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                >
-                                </path>
-                              </svg>
                               Invite Members
                             </Button>
                           </div>
