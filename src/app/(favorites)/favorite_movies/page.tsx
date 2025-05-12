@@ -190,7 +190,7 @@ const MovieFavorites: React.FC = () => {
           favoriteMovieId,
         );
         setSuccessMessage("Favorite movie saved successfully");
-      setShowSuccessMessage(true);
+        setShowSuccessMessage(true);
       }
       router.push(`/users/${effectiveUserId}/dashboard`);
     } catch (err) {

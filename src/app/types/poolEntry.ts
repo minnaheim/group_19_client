@@ -1,4 +1,4 @@
-import { Movie } from './movie'; // Assuming Movie is your MovieGetDTO equivalent
+import { Movie } from "./movie"; // Assuming Movie is your MovieGetDTO equivalent
 
 export interface PoolEntry {
   movie: Movie;

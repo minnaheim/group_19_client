@@ -89,12 +89,19 @@ const GroupsManagement: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
 
   // Confirmation dialog states
-  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState<boolean>(false);
-  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState<boolean>(false);
-  const [showRemoveMemberConfirmDialog, setShowRemoveMemberConfirmDialog] = useState<boolean>(false);
+  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState<boolean>(
+    false,
+  );
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState<
+    boolean
+  >(false);
+  const [showRemoveMemberConfirmDialog, setShowRemoveMemberConfirmDialog] =
+    useState<boolean>(false);
   const [groupToLeave, setGroupToLeave] = useState<number | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
-  const [memberToRemove, setMemberToRemove] = useState<{groupId: number, memberId: number} | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<
+    { groupId: number; memberId: number } | null
+  >(null);
 
   // Dialog visibility states
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState<
@@ -167,7 +174,7 @@ const GroupsManagement: React.FC = () => {
     setIsLoadingUsers(true);
     try {
       const users = await retry(() =>
-          apiService.get<UserSearchResponse[]>("/users/all")
+        apiService.get<UserSearchResponse[]>("/users/all")
       );
 
       if (Array.isArray(users)) {
@@ -180,7 +187,7 @@ const GroupsManagement: React.FC = () => {
     } catch (err) {
       console.error("Error fetching all users:", err);
       setInviteError(
-          "Could not load user search. Using regular search instead."
+        "Could not load user search. Using regular search instead.",
       );
       setUsersLoaded(false);
     } finally {
@@ -528,17 +535,17 @@ const GroupsManagement: React.FC = () => {
         const members: User[] = await apiService.get<User[]>(
           `/groups/${groupId}/members`,
         );
-        
+
         // Get pool entries (with movie and addedBy properties)
         const poolEntries: PoolEntry[] = await apiService.get<PoolEntry[]>(
           `/groups/${groupId}/pool`,
         );
-        
+
         // Extract just the movies from pool entries
-        const movies: Movie[] = Array.isArray(poolEntries) 
-          ? poolEntries.map(entry => entry.movie)
+        const movies: Movie[] = Array.isArray(poolEntries)
+          ? poolEntries.map((entry) => entry.movie)
           : [];
-          
+
         const creator = group.creator; // fetchUserById handles its own errors/placeholders
 
         // Construct the detailed object
@@ -580,17 +587,17 @@ const GroupsManagement: React.FC = () => {
       const [groupsData, receivedData, sentData] = await Promise.all([
         retry(() => apiService.get<Group[]>("/groups")),
         retry(() =>
-            apiService.get<GroupInvitation[]>("/groups/invitations/received")
+          apiService.get<GroupInvitation[]>("/groups/invitations/received")
         ),
         retry(() =>
-            apiService.get<GroupInvitation[]>("/groups/invitations/sent")
+          apiService.get<GroupInvitation[]>("/groups/invitations/sent")
         ),
       ]);
 
       setGroups(
-          Array.isArray(groupsData)
-              ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
-              : []
+        Array.isArray(groupsData)
+          ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
+          : [],
       );
       setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
       setSentInvitations(Array.isArray(sentData) ? sentData : []);
@@ -656,30 +663,34 @@ const GroupsManagement: React.FC = () => {
         const [groupsData, receivedData, sentData] = await Promise.all([
           retry(() => apiService.get<Group[]>("/groups")),
           retry(() =>
-              apiService.get<GroupInvitation[]>("/groups/invitations/received")
+            apiService.get<GroupInvitation[]>("/groups/invitations/received")
           ),
           retry(() =>
-              apiService.get<GroupInvitation[]>("/groups/invitations/sent")
+            apiService.get<GroupInvitation[]>("/groups/invitations/sent")
           ),
         ]);
 
         if (mounted) {
           setGroups(
-              Array.isArray(groupsData)
-                  ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
-                  : []
+            Array.isArray(groupsData)
+              ? groupsData.sort((a, b) =>
+                a.groupName.localeCompare(b.groupName)
+              )
+              : [],
           );
-          setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
+          setReceivedInvitations(
+            Array.isArray(receivedData) ? receivedData : [],
+          );
           setSentInvitations(Array.isArray(sentData) ? sentData : []);
         }
       } catch (err: unknown) {
         console.error("Error loading initial groups/invitations data:", err);
         if (mounted) {
           let message =
-              "Failed to load groups or invitations. Please try refreshing the page.";
+            "Failed to load groups or invitations. Please try refreshing the page.";
           if (
-              err instanceof Error && "status" in err &&
-              (err as ApplicationError).status === 401
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 401
           ) {
             message = "Your session has expired. Please log in again.";
           } else {
@@ -1028,10 +1039,10 @@ const GroupsManagement: React.FC = () => {
     setGroupToLeave(groupId);
     setShowLeaveConfirmDialog(true);
   };
-  
+
   const confirmLeaveGroup = async () => {
     if (!groupToLeave) return;
-    
+
     try {
       await apiService.delete(`/groups/${groupToLeave}/leave`);
       await refreshGroupsData(); // Refresh lists
@@ -1068,7 +1079,7 @@ const GroupsManagement: React.FC = () => {
       // Close the confirmation dialog regardless of success or failure
       setShowLeaveConfirmDialog(false);
       setGroupToLeave(null);
-      
+
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -1083,10 +1094,10 @@ const GroupsManagement: React.FC = () => {
     setGroupToDelete(groupId);
     setShowDeleteConfirmDialog(true);
   };
-  
+
   const confirmDeleteGroup = async () => {
     if (!groupToDelete) return;
-    
+
     try {
       await apiService.delete(`/groups/${groupToDelete}`);
       await refreshGroupsData(); // Refresh lists
@@ -1122,7 +1133,7 @@ const GroupsManagement: React.FC = () => {
       // Close the confirmation dialog regardless of success or failure
       setShowDeleteConfirmDialog(false);
       setGroupToDelete(null);
-      
+
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -1134,15 +1145,17 @@ const GroupsManagement: React.FC = () => {
   const handleRemoveMember = async (groupId: number, memberId: number) => {
     setDialogError(null);
     setError(null);
-    setMemberToRemove({groupId, memberId});
+    setMemberToRemove({ groupId, memberId });
     setShowRemoveMemberConfirmDialog(true);
   };
-  
+
   const confirmRemoveMember = async () => {
     if (!memberToRemove) return;
-    
+
     try {
-      await apiService.delete(`/groups/${memberToRemove.groupId}/members/${memberToRemove.memberId}`);
+      await apiService.delete(
+        `/groups/${memberToRemove.groupId}/members/${memberToRemove.memberId}`,
+      );
       showSuccessMessage("Member removed successfully");
       // Refresh details in the dialog
       const refreshedGroup = await loadGroupDetails(memberToRemove.groupId);
@@ -1177,7 +1190,7 @@ const GroupsManagement: React.FC = () => {
       // Close the confirmation dialog regardless of success or failure
       setShowRemoveMemberConfirmDialog(false);
       setMemberToRemove(null);
-      
+
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -1528,7 +1541,12 @@ const GroupsManagement: React.FC = () => {
                                     className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
                                   >
                                     <img
-                                      src={movie.posterURL && movie.posterURL.startsWith('http') ? movie.posterURL : movie.posterURL ? `https://image.tmdb.org/t/p/w500${movie.posterURL}` : "/placeholder.png"}
+                                      src={movie.posterURL &&
+                                          movie.posterURL.startsWith("http")
+                                        ? movie.posterURL
+                                        : movie.posterURL
+                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
+                                        : "/placeholder.png"}
                                       alt={movie.title}
                                       className="w-full h-full object-cover"
                                     />
@@ -2267,7 +2285,12 @@ const GroupsManagement: React.FC = () => {
                                 >
                                   <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0">
                                     <img
-                                      src={movie.posterURL && movie.posterURL.startsWith('http') ? movie.posterURL : movie.posterURL ? `https://image.tmdb.org/t/p/w500${movie.posterURL}` : "/placeholder.png"}
+                                      src={movie.posterURL &&
+                                          movie.posterURL.startsWith("http")
+                                        ? movie.posterURL
+                                        : movie.posterURL
+                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
+                                        : "/placeholder.png"}
                                       alt={movie.title}
                                       className="w-full h-full object-cover"
                                     />
@@ -2324,9 +2347,8 @@ const GroupsManagement: React.FC = () => {
                             selectedGroup.phase !== "RESULTS" && (
                             <Button
                               variant="secondary"
-                              disabled={
-                                selectedGroup.phase === "POOL" && poolCount < 2
-                              }
+                              disabled={selectedGroup.phase === "POOL" &&
+                                poolCount < 2}
                               onClick={() =>
                                 handleAdvancePhase(
                                   selectedGroup.groupId,
@@ -2391,7 +2413,7 @@ const GroupsManagement: React.FC = () => {
           confirmText="Yes, leave group"
           cancelText="No, stay in group"
         />
-        
+
         {/* Delete Group Confirmation Dialog */}
         <ConfirmationDialog
           isOpen={showDeleteConfirmDialog}
@@ -2403,7 +2425,7 @@ const GroupsManagement: React.FC = () => {
           confirmText="Yes, delete group"
           cancelText="No, keep group"
         />
-        
+
         {/* Remove Member Confirmation Dialog */}
         <ConfirmationDialog
           isOpen={showRemoveMemberConfirmDialog}

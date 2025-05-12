@@ -43,8 +43,12 @@ const WatchList: React.FC = () => {
 
   // confirmation dialog
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
-  const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(null);
-  const [confirmDialogAction, setConfirmDialogAction] = useState<() => Promise<void>>(() => Promise.resolve());
+  const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(
+    null,
+  );
+  const [confirmDialogAction, setConfirmDialogAction] = useState<
+    () => Promise<void>
+  >(() => Promise.resolve());
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -56,13 +60,15 @@ const WatchList: React.FC = () => {
         setLoading(false);
         setUser(null);
         // Optionally set an error if ID is crucial and missing
-        // setError("User ID missing from URL."); 
+        // setError("User ID missing from URL.");
         return;
       }
 
       setLoading(true);
       try {
-        console.log(`Watchlist (trigger: ${refreshTrigger}): Fetching user data for ID: ${id}`); // Diagnostic log
+        console.log(
+          `Watchlist (trigger: ${refreshTrigger}): Fetching user data for ID: ${id}`,
+        ); // Diagnostic log
         const userData = await retry(() =>
           apiService.get(`/users/${id}/profile`)
         );
@@ -91,7 +97,7 @@ const WatchList: React.FC = () => {
   useEffect(() => {
     const handleFocus = () => {
       console.log("Watchlist page focused, triggering data refresh."); // Diagnostic log
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshTrigger((prev) => prev + 1);
     };
 
     window.addEventListener("focus", handleFocus);
@@ -152,19 +158,23 @@ const WatchList: React.FC = () => {
       return;
     }
     try {
-      await apiService.delete(`/users/${userId}/watchlist/${movieToRemove.movieId}`);
+      await apiService.delete(
+        `/users/${userId}/watchlist/${movieToRemove.movieId}`,
+      );
       setUser((prevUser) => {
         if (!prevUser) return null;
         return {
           ...prevUser,
           watchlist: prevUser.watchlist.filter(
-            (movie) => movie.movieId !== movieToRemove.movieId
+            (movie) => movie.movieId !== movieToRemove.movieId,
           ),
         };
       });
       if (isSearching) {
-        setFilteredMovies((prevFiltered) => 
-          prevFiltered.filter((movie) => movie.movieId !== movieToRemove.movieId)
+        setFilteredMovies((prevFiltered) =>
+          prevFiltered.filter((movie) =>
+            movie.movieId !== movieToRemove.movieId
+          )
         );
       }
       showMessage(`'${movieToRemove.title}' removed from watchlist.`);
@@ -198,8 +208,10 @@ const WatchList: React.FC = () => {
       return;
     }
 
-    const movieIsInWatchlist = user?.watchlist.some(m => m.movieId === movie.movieId);
-    
+    const movieIsInWatchlist = user?.watchlist.some((m) =>
+      m.movieId === movie.movieId
+    );
+
     // If the movie is in the watchlist, show confirmation dialog
     if (movieIsInWatchlist) {
       setConfirmDialogMovie(movie);
@@ -217,7 +229,7 @@ const WatchList: React.FC = () => {
       try {
         // Not in watchlist, just mark as seen with default parameter
         await apiService.post(`/users/${userId}/watched/${movie.movieId}`, {});
-        
+
         updateUserAfterMarkAsSeen(movie, false, false);
         showMessage(`'${movie.title}' marked as seen.`);
         closeModal();
@@ -231,7 +243,7 @@ const WatchList: React.FC = () => {
   // Handle confirmation dialog responses
   const handleKeepInWatchlist = async () => {
     if (!confirmDialogMovie) return;
-    
+
     try {
       await completeMarkAsSeen(confirmDialogMovie, true);
     } catch (error) {
@@ -245,7 +257,7 @@ const WatchList: React.FC = () => {
 
   const handleRemoveFromWatchlistAfterSeen = async () => {
     if (!confirmDialogMovie) return;
-    
+
     try {
       await completeMarkAsSeen(confirmDialogMovie, false);
     } catch (error) {
@@ -259,44 +271,57 @@ const WatchList: React.FC = () => {
 
   const completeMarkAsSeen = async (movie: Movie, keepInWatchlist: boolean) => {
     // Pass the keepInWatchlist parameter to the API
-    await apiService.post(`/users/${userId}/watched/${movie.movieId}?keepInWatchlist=${keepInWatchlist}`, {});
-    
+    await apiService.post(
+      `/users/${userId}/watched/${movie.movieId}?keepInWatchlist=${keepInWatchlist}`,
+      {},
+    );
+
     // Update local state and show message
     updateUserAfterMarkAsSeen(movie, true, keepInWatchlist);
-    
+
     if (keepInWatchlist) {
       showMessage(`'${movie.title}' marked as seen and kept in watchlist.`);
     } else {
-      showMessage(`'${movie.title}' marked as seen and removed from watchlist.`);
+      showMessage(
+        `'${movie.title}' marked as seen and removed from watchlist.`,
+      );
     }
     closeModal();
   };
 
-  const updateUserAfterMarkAsSeen = (movie: Movie, movieIsInWatchlist: boolean, keepInWatchlist: boolean) => {
+  const updateUserAfterMarkAsSeen = (
+    movie: Movie,
+    movieIsInWatchlist: boolean,
+    keepInWatchlist: boolean,
+  ) => {
     try {
       // Update local state to reflect the changes that happened on the server
       setUser((prevUser) => {
         if (!prevUser) return null;
-        
+
         // Add to watched movies if not already there
-        const alreadyWatched = prevUser.watchedMovies.some(m => m.movieId === movie.movieId);
-        const updatedWatchedMovies = alreadyWatched 
-          ? prevUser.watchedMovies 
+        const alreadyWatched = prevUser.watchedMovies.some((m) =>
+          m.movieId === movie.movieId
+        );
+        const updatedWatchedMovies = alreadyWatched
+          ? prevUser.watchedMovies
           : [...prevUser.watchedMovies, movie];
-        
+
         // If we chose not to keep in watchlist, update local watchlist state
         let updatedWatchlist = prevUser.watchlist;
         if (movieIsInWatchlist && !keepInWatchlist) {
-          updatedWatchlist = prevUser.watchlist.filter(m => m.movieId !== movie.movieId);
-          
+          updatedWatchlist = prevUser.watchlist.filter((m) =>
+            m.movieId !== movie.movieId
+          );
+
           // Also update filtered movies if searching
           if (isSearching) {
-            setFilteredMovies(prevFiltered => 
-              prevFiltered.filter(m => m.movieId !== movie.movieId)
+            setFilteredMovies((prevFiltered) =>
+              prevFiltered.filter((m) => m.movieId !== movie.movieId)
             );
           }
         }
-        
+
         return {
           ...prevUser,
           watchlist: updatedWatchlist,
@@ -414,7 +439,10 @@ const WatchList: React.FC = () => {
 
         {/* Display Action Error Message */}
         {actionError && (
-          <ErrorMessage message={actionError} onClose={() => setActionError(null)} />
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
         )}
 
         {/* Movie Details Modal */}

@@ -59,7 +59,7 @@ const SeenList: React.FC = () => {
           error instanceof Error && "status" in error &&
           (error as ApplicationError).status === 404
         ) {
-          setError("Oops! We couldn't find your profile details."); 
+          setError("Oops! We couldn't find your profile details.");
         } else {
           setError("Failed to load user data");
         }
@@ -129,23 +129,29 @@ const SeenList: React.FC = () => {
     }
     try {
       // Corrected API endpoint
-      await apiService.delete(`/users/${userId}/watched/${movieToRemove.movieId}`);
+      await apiService.delete(
+        `/users/${userId}/watched/${movieToRemove.movieId}`,
+      );
       setUser((prevUser) => {
         if (!prevUser) return null;
         return {
           ...prevUser,
           watchedMovies: prevUser.watchedMovies?.filter(
-            (movie) => movie.movieId !== movieToRemove.movieId
+            (movie) => movie.movieId !== movieToRemove.movieId,
           ) || [],
         };
       });
       // Update filteredMovies as well if currently searching
       if (isSearching) {
-        setFilteredMovies((prevFiltered) => 
-          prevFiltered.filter((movie) => movie.movieId !== movieToRemove.movieId)
+        setFilteredMovies((prevFiltered) =>
+          prevFiltered.filter((movie) =>
+            movie.movieId !== movieToRemove.movieId
+          )
         );
       }
-      showMessage(`Successfully removed '${movieToRemove.title}' from seen list.`); // Success message
+      showMessage(
+        `Successfully removed '${movieToRemove.title}' from seen list.`,
+      ); // Success message
     } catch (error) {
       console.error("Failed to remove movie from seen list:", error);
       setActionError("Error removing movie from seen list. Please try again."); // Changed to setActionError
@@ -202,7 +208,8 @@ const SeenList: React.FC = () => {
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
       {/* Sidebar */}
-      <Navigation userId={userId} activeItem="Seen List" /> {/* Corrected activeItem */}
+      <Navigation userId={userId} activeItem="Seen List" />{" "}
+      {/* Corrected activeItem */}
       {/* Main content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="mb-8">
@@ -250,7 +257,8 @@ const SeenList: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex justify-end space-x-4"> {/* Changed justify-between to justify-end */}
+        <div className="mt-8 flex justify-end space-x-4">
+          {/* Changed justify-between to justify-end */}
           {isEditing
             ? (
               <Button
@@ -282,7 +290,10 @@ const SeenList: React.FC = () => {
 
         {/* Display Action Error Message */}
         {actionError && (
-          <ErrorMessage message={actionError} onClose={() => setActionError(null)} />
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
         )}
 
         {/* Movie Details Modal */}

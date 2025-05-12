@@ -40,7 +40,9 @@ const MovieCard: React.FC<MovieCardProps> = ({
       onClick={handleClick}
     >
       <img
-        className={`w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md ${isEditing ? "opacity-60" : "group-hover:opacity-75 transition-opacity"} ${isSelectingFavorite ? "border border-gray-300" : ""}`}
+        className={`w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] object-cover rounded-md ${
+          isEditing ? "opacity-60" : "group-hover:opacity-75 transition-opacity"
+        } ${isSelectingFavorite ? "border border-gray-300" : ""}`}
         alt={movie.title}
         src={movie.posterURL}
       />

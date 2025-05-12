@@ -163,7 +163,7 @@ const Vote: React.FC = () => {
       let state: VoteStateDTO;
       try {
         state = await apiService.get<VoteStateDTO>(
-          `/groups/${groupId}/vote-state`
+          `/groups/${groupId}/vote-state`,
         );
       } catch (err: unknown) {
         if (err instanceof Error && "status" in err) {
@@ -171,7 +171,7 @@ const Vote: React.FC = () => {
           switch (appErr.status) {
             case 401:
               setError(
-                "Your session has expired. Please log in again to view the vote state."
+                "Your session has expired. Please log in again to view the vote state.",
               );
               setShowSuccessMessage(false); // Clear success on new error
               setSuccessMessage("");
@@ -188,14 +188,14 @@ const Vote: React.FC = () => {
               break;
             default:
               setError(
-                "An error occurred while loading vote state. Please try again."
+                "An error occurred while loading vote state. Please try again.",
               );
               setShowSuccessMessage(false); // Clear success on new error
               setSuccessMessage("");
           }
         } else {
           setError(
-            "An error occurred while loading vote state. Please try again."
+            "An error occurred while loading vote state. Please try again.",
           );
           setShowSuccessMessage(false); // Clear success on new error
           setSuccessMessage("");
@@ -408,7 +408,7 @@ const Vote: React.FC = () => {
       // Validate that userId and groupId are valid numbers
       if (!userId || !groupId) {
         setError(
-          "Missing user ID or group ID. Please go back to the main page."
+          "Missing user ID or group ID. Please go back to the main page.",
         );
         setShowSuccessMessage(false); // Clear success on new error
         setSuccessMessage("");
@@ -422,8 +422,9 @@ const Vote: React.FC = () => {
       const rankingSubmitDTOs: RankingSubmitDTO[] = validRankings.map(
         (movie, index) => {
           // Ensure movieId is a valid integer
-          const movieId =
-            movie && movie.movieId ? parseInt(String(movie.movieId), 10) : null;
+          const movieId = movie && movie.movieId
+            ? parseInt(String(movie.movieId), 10)
+            : null;
 
           if (isNaN(movieId as number) || movieId === null) {
             throw new Error(`Invalid movie ID for rank ${index + 1}`);
@@ -433,7 +434,7 @@ const Vote: React.FC = () => {
             movieId: movieId as number,
             rank: index + 1, // Ranks are 1-based (1, 2, 3)
           };
-        }
+        },
       );
       console.log("Submitting rankings:", JSON.stringify(rankingSubmitDTOs));
       // Make sure the API endpoint is properly formatted
@@ -452,33 +453,35 @@ const Vote: React.FC = () => {
         switch (appErr.status) {
           case 400:
             setError(
-              "There was an issue with your submitted ranks. Please check and try again."
+              "There was an issue with your submitted ranks. Please check and try again.",
             );
             setShowSuccessMessage(false); // Clear success on new error
             setSuccessMessage("");
             break;
           case 404:
-            setError("We could not find the user or group for submitting ranks.");
+            setError(
+              "We could not find the user or group for submitting ranks.",
+            );
             setShowSuccessMessage(false); // Clear success on new error
             setSuccessMessage("");
             break;
           case 409:
             setError(
-              "Voting is not currently open for this group. Rankings cannot be submitted."
+              "Voting is not currently open for this group. Rankings cannot be submitted.",
             );
             setShowSuccessMessage(false); // Clear success on new error
             setSuccessMessage("");
             break;
           default:
             setError(
-              "An error occurred while submitting your rankings. Please try again."
+              "An error occurred while submitting your rankings. Please try again.",
             );
             setShowSuccessMessage(false); // Clear success on new error
             setSuccessMessage("");
         }
       } else {
         setError(
-          "An error occurred while submitting your rankings. Please try again."
+          "An error occurred while submitting your rankings. Please try again.",
         );
         setShowSuccessMessage(false); // Clear success on new error
         setSuccessMessage("");
@@ -574,52 +577,179 @@ const Vote: React.FC = () => {
           </div>
         )}
 
-        {isMobile ? (
-          // Mobile-specific rendering
-          <>
-            {/* Movie Pool Section for Mobile */}
-            <div className="mb-8">
-              <h2 className="font-semibold text-[#3b3e88] text-xl">
-                Movie Pool
-              </h2>
-              <div
-                id="movie-pool"
-                className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
-              >
-                {selectingForRank !== null ? (
-                  // When selecting for a specific rank
-                  availableMovies.length > 0 ? (
-                    availableMovies.map((movie, index) => (
-                      <SortableItem
-                        key={`pool-${index}`}
-                        id={`pool-${index}`}
-                        isMobile={true}
-                        onClick={() => handleMobileMovieSelect(index)}
-                      >
-                        <div className="flex flex-col items-center">
-                          <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
-                            <img
-                              src={getFullPosterUrl(movie.posterURL)}
-                              alt={movie.title}
-                              className="w-full h-full object-cover"
-                            />
+        {isMobile
+          ? (
+            // Mobile-specific rendering
+            <>
+              {/* Movie Pool Section for Mobile */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-[#3b3e88] text-xl">
+                  Movie Pool
+                </h2>
+                <div
+                  id="movie-pool"
+                  className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
+                >
+                  {selectingForRank !== null
+                    ? (
+                      // When selecting for a specific rank
+                      availableMovies.length > 0
+                        ? (
+                          availableMovies.map((movie, index) => (
+                            <SortableItem
+                              key={`pool-${index}`}
+                              id={`pool-${index}`}
+                              isMobile={true}
+                              onClick={() => handleMobileMovieSelect(index)}
+                            >
+                              <div className="flex flex-col items-center">
+                                <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                                  <img
+                                    src={getFullPosterUrl(movie.posterURL)}
+                                    alt={movie.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              </div>
+                            </SortableItem>
+                          ))
+                        )
+                        : (
+                          <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
+                            All movies have been ranked or no movies are
+                            available.
                           </div>
-                        </div>
-                      </SortableItem>
-                    ))
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
-                      All movies have been ranked or no movies are available.
-                    </div>
-                  )
-                ) : // Normal pool display when not selecting
-                availableMovies.length > 0 ? (
-                  availableMovies.map((movie, index) => (
-                    <SortableItem
-                      key={`pool-${index}`}
-                      id={`pool-${index}`}
-                      isMobile={true}
+                        )
+                    ) // Normal pool display when not selecting
+                    : availableMovies.length > 0
+                    ? (
+                      availableMovies.map((movie, index) => (
+                        <SortableItem
+                          key={`pool-${index}`}
+                          id={`pool-${index}`}
+                          isMobile={true}
+                        >
+                          <div className="flex flex-col items-center">
+                            <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                              <img
+                                src={getFullPosterUrl(movie.posterURL)}
+                                alt={movie.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        </SortableItem>
+                      ))
+                    )
+                    : (
+                      <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
+                        All movies have been ranked or no movies are available.
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Ranking Section for Mobile */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-[#3b3e88] text-xl">
+                  Your Ranking
+                </h2>
+                {(() => {
+                  const filledSlots =
+                    rankings.filter((movie) => movie !== null).length;
+                  const totalMovies = Math.min(
+                    5,
+                    availableMovies.length + filledSlots,
+                  );
+                  const isCompleted = filledSlots >= totalMovies;
+                  return (
+                    <p
+                      className={`mt-6 text-sm ${
+                        isCompleted ? "text-[#3C3F88]" : "text-orange-600"
+                      }`}
                     >
+                      You ranked {filledSlots}/{totalMovies} movies.
+                      {!isCompleted && ` Please rank ${totalMovies} movies.`}
+                    </p>
+                  );
+                })()}
+                <div className="flex flex-wrap gap-4 mt-4">
+                  {rankings.map((movie, index) => (
+                    <SortableItem
+                      key={`rank-${index}`}
+                      id={`rank-${index}`}
+                      isMobile={true}
+                      onClick={() =>
+                        !hasSubmitted && handleMobileRankSelect(index)}
+                      onRemove={showRemove(movie)
+                        ? () => handleRemoveFromRanking(index)
+                        : undefined}
+                    >
+                      {movie
+                        ? (
+                          <div
+                            className={`flex flex-col items-center ${
+                              selectingForRank === index
+                                ? "ring-2 ring-blue-500"
+                                : ""
+                            }`}
+                          >
+                            <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                              <img
+                                src={getFullPosterUrl(movie.posterURL)}
+                                alt={movie.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="badge absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                              {index + 1}
+                            </span>
+                          </div>
+                        )
+                        : (
+                          <div
+                            className={`flex flex-col items-center justify-center ${
+                              selectingForRank === index
+                                ? "ring-2 ring-blue-500"
+                                : ""
+                            }`}
+                          >
+                            <p className="text-[#b9c0de] text-lg font-semibold">
+                              Rank #{index + 1}
+                            </p>
+                            <p className="text-[#b9c0de] text-sm">
+                              {selectingForRank === index
+                                ? "Select a movie"
+                                : "Tap to select"}
+                            </p>
+                          </div>
+                        )}
+                    </SortableItem>
+                  ))}
+                </div>
+              </div>
+            </>
+          )
+          : (
+            // Desktop rendering with DnD
+            <DndContext
+              collisionDetection={pointerWithin}
+              onDragEnd={handleDragEnd}
+            >
+              {/* Movie Pool Section for Desktop */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-[#3b3e88] text-xl">
+                  Movie Pool
+                </h2>
+                <p className="text-sm text-[#3b3e88] mt-2">
+                  Use drag and drop to rank the movies
+                </p>
+                <div
+                  id="movie-pool"
+                  className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
+                >
+                  {availableMovies.map((movie, index) => (
+                    <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
                       <div className="flex flex-col items-center">
                         <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
                           <img
@@ -630,175 +760,79 @@ const Vote: React.FC = () => {
                         </div>
                       </div>
                     </SortableItem>
-                  ))
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
-                    All movies have been ranked or no movies are available.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Ranking Section for Mobile */}
-            <div className="mb-8">
-              <h2 className="font-semibold text-[#3b3e88] text-xl">
-                Your Ranking
-              </h2>
-              {(() => {
-                const filledSlots = rankings.filter((movie) => movie !== null).length;
-                const totalMovies = Math.min(5, availableMovies.length + filledSlots);
-                const isCompleted = filledSlots >= totalMovies;
-                return (
-                  <p className={`mt-6 text-sm ${isCompleted ? "text-[#3C3F88]" : "text-orange-600"}`}>
-                    You ranked {filledSlots}/{totalMovies} movies. 
-                    {!isCompleted && ` Please rank ${totalMovies} movies.`}
-                  </p>
-                );
-              })()}
-              <div className="flex flex-wrap gap-4 mt-4">
-                {rankings.map((movie, index) => (
-                  <SortableItem
-                    key={`rank-${index}`}
-                    id={`rank-${index}`}
-                    isMobile={true}
-                    onClick={() =>
-                      !hasSubmitted && handleMobileRankSelect(index)
-                    }
-                    onRemove={
-                      showRemove(movie)
-                        ? () => handleRemoveFromRanking(index)
-                        : undefined
-                    }
-                  >
-                    {movie ? (
-                      <div
-                        className={`flex flex-col items-center ${selectingForRank === index ? "ring-2 ring-blue-500" : ""}`}
-                      >
-                        <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
-                          <img
-                            src={getFullPosterUrl(movie.posterURL)}
-                            alt={movie.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="badge absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                          {index + 1}
-                        </span>
-                      </div>
-                    ) : (
-                      <div
-                        className={`flex flex-col items-center justify-center ${selectingForRank === index ? "ring-2 ring-blue-500" : ""}`}
-                      >
-                        <p className="text-[#b9c0de] text-lg font-semibold">
-                          Rank #{index + 1}
-                        </p>
-                        <p className="text-[#b9c0de] text-sm">
-                          {selectingForRank === index
-                            ? "Select a movie"
-                            : "Tap to select"}
-                        </p>
-                      </div>
-                    )}
-                  </SortableItem>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          // Desktop rendering with DnD
-          <DndContext
-            collisionDetection={pointerWithin}
-            onDragEnd={handleDragEnd}
-          >
-            {/* Movie Pool Section for Desktop */}
-            <div className="mb-8">
-              <h2 className="font-semibold text-[#3b3e88] text-xl">
-                Movie Pool
-              </h2>
-              <p className="text-sm text-[#3b3e88] mt-2">
-                Use drag and drop to rank the movies
-              </p>
-              <div
-                id="movie-pool"
-                className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
-              >
-                {availableMovies.map((movie, index) => (
-                  <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
-                    <div className="flex flex-col items-center">
-                      <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
-                        <img
-                          src={getFullPosterUrl(movie.posterURL)}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                  ))}
+                  {availableMovies.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
+                      All movies have been ranked or no movies are available.
                     </div>
-                  </SortableItem>
-                ))}
-                {availableMovies.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
-                    All movies have been ranked or no movies are available.
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Ranking Section for Desktop */}
-            <div className="mb-8">
-              <h2 className="font-semibold text-[#3b3e88] text-xl">
-                Your Ranking
-              </h2>
-              {(() => {
-                const filledSlots = rankings.filter((movie) => movie !== null).length;
-                const totalMovies = Math.min(5, availableMovies.length + filledSlots);
-                const isCompleted = filledSlots >= totalMovies;
-                return (
-                  <p className={`mt-6 text-sm ${isCompleted ? "text-[#3C3F88]" : "text-orange-600"}`}>
-                    You ranked {filledSlots}/{totalMovies} movies. 
-                    {!isCompleted && ` Please rank ${totalMovies} movies.`}
-                  </p>
-                );
-              })()}
-              <div className="flex flex-wrap gap-4 mt-4">
-                {rankings.map((movie, index) => (
-                  <SortableItem
-                    key={`rank-${index}`}
-                    id={`rank-${index}`}
-                    onRemove={
-                      showRemove(movie)
+              {/* Ranking Section for Desktop */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-[#3b3e88] text-xl">
+                  Your Ranking
+                </h2>
+                {(() => {
+                  const filledSlots =
+                    rankings.filter((movie) => movie !== null).length;
+                  const totalMovies = Math.min(
+                    5,
+                    availableMovies.length + filledSlots,
+                  );
+                  const isCompleted = filledSlots >= totalMovies;
+                  return (
+                    <p
+                      className={`mt-6 text-sm ${
+                        isCompleted ? "text-[#3C3F88]" : "text-orange-600"
+                      }`}
+                    >
+                      You ranked {filledSlots}/{totalMovies} movies.
+                      {!isCompleted && ` Please rank ${totalMovies} movies.`}
+                    </p>
+                  );
+                })()}
+                <div className="flex flex-wrap gap-4 mt-4">
+                  {rankings.map((movie, index) => (
+                    <SortableItem
+                      key={`rank-${index}`}
+                      id={`rank-${index}`}
+                      onRemove={showRemove(movie)
                         ? () => handleRemoveFromRanking(index)
-                        : undefined
-                    }
-                  >
-                    {movie ? (
-                      <div className="flex flex-col items-center">
-                        <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
-                          <img
-                            src={getFullPosterUrl(movie.posterURL)}
-                            alt={movie.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="badge absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                          {index + 1}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center">
-                        <p className="text-[#b9c0de] text-lg font-semibold">
-                          Rank #{index + 1}
-                        </p>
-                        <p className="text-[#b9c0de] text-sm">
-                          Drop a movie here
-                        </p>
-                      </div>
-                    )}
-                  </SortableItem>
-                ))}
+                        : undefined}
+                    >
+                      {movie
+                        ? (
+                          <div className="flex flex-col items-center">
+                            <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
+                              <img
+                                src={getFullPosterUrl(movie.posterURL)}
+                                alt={movie.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="badge absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                              {index + 1}
+                            </span>
+                          </div>
+                        )
+                        : (
+                          <div className="flex flex-col items-center justify-center">
+                            <p className="text-[#b9c0de] text-lg font-semibold">
+                              Rank #{index + 1}
+                            </p>
+                            <p className="text-[#b9c0de] text-sm">
+                              Drop a movie here
+                            </p>
+                          </div>
+                        )}
+                    </SortableItem>
+                  ))}
+                </div>
               </div>
-            </div>
-          </DndContext>
-        )}
+            </DndContext>
+          )}
         {/* Navigation Buttons: Back on left, End Voting on right */}
         <div className="flex justify-between items-center mt-4">
           <Button
@@ -810,64 +844,64 @@ const Vote: React.FC = () => {
           {phase === "VOTING" &&
             phaseGroup &&
             String(phaseGroup.creatorId) === String(userId) && (
-              <Button
-                variant="secondary"
-                onClick={async () => {
-                  try {
-                    await apiService.post(
-                      `/groups/${groupId}/show-results`,
-                      {}
-                    );
-                    setSuccessMessage(
-                      "Voting ended, results are now available."
-                    );
-                    setShowSuccessMessage(true);
-                    setError(""); // Clear success on new error
-                  } catch (err: unknown) {
-                    if (err instanceof Error && "status" in err) {
-                      const appErr = err as ApplicationError;
-                      switch (appErr.status) {
-                        case 403:
-                          setError(
-                            "Only the group creator can end voting and show results."
-                          );
-                          setShowSuccessMessage(false);
-                          setSuccessMessage("");
-                          break;
-                        case 404:
-                          setError("The specified group could not be found.");
-                          setShowSuccessMessage(false);
-                          setSuccessMessage("");
-                          break;
-                        case 409:
-                          setError(
-                            "This action can only be performed when voting is active for this group."
-                          );
-                          setShowSuccessMessage(false);
-                          setSuccessMessage("");
-                          break;
-                        default:
-                          setError(
-                            "An error occurred while ending voting. Please try again."
-                          );
-                          setShowSuccessMessage(false);
-                          setSuccessMessage("");
-                      }
-                    } else {
-                      setError(
-                        "An error occurred while ending voting. Please try again."
-                      );
-                      setShowSuccessMessage(false);
-                      setSuccessMessage("");
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  await apiService.post(
+                    `/groups/${groupId}/show-results`,
+                    {},
+                  );
+                  setSuccessMessage(
+                    "Voting ended, results are now available.",
+                  );
+                  setShowSuccessMessage(true);
+                  setError(""); // Clear success on new error
+                } catch (err: unknown) {
+                  if (err instanceof Error && "status" in err) {
+                    const appErr = err as ApplicationError;
+                    switch (appErr.status) {
+                      case 403:
+                        setError(
+                          "Only the group creator can end voting and show results.",
+                        );
+                        setShowSuccessMessage(false);
+                        setSuccessMessage("");
+                        break;
+                      case 404:
+                        setError("The specified group could not be found.");
+                        setShowSuccessMessage(false);
+                        setSuccessMessage("");
+                        break;
+                      case 409:
+                        setError(
+                          "This action can only be performed when voting is active for this group.",
+                        );
+                        setShowSuccessMessage(false);
+                        setSuccessMessage("");
+                        break;
+                      default:
+                        setError(
+                          "An error occurred while ending voting. Please try again.",
+                        );
+                        setShowSuccessMessage(false);
+                        setSuccessMessage("");
                     }
-                    return;
+                  } else {
+                    setError(
+                      "An error occurred while ending voting. Please try again.",
+                    );
+                    setShowSuccessMessage(false);
+                    setSuccessMessage("");
                   }
-                  router.replace(`/users/${userId}/groups/${groupId}/results`);
-                }}
-              >
-                End Voting & Show Results
-              </Button>
-            )}
+                  return;
+                }
+                router.replace(`/users/${userId}/groups/${groupId}/results`);
+              }}
+            >
+              End Voting & Show Results
+            </Button>
+          )}
         </div>
       </div>
     </div>

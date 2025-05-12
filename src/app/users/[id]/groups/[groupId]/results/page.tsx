@@ -37,8 +37,12 @@ const Results: React.FC = () => {
   };
   if (Array.isArray(id)) id = id[0];
   if (Array.isArray(groupId)) groupId = groupId[0];
-  const { group: phaseGroup, phase: phaseFromHook, loading: phaseLoading, error: phaseError } =
-    useGroupPhase(groupId as string);
+  const {
+    group: phaseGroup,
+    phase: phaseFromHook,
+    loading: phaseLoading,
+    error: phaseError,
+  } = useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<
@@ -129,13 +133,18 @@ const Results: React.FC = () => {
           let watchedMoviesList: any[] = [];
           if (Array.isArray(response)) {
             watchedMoviesList = response;
-          } else if (response && typeof response === 'object' && Array.isArray((response as any).data)) {
+          } else if (
+            response && typeof response === "object" &&
+            Array.isArray((response as any).data)
+          ) {
             watchedMoviesList = (response as any).data;
           }
 
           if (fullWinningMovie.movieId) {
             const isWatched = watchedMoviesList.some(
-              (movie: any) => movie.movieId === fullWinningMovie.movieId || movie.id === fullWinningMovie.movieId // Check both movieId and id just in case
+              (movie: any) =>
+                movie.movieId === fullWinningMovie.movieId ||
+                movie.id === fullWinningMovie.movieId, // Check both movieId and id just in case
             );
             if (isWatched) {
               setMovieAddedToWatchedList(true);
@@ -254,13 +263,15 @@ const Results: React.FC = () => {
         <div className="mb-8 flex items-center">
           <div>
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
-            {phaseGroup
+              {phaseGroup
                 ? `${phaseGroup.groupName} - Final Movie Ranking`
                 : "Final Movie Ranking"}
             </h1>
-            {/* <p className="text-[#b9c0de] mt-2">
+            {
+              /* <p className="text-[#b9c0de] mt-2">
               See what your group has chosen to watch
-            </p> */}
+            </p> */
+            }
           </div>
         </div>
 

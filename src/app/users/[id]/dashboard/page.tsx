@@ -90,7 +90,9 @@ const Dashboard: React.FC = () => {
             err instanceof Error && "status" in err &&
             (err as ApplicationError).status === 404
           ) {
-            setError("Welcome! We couldn't fetch your profile details right now.");
+            setError(
+              "Welcome! We couldn't fetch your profile details right now.",
+            );
           } else {
             setError("Failed to load profile data. Please try again later.");
           }
@@ -512,7 +514,10 @@ const Dashboard: React.FC = () => {
 
         {/* Display Action Error Message */}
         {actionError && (
-          <ErrorMessage message={actionError} onClose={() => setActionError(null)} />
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
         )}
       </div>
     </div>
