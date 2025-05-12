@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ConfirmationDialog from "@/components/ui/confirmation_dialog";
 import { retry } from "src/utils/retry";
 import type { ApplicationError } from "@/app/types/error";
 
@@ -86,7 +87,14 @@ const GroupsManagement: React.FC = () => {
 
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
-  // --- End Refactored State ---
+
+  // Confirmation dialog states
+  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState<boolean>(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState<boolean>(false);
+  const [showRemoveMemberConfirmDialog, setShowRemoveMemberConfirmDialog] = useState<boolean>(false);
+  const [groupToLeave, setGroupToLeave] = useState<number | null>(null);
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{groupId: number, memberId: number} | null>(null);
 
   // Dialog visibility states
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState<
@@ -1017,9 +1025,15 @@ const GroupsManagement: React.FC = () => {
   const handleLeaveGroup = async (groupId: number) => {
     setDialogError(null);
     setError(null);
-    if (!window.confirm("Are you sure you want to leave this group?")) return;
+    setGroupToLeave(groupId);
+    setShowLeaveConfirmDialog(true);
+  };
+  
+  const confirmLeaveGroup = async () => {
+    if (!groupToLeave) return;
+    
     try {
-      await apiService.delete(`/groups/${groupId}/leave`);
+      await apiService.delete(`/groups/${groupToLeave}/leave`);
       await refreshGroupsData(); // Refresh lists
       showSuccessMessage("Left group successfully");
       setIsGroupDetailDialogOpen(false);
@@ -1051,6 +1065,10 @@ const GroupsManagement: React.FC = () => {
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
     } finally {
+      // Close the confirmation dialog regardless of success or failure
+      setShowLeaveConfirmDialog(false);
+      setGroupToLeave(null);
+      
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -1062,13 +1080,15 @@ const GroupsManagement: React.FC = () => {
   const handleDeleteGroup = async (groupId: number) => {
     setDialogError(null);
     setError(null);
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently delete this group? This cannot be undone.",
-      )
-    ) return;
+    setGroupToDelete(groupId);
+    setShowDeleteConfirmDialog(true);
+  };
+  
+  const confirmDeleteGroup = async () => {
+    if (!groupToDelete) return;
+    
     try {
-      await apiService.delete(`/groups/${groupId}`);
+      await apiService.delete(`/groups/${groupToDelete}`);
       await refreshGroupsData(); // Refresh lists
       showSuccessMessage("Group deleted successfully");
       setIsGroupDetailDialogOpen(false);
@@ -1099,6 +1119,10 @@ const GroupsManagement: React.FC = () => {
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
     } finally {
+      // Close the confirmation dialog regardless of success or failure
+      setShowDeleteConfirmDialog(false);
+      setGroupToDelete(null);
+      
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -1110,12 +1134,18 @@ const GroupsManagement: React.FC = () => {
   const handleRemoveMember = async (groupId: number, memberId: number) => {
     setDialogError(null);
     setError(null);
-    // Optional confirmation: if (!window.confirm('Are you sure you want to remove this member?')) return;
+    setMemberToRemove({groupId, memberId});
+    setShowRemoveMemberConfirmDialog(true);
+  };
+  
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove) return;
+    
     try {
-      await apiService.delete(`/groups/${groupId}/members/${memberId}`);
+      await apiService.delete(`/groups/${memberToRemove.groupId}/members/${memberToRemove.memberId}`);
       showSuccessMessage("Member removed successfully");
       // Refresh details in the dialog
-      const refreshedGroup = await loadGroupDetails(groupId);
+      const refreshedGroup = await loadGroupDetails(memberToRemove.groupId);
       setSelectedGroup(refreshedGroup);
       refreshGroupsData(); // Refresh main list (for member counts, etc.)
     } catch (err: unknown) {
@@ -1144,6 +1174,10 @@ const GroupsManagement: React.FC = () => {
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
     } finally {
+      // Close the confirmation dialog regardless of success or failure
+      setShowRemoveMemberConfirmDialog(false);
+      setMemberToRemove(null);
+      
       // Ensure success message is not lingering if error occurred
       if (dialogError) {
         setShowActionMessage(false);
@@ -2345,6 +2379,42 @@ const GroupsManagement: React.FC = () => {
             className="bg-green-500" // Success styling
           />
         </div>
+
+        {/* Leave Group Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showLeaveConfirmDialog}
+          onClose={() => setShowLeaveConfirmDialog(false)}
+          onConfirm={confirmLeaveGroup}
+          onCancel={() => setShowLeaveConfirmDialog(false)}
+          title="Leave Group"
+          message="Are you sure you want to leave this group?"
+          confirmText="Yes, leave group"
+          cancelText="No, stay in group"
+        />
+        
+        {/* Delete Group Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showDeleteConfirmDialog}
+          onClose={() => setShowDeleteConfirmDialog(false)}
+          onConfirm={confirmDeleteGroup}
+          onCancel={() => setShowDeleteConfirmDialog(false)}
+          title="Delete Group"
+          message="Are you sure you want to permanently delete this group? This cannot be undone."
+          confirmText="Yes, delete group"
+          cancelText="No, keep group"
+        />
+        
+        {/* Remove Member Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showRemoveMemberConfirmDialog}
+          onClose={() => setShowRemoveMemberConfirmDialog(false)}
+          onConfirm={confirmRemoveMember}
+          onCancel={() => setShowRemoveMemberConfirmDialog(false)}
+          title="Remove Member"
+          message="Are you sure you want to remove this member from the group?"
+          confirmText="Yes, remove member"
+          cancelText="No, keep member"
+        />
       </div>
     </div>
   );

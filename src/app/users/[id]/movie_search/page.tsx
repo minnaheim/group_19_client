@@ -15,6 +15,7 @@ import MovieDetailsModal from "@/components/ui/movie_details";
 import MovieList from "@/components/ui/movie_list";
 import { retry } from "src/utils/retry";
 import { RefreshCw, Search, X, Plus } from "lucide-react";
+import ConfirmationDialog from "@/components/ui/confirmation_dialog";
 
 // Define types for genres, actors, and directors
 interface Genre {
@@ -191,8 +192,12 @@ const SearchMovies: React.FC = () => {
   // ANI CHANGE: Added a state to track ongoing movie addition to prevent simultaneous operations
   const [isAddingMovie, setIsAddingMovie] = useState<boolean>(false);
 
+  // Confirmation dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(null);
+
   const { value: token } = useLocalStorage<string>("token", "");
-  const { value: userId } = useLocalStorage<string>("userId", "");
+  const { value: loggedInUserId } = useLocalStorage<string>("userId", "");
 
   // fetch user data
   useEffect(() => {
@@ -561,6 +566,12 @@ const SearchMovies: React.FC = () => {
       return;
     }
 
+    // Ensure action is on the logged-in user's list
+    if (loggedInUserId !== id) {
+        showMessage("You can only add movies to your own watchlist.");
+        return;
+    }
+
     if (isInWatchlist(movie)) {
       showMessage("Movie already in your watchlist");
       return;
@@ -569,7 +580,7 @@ const SearchMovies: React.FC = () => {
     try {
       setIsAddingMovie(true);
 
-      await apiService.post(`/users/${id}/watchlist/${movie.movieId}`, {});
+      await apiService.post(`/users/${loggedInUserId}/watchlist/${movie.movieId}`, {});
 
       // update local state
       if (user) {
@@ -609,57 +620,137 @@ const SearchMovies: React.FC = () => {
     }
   };
 
+  // Handle API errors
+  const handleError = (error: unknown) => {
+    console.error("Failed to update movie status:", error);
+    if (error instanceof Error && "status" in error) {
+      const appErr = error as ApplicationError;
+      switch (appErr.status) {
+        case 401: showMessage("Please log in again to update movie status."); break;
+        case 403: showMessage("You don't have permission to modify these lists."); break;
+        case 404: showMessage("Could not find the user or movie."); break;
+        case 409: showMessage("Conflict: The movie might already be in the desired state or another operation is pending."); break;
+        default: showMessage("Failed to update movie status. Please try again.");
+      }
+    } else {
+      showMessage("An unexpected error occurred. Failed to update movie status.");
+    }
+  };
+
+  // Complete the mark as seen process after user decision
+  const completeAddToSeenList = async (movie: Movie, movieIsInWatchlist: boolean, keepInWatchlist: boolean) => {
+    // Only call API if not already in seen list
+    if (!isInSeenList(movie)) {
+      // Pass the keepInWatchlist parameter only if the movie is in watchlist
+      const apiUrl = movieIsInWatchlist
+        ? `/users/${loggedInUserId}/watched/${movie.movieId}?keepInWatchlist=${keepInWatchlist}`
+        : `/users/${loggedInUserId}/watched/${movie.movieId}`;
+      
+      await apiService.post(apiUrl, {});
+    }
+
+    // Update local state to reflect the changes that happened on the server
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      
+      // Add to watched movies if not already there
+      const alreadyWatched = prevUser.watchedMovies.some(m => m.movieId === movie.movieId);
+      const updatedWatchedMovies = alreadyWatched 
+        ? prevUser.watchedMovies 
+        : [...prevUser.watchedMovies, movie];
+      
+      // If we chose not to keep in watchlist, update local watchlist state
+      let updatedWatchlist = prevUser.watchlist;
+      if (movieIsInWatchlist && !keepInWatchlist) {
+        updatedWatchlist = prevUser.watchlist.filter(m => m.movieId !== movie.movieId);
+      }
+      
+      return { 
+        ...prevUser, 
+        watchlist: updatedWatchlist,
+        watchedMovies: updatedWatchedMovies 
+      };
+    });
+    
+    // Show appropriate message based on what happened
+    if (movieIsInWatchlist) {
+      if (keepInWatchlist) {
+        showMessage(`'${movie.title}' marked as seen and kept in watchlist.`);
+      } else {
+        showMessage(`'${movie.title}' marked as seen and removed from watchlist.`);
+      }
+    } else {
+      // Movie was not in watchlist, just marked as seen (or already was)
+      if (!isInSeenList(movie)) { // Avoid duplicate message if already shown "already in seen list"
+        showMessage(`'${movie.title}' marked as seen.`);
+      }
+    }
+  };
+
+  // Handle dialog confirmation: keep in watchlist
+  const handleKeepInWatchlist = async () => {
+    if (!confirmDialogMovie) return;
+    
+    try {
+      await completeAddToSeenList(confirmDialogMovie, true, true);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+      setIsAddingMovie(false);
+    }
+  };
+
+  // Handle dialog cancellation: remove from watchlist
+  const handleRemoveFromWatchlistAfterSeen = async () => {
+    if (!confirmDialogMovie) return;
+    
+    try {
+      await completeAddToSeenList(confirmDialogMovie, true, false);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+      setIsAddingMovie(false);
+    }
+  };
+
   const handleAddToSeenList = async (movie: Movie) => {
     if (isAddingMovie) {
       showMessage("Please wait while the current operation completes");
       return;
     }
+    
+    // Ensure action is on the logged-in user's list
+    if (loggedInUserId !== id) {
+        showMessage("You can only add movies to your own seen list.");
+        return;
+    }
 
+    // If already in seen list, inform user, but still proceed to check watchlist status for consistency
     if (isInSeenList(movie)) {
-      showMessage("Movie already in your seen list");
-      return;
+      showMessage("Movie is already in your seen list.");
     }
 
     try {
       setIsAddingMovie(true);
 
-      await apiService.post(`/users/${id}/watched/${movie.movieId}`, {});
-
-      // update local state
-      if (user) {
-        setUser({
-          ...user,
-          watchedMovies: [...user.watchedMovies, movie],
-        });
+      // 1. Check if movie is in watchlist
+      const movieIsInWatchlist = isInWatchlist(movie);
+      
+      // 2. If in watchlist, show confirmation dialog
+      if (movieIsInWatchlist) {
+        setConfirmDialogMovie(movie);
+        setShowConfirmDialog(true);
+        return; // Exit early, dialog callbacks will continue the process
       }
-
-      showMessage("Added to watched list");
+      
+      // If not in watchlist, continue with normal flow
+      await completeAddToSeenList(movie, false, false);
     } catch (error) {
-      if (error instanceof Error && "status" in error) {
-        const appErr = error as ApplicationError;
-        switch (appErr.status) {
-          case 401:
-            showMessage(
-                "Please log in again to add movies to your watched list.",
-            );
-            break;
-          case 403:
-            showMessage(
-                "You don't have permission to modify this watched list.",
-            );
-            break;
-          case 404:
-            showMessage(
-                "Could not find the user or movie to add to the watched list.",
-            );
-            break;
-          case 409:
-            showMessage("You've already marked this movie as watched.");
-            break;
-          default:
-            showMessage("Failed to add movie to watched list.");
-        }
-      }
+      handleError(error);
     } finally {
       setIsAddingMovie(false);
     }
@@ -714,7 +805,7 @@ const SearchMovies: React.FC = () => {
   return (
       <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
         {/* sidebar */}
-        <Navigation userId={userId} activeItem="Search Movies" />
+        <Navigation userId={loggedInUserId} activeItem="Search Movies" />
         {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
 
         {/* main content */}
@@ -952,6 +1043,24 @@ const SearchMovies: React.FC = () => {
               onHide={() => setShowActionMessage(false)}
               className="bg-green-500"
           />
+
+          {/* Confirmation Dialog */}
+          {confirmDialogMovie && (
+            <ConfirmationDialog
+              isOpen={showConfirmDialog}
+              onClose={() => {
+                setShowConfirmDialog(false);
+                setConfirmDialogMovie(null);
+                setIsAddingMovie(false);
+              }}
+              onConfirm={handleKeepInWatchlist}
+              onCancel={handleRemoveFromWatchlistAfterSeen}
+              title={`Mark '${confirmDialogMovie?.title}' as seen:`}
+              message={`Do you want to keep '${confirmDialogMovie?.title}' in your watchlist?`}
+              confirmText="Yes, I want to watch it again"
+              cancelText="No, I won't watch it again"
+            />
+          )}
         </div>
       </div>
   );

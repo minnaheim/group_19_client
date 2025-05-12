@@ -13,6 +13,7 @@ import SearchBar from "@/components/ui/search_bar";
 import MovieList from "@/components/ui/movie_list";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import ActionMessage from "@/components/ui/action_message";
+import ConfirmationDialog from "@/components/ui/confirmation_dialog";
 import { retry } from "src/utils/retry";
 
 const WatchList: React.FC = () => {
@@ -24,6 +25,7 @@ const WatchList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // State to trigger re-fetch
 
   // search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -39,28 +41,43 @@ const WatchList: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(null);
+  const [confirmDialogAction, setConfirmDialogAction] = useState<() => Promise<void>>(() => Promise.resolve());
+
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
 
-  // Fetch user data
+  // Fetch user data - now also depends on refreshTrigger
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        setUser(null);
+        // Optionally set an error if ID is crucial and missing
+        // setError("User ID missing from URL."); 
+        return;
+      }
 
+      setLoading(true);
       try {
-        setLoading(true);
+        console.log(`Watchlist (trigger: ${refreshTrigger}): Fetching user data for ID: ${id}`); // Diagnostic log
         const userData = await retry(() =>
           apiService.get(`/users/${id}/profile`)
         );
         setUser(userData as User);
+        setError(null); // Clear previous errors on success
       } catch (error: unknown) {
+        console.error("Watchlist: Error loading user data:", error); // Diagnostic log
+        setUser(null); // Clear user data on error
         if (
           error instanceof Error && "status" in error &&
           (error as ApplicationError).status === 404
         ) {
-          showMessage("Oops! We couldn't find your profile details.");
+          setError("Oops! We couldn't find your profile details.");
         } else {
-          setError("Failed to load user data");
+          setError("Failed to load user data. Please try again.");
         }
       } finally {
         setLoading(false);
@@ -68,7 +85,20 @@ const WatchList: React.FC = () => {
     };
 
     fetchUserData();
-  }, [id, token, apiService]);
+  }, [id, token, apiService, refreshTrigger]); // Added refreshTrigger to dependencies
+
+  // Re-fetch data when the window gains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Watchlist page focused, triggering data refresh."); // Diagnostic log
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []); // Empty dependency array, so it sets up and cleans up once
 
   // Filter movies based on search query - now only searching by title
   useEffect(() => {
@@ -167,18 +197,105 @@ const WatchList: React.FC = () => {
       setActionError("You can only modify your own lists!");
       return;
     }
-    try {
-      await apiService.post(`/users/${userId}/watchedMovies`, {
-        movieId: movie.movieId,
-      });
-      await apiService.delete(`/users/${userId}/watchlist/${movie.movieId}`);
 
+    const movieIsInWatchlist = user?.watchlist.some(m => m.movieId === movie.movieId);
+    
+    // If the movie is in the watchlist, show confirmation dialog
+    if (movieIsInWatchlist) {
+      setConfirmDialogMovie(movie);
+      setConfirmDialogAction(() => async () => {
+        try {
+          await completeMarkAsSeen(movie, true); // Keep in watchlist
+        } catch (error) {
+          console.error("Failed to mark movie as seen:", error);
+          setActionError("Error marking movie as seen. Please try again.");
+        }
+      });
+      setShowConfirmDialog(true);
+    } else {
+      // Not in watchlist, just mark as seen
+      try {
+        // Not in watchlist, just mark as seen with default parameter
+        await apiService.post(`/users/${userId}/watched/${movie.movieId}`, {});
+        
+        updateUserAfterMarkAsSeen(movie, false, false);
+        showMessage(`'${movie.title}' marked as seen.`);
+        closeModal();
+      } catch (error) {
+        console.error("Failed to mark movie as seen:", error);
+        setActionError("Error marking movie as seen. Please try again.");
+      }
+    }
+  };
+
+  // Handle confirmation dialog responses
+  const handleKeepInWatchlist = async () => {
+    if (!confirmDialogMovie) return;
+    
+    try {
+      await completeMarkAsSeen(confirmDialogMovie, true);
+    } catch (error) {
+      console.error("Failed to mark movie as seen:", error);
+      setActionError("Error marking movie as seen. Please try again.");
+    } finally {
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+    }
+  };
+
+  const handleRemoveFromWatchlistAfterSeen = async () => {
+    if (!confirmDialogMovie) return;
+    
+    try {
+      await completeMarkAsSeen(confirmDialogMovie, false);
+    } catch (error) {
+      console.error("Failed to mark movie as seen:", error);
+      setActionError("Error marking movie as seen. Please try again.");
+    } finally {
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+    }
+  };
+
+  const completeMarkAsSeen = async (movie: Movie, keepInWatchlist: boolean) => {
+    // Pass the keepInWatchlist parameter to the API
+    await apiService.post(`/users/${userId}/watched/${movie.movieId}?keepInWatchlist=${keepInWatchlist}`, {});
+    
+    // Update local state and show message
+    updateUserAfterMarkAsSeen(movie, true, keepInWatchlist);
+    
+    if (keepInWatchlist) {
+      showMessage(`'${movie.title}' marked as seen and kept in watchlist.`);
+    } else {
+      showMessage(`'${movie.title}' marked as seen and removed from watchlist.`);
+    }
+    closeModal();
+  };
+
+  const updateUserAfterMarkAsSeen = (movie: Movie, movieIsInWatchlist: boolean, keepInWatchlist: boolean) => {
+    try {
+      // Update local state to reflect the changes that happened on the server
       setUser((prevUser) => {
         if (!prevUser) return null;
-        const updatedWatchlist = prevUser.watchlist.filter(
-          (m) => m.movieId !== movie.movieId
-        );
-        const updatedWatchedMovies = prevUser.watchedMovies ? [...prevUser.watchedMovies, movie] : [movie];
+        
+        // Add to watched movies if not already there
+        const alreadyWatched = prevUser.watchedMovies.some(m => m.movieId === movie.movieId);
+        const updatedWatchedMovies = alreadyWatched 
+          ? prevUser.watchedMovies 
+          : [...prevUser.watchedMovies, movie];
+        
+        // If we chose not to keep in watchlist, update local watchlist state
+        let updatedWatchlist = prevUser.watchlist;
+        if (movieIsInWatchlist && !keepInWatchlist) {
+          updatedWatchlist = prevUser.watchlist.filter(m => m.movieId !== movie.movieId);
+          
+          // Also update filtered movies if searching
+          if (isSearching) {
+            setFilteredMovies(prevFiltered => 
+              prevFiltered.filter(m => m.movieId !== movie.movieId)
+            );
+          }
+        }
         
         return {
           ...prevUser,
@@ -186,13 +303,6 @@ const WatchList: React.FC = () => {
           watchedMovies: updatedWatchedMovies,
         };
       });
-      if (isSearching) {
-        setFilteredMovies((prevFiltered) => 
-          prevFiltered.filter((m) => m.movieId !== movie.movieId)
-        );
-      }
-      showMessage(`'${movie.title}' marked as seen and removed from watchlist.`);
-      closeModal();
     } catch (error) {
       console.error("Failed to mark movie as seen:", error);
       setActionError("Error marking movie as seen. Please try again.");
@@ -327,6 +437,20 @@ const WatchList: React.FC = () => {
           onHide={() => setShowActionMessage(false)}
           className="bg-green-500"
         />
+
+        {/* Confirmation Dialog */}
+        {confirmDialogMovie && (
+          <ConfirmationDialog
+            isOpen={showConfirmDialog}
+            onClose={() => setShowConfirmDialog(false)}
+            onConfirm={handleKeepInWatchlist}
+            onCancel={handleRemoveFromWatchlistAfterSeen}
+            title={`Mark '${confirmDialogMovie?.title}' as seen:`}
+            message={`Do you want to keep '${confirmDialogMovie?.title}' in your watchlist?`}
+            confirmText="Yes, I want to watch it again"
+            cancelText="No, I won't watch it again"
+          />
+        )}
       </div>
     </div>
   );
