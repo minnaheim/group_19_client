@@ -44,6 +44,8 @@ const MoviePool: React.FC = () => {
     if (phaseLoading) return;
     if (phaseError) {
       setSubmitError(phaseError as string);
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
       return;
     }
     if (phase && phase !== "POOL") {
@@ -83,6 +85,8 @@ const MoviePool: React.FC = () => {
 
       try {
         const response = await apiService.get<User>(`/users/${userId}/profile`);
+        // Clear previous error on successful fetch
+        setSubmitError(""); 
         if (
           response && typeof response === "object" && "watchlist" in response
         ) {
@@ -101,17 +105,17 @@ const MoviePool: React.FC = () => {
         if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (appErr.status === 404) {
-            setSubmitError("Oops! We couldn't find the user profile.");
+            setSubmitError("User profile not found. Could not load watchlist.");
+          } else if (appErr.status === 401) {
+            setSubmitError("Session expired. Please log in again to load watchlist.");
           } else {
-            setSubmitError(
-              "An error occurred while loading your watchlist. Please try again.",
-            );
+            setSubmitError("Failed to load your watchlist. Please try refreshing.");
           }
         } else {
-          setSubmitError(
-            "An error occurred while loading your watchlist. Please try again.",
-          );
+          setSubmitError("An unexpected error occurred while loading your watchlist.");
         }
+        setShowSuccessMessage(false); // Clear success message on new error
+        setSuccessMessage("");
       }
     };
 
@@ -150,6 +154,8 @@ const MoviePool: React.FC = () => {
             "An error occurred while loading the movie pool. Please try again.",
           );
         }
+        setShowSuccessMessage(false); // Clear success message on new error
+        setSuccessMessage("");
       }
     };
 
@@ -160,6 +166,8 @@ const MoviePool: React.FC = () => {
   const handleAddToPool = async (movie: Movie) => {
     if (phase !== "POOL") {
       setSubmitError("You can only add movies during the POOL phase.");
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
       return;
     }
 
@@ -176,6 +184,7 @@ const MoviePool: React.FC = () => {
         setMoviePool(response);
         setSuccessMessage(`Added '${movie.title}'`);
         setShowSuccessMessage(true);
+        setSubmitError(""); // Clear error on success
       }
     } catch (err: unknown) {
       console.error(`Failed to add movie ${movie.movieId} to pool:`, err);
@@ -199,6 +208,8 @@ const MoviePool: React.FC = () => {
       } else {
         setSubmitError(`An unknown error occurred while adding '${movie.title}'.`);
       }
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
     }
   };
 
@@ -229,25 +240,26 @@ const MoviePool: React.FC = () => {
           : "Movie removed successfully!"
       );
       setShowSuccessMessage(true);
+      setSubmitError(""); // Clear error on success
     } catch (err: unknown) {
-      console.error("Failed to remove movie from pool:", err);
+      console.error("Error removing movie from pool:", err);
+      let errorMessage = "Failed to remove movie from pool. Please try again.";
       if (err instanceof Error && "status" in err) {
         const appErr = err as ApplicationError;
-        let specificError = "";
         switch (appErr.status) {
           case 403:
-            specificError = "You can only remove movies that you added, or you are not a member, or it's not POOL phase.";
+            errorMessage = "You can only remove movies that you added, or you are not a member, or it's not POOL phase.";
             break;
           case 404:
-            specificError = "Movie not found in the pool or group not found.";
+            errorMessage = "Movie not found in the pool or group not found.";
             break;
           default:
-            specificError = "Failed to remove movie.";
+            errorMessage = "Failed to remove movie.";
         }
-        setSubmitError(specificError);
-      } else {
-        setSubmitError("An unknown error occurred while removing the movie.");
       }
+      setSubmitError(errorMessage);
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
     }
   };
 
@@ -280,8 +292,13 @@ const MoviePool: React.FC = () => {
       setUserWatchlist((prev) => [...prev, movie]);
       setSuccessMessage("Movie added to your watchlist!");
       setShowSuccessMessage(true);
+      setSubmitError(""); // Clear error on success
+      setIsModalOpen(false);
     } catch {
       setSubmitError("Failed to add movie to watchlist.");
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
+      // setIsModalOpen(false); // Optionally keep modal open on error
     } finally {
       setIsAddingWatchlist(false);
     }
@@ -299,8 +316,13 @@ const MoviePool: React.FC = () => {
       setUserWatched((prev) => [...prev, movie]);
       setSuccessMessage("Movie marked as seen!");
       setShowSuccessMessage(true);
+      setSubmitError(""); // Clear error on success
+      setIsModalOpen(false);
     } catch {
       setSubmitError("Failed to mark movie as seen.");
+      setShowSuccessMessage(false); // Clear success message on new error
+      setSuccessMessage("");
+      // setIsModalOpen(false); // Optionally keep modal open on error
     } finally {
       setIsMarkingSeen(false);
     }
@@ -427,6 +449,7 @@ const MoviePool: React.FC = () => {
                     await apiService.post(`/groups/${groupId}/start-voting`, {});
                     setSuccessMessage("Voting started successfully!");
                     setShowSuccessMessage(true);
+                    setSubmitError(""); // Clear error on success
                     router.replace(`/users/${userId}/groups/${groupId}/vote`);
                   } catch (err: unknown) {
                     if (err instanceof Error && "status" in err) {
@@ -457,6 +480,8 @@ const MoviePool: React.FC = () => {
                         "An error occurred while starting voting. Please try again.",
                       );
                     }
+                    setShowSuccessMessage(false); // Clear success message on new error
+                    setSuccessMessage("");
                   }
                 }}
               >

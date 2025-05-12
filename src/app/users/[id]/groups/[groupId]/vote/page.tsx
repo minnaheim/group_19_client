@@ -141,7 +141,9 @@ const Vote: React.FC = () => {
   useEffect(() => {
     if (phaseLoading) return;
     if (phaseError) {
-      setError(phaseError);
+      setError(phaseError as string);
+      setShowSuccessMessage(false); // Clear success on new error
+      setSuccessMessage("");
       return;
     }
     if (phase && phase !== "VOTING") {
@@ -171,22 +173,32 @@ const Vote: React.FC = () => {
               setError(
                 "Your session has expired. Please log in again to view the vote state."
               );
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             case 404:
               setError("Could not find the group or you are not a member.");
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             case 409:
               setError("Voting is not currently active for this group.");
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             default:
               setError(
                 "An error occurred while loading vote state. Please try again."
               );
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
           }
         } else {
           setError(
             "An error occurred while loading vote state. Please try again."
           );
+          setShowSuccessMessage(false); // Clear success on new error
+          setSuccessMessage("");
         }
         return;
       }
@@ -208,6 +220,7 @@ const Vote: React.FC = () => {
       setAvailableMovies(pool);
       setRankings(initial);
       setHistory([{ availableMovies: pool, rankings: initial }]);
+      setError(""); // Clear error on successful fetch
     })();
   }, [phase, groupId, userId]);
 
@@ -382,6 +395,8 @@ const Vote: React.FC = () => {
   const handleSubmitRanking = async () => {
     if (!isSubmitEnabled()) {
       setError(getRankingRequirementMessage());
+      setShowSuccessMessage(false); // Clear success on new error
+      setSuccessMessage("");
       return;
     }
 
@@ -393,6 +408,8 @@ const Vote: React.FC = () => {
         setError(
           "Missing user ID or group ID. Please go back to the main page."
         );
+        setShowSuccessMessage(false); // Clear success on new error
+        setSuccessMessage("");
         return;
       }
 
@@ -429,6 +446,7 @@ const Vote: React.FC = () => {
       );
       setShowSuccessMessage(true);
       setHasSubmitted(true);
+      setError(""); // Clear error on success
     } catch (err: unknown) {
       if (err instanceof Error && "status" in err) {
         const appErr = err as ApplicationError;
@@ -437,26 +455,36 @@ const Vote: React.FC = () => {
             setError(
               "There was an issue with your submitted ranks. Please check and try again."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           case 404:
             setError(
-              "We couldn&apos;t find the user or group for submitting ranks."
+              "We could not find the user or group for submitting ranks."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           case 409:
             setError(
               "Voting is not currently open for this group. Rankings cannot be submitted."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           default:
             setError(
               "An error occurred while submitting your rankings. Please try again."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
         }
       } else {
         setError(
           "An error occurred while submitting your rankings. Please try again."
         );
+        setShowSuccessMessage(false); // Clear success on new error
+        setSuccessMessage("");
       }
     } finally {
       setIsSubmitting(false);
@@ -514,8 +542,8 @@ const Vote: React.FC = () => {
                   Then tap on a movie from the pool to assign it to that rank
                 </li>
                 <li>
-                  To change a movie&apos;s rank, first remove it, then select a
-                  new rank
+                  To change a movies rank, first remove it, then select a new
+                  rank
                 </li>
               </ol>
             </div>
@@ -767,6 +795,7 @@ const Vote: React.FC = () => {
                       "Voting ended, results are now available."
                     );
                     setShowSuccessMessage(true);
+                    setError(""); // Clear error on success
                   } catch (err: unknown) {
                     if (err instanceof Error && "status" in err) {
                       const appErr = err as ApplicationError;
@@ -775,24 +804,34 @@ const Vote: React.FC = () => {
                           setError(
                             "Only the group creator can end voting and show results."
                           );
+                          setShowSuccessMessage(false); // Clear success on new error
+                          setSuccessMessage("");
                           break;
                         case 404:
                           setError("The specified group could not be found.");
+                          setShowSuccessMessage(false); // Clear success on new error
+                          setSuccessMessage("");
                           break;
                         case 409:
                           setError(
                             "This action can only be performed when voting is active for this group."
                           );
+                          setShowSuccessMessage(false); // Clear success on new error
+                          setSuccessMessage("");
                           break;
                         default:
                           setError(
                             "An error occurred while ending voting. Please try again."
                           );
+                          setShowSuccessMessage(false); // Clear success on new error
+                          setSuccessMessage("");
                       }
                     } else {
                       setError(
                         "An error occurred while ending voting. Please try again."
                       );
+                      setShowSuccessMessage(false); // Clear success on new error
+                      setSuccessMessage("");
                     }
                     return;
                   }

@@ -87,6 +87,7 @@ const Results: React.FC = () => {
         setDetailedResults(response.detailedResults);
         setActionMessage("Results loaded successfully");
         setShowActionMessage(true);
+        setError(""); // Clear error on success
       } catch (err: unknown) {
         console.error("Failed to fetch combined results:", err);
         if (err instanceof Error && "status" in err) {
@@ -97,14 +98,18 @@ const Results: React.FC = () => {
             );
           } else if (appErr.status === 409) {
             setError("Results can only be viewed after voting has ended.");
-          } else {setError(
+          } else {
+            setError(
               "An error occurred while loading results. Please try again.",
-            );}
+            );
+          }
         } else {
           setError(
             "An error occurred while loading results. Please try again.",
           );
         }
+        setShowActionMessage(false); // Clear success on new error
+        setActionMessage("");
       } finally {
         setLoading(false);
       }
@@ -165,6 +170,7 @@ const Results: React.FC = () => {
 
       setActionMessage("Marked winning movie as seen!");
       setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
+      setError(""); // Clear error on success
     } catch (error) {
       console.error("Error marking movie as seen:", error);
 
@@ -177,11 +183,13 @@ const Results: React.FC = () => {
           );
           setMovieAddedToWatchedList(true); // Mark as added since it's already there
         } else {
-          setActionMessage("Failed to mark movie as seen");
+          setError("Failed to mark movie as seen");
         }
       } else {
-        setActionMessage("Failed to mark movie as seen");
+        setError("Failed to mark movie as seen");
       }
+      setShowActionMessage(false); // Clear success on new error
+      setActionMessage("");
     } finally {
       setIsAddingToWatchedList(false);
       setShowActionMessage(true);
@@ -191,7 +199,10 @@ const Results: React.FC = () => {
   useEffect(() => {
     if (phaseLoading) return;
     if (phaseError) {
-      setError(phaseError);
+      setError(phaseError as string);
+      setShowActionMessage(false); // Clear success on new error
+      setActionMessage("");
+      setLoading(false);
       return;
     }
     if (phaseFromHook && phaseFromHook !== "RESULTS") {
@@ -202,6 +213,15 @@ const Results: React.FC = () => {
       }
     }
   }, [phaseFromHook, phaseLoading, phaseError, router, userId, groupId]);
+
+  useEffect(() => {
+    if (phaseError) {
+      setError(phaseError as string);
+      setShowActionMessage(false);
+      setActionMessage("");
+      setLoading(false); // Also ensure loading is stopped
+    }
+  }, [phaseError]);
 
   // Helper function to get complete image URL
   const getFullPosterUrl = (posterPath?: string | null): string => {

@@ -36,6 +36,7 @@ const FriendWatchlist: React.FC = () => {
   // Action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Adding movie state (from search movies page)
   const [isAddingMovie, setIsAddingMovie] = useState<boolean>(false);
@@ -129,6 +130,7 @@ const FriendWatchlist: React.FC = () => {
   const showMessage = (message: string) => {
     setActionMessage(message);
     setShowActionMessage(true);
+    setActionError(null);
     setTimeout(() => {
       setShowActionMessage(false);
     }, 3000);
@@ -150,10 +152,11 @@ const FriendWatchlist: React.FC = () => {
       );
       setSelectedMovie(detailedMovie);
       setIsModalOpen(true);
+      setActionError(null);
     } catch (error: unknown) {
       console.error("Error fetching movie details:", error);
-      showMessage("Error loading movie details");
-      setSelectedMovie(movie); // Fall back to basic movie info
+      setActionError("Error loading movie details");
+      setSelectedMovie(movie);
       setIsModalOpen(true);
     }
   };
@@ -179,28 +182,29 @@ const FriendWatchlist: React.FC = () => {
       }
 
       showMessage("Added to your watchlist");
+      closeModal();
     } catch (error) {
       console.error("Error adding to watchlist:", error);
       if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            showMessage("Please log in again to add movies to your watchlist.");
+            setActionError("Please log in again to add movies to your watchlist.");
             break;
           case 403:
-            showMessage("You don't have permission to modify this watchlist.");
+            setActionError("You don't have permission to modify this watchlist.");
             break;
           case 404:
-            showMessage("Could not find the user or movie to add to the watchlist.");
+            setActionError("Could not find the user or movie to add to the watchlist.");
             break;
           case 409:
-            showMessage("This movie is already on your watchlist.");
+            setActionError("This movie is already on your watchlist.");
             break;
           default:
-            showMessage("Failed to add movie to watchlist.");
+            setActionError("Failed to add movie to watchlist.");
         }
       } else {
-        showMessage("Failed to add movie to watchlist");
+        setActionError("Failed to add movie to watchlist");
       }
     } finally {
       setIsAddingMovie(false);
@@ -228,28 +232,29 @@ const FriendWatchlist: React.FC = () => {
       }
 
       showMessage("Added to your watched list");
+      closeModal();
     } catch (error) {
       console.error("Error adding to seen list:", error);
       if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            showMessage("Please log in again to add movies to your watched list.");
+            setActionError("Please log in again to add movies to your watched list.");
             break;
           case 403:
-            showMessage("You don't have permission to modify this watched list.");
+            setActionError("You don't have permission to modify this watched list.");
             break;
           case 404:
-            showMessage("Could not find the user or movie to add to the watched list.");
+            setActionError("Could not find the user or movie to add to the watched list.");
             break;
           case 409:
-            showMessage("You've already marked this movie as watched.");
+            setActionError("You've already marked this movie as watched.");
             break;
           default:
-            showMessage("Failed to add movie to watched list.");
+            setActionError("Failed to add movie to watched list.");
         }
       } else {
-        showMessage("Failed to add movie to watched list");
+        setActionError("Failed to add movie to watched list");
       }
     } finally {
       setIsAddingMovie(false);
@@ -484,6 +489,11 @@ const FriendWatchlist: React.FC = () => {
               onHide={() => setShowActionMessage(false)}
               className="bg-green-500"
           />
+
+          {/* Display Action Error Message */}
+          {actionError && (
+              <ErrorMessage message={actionError} onClose={() => setActionError(null)} />
+          )}
         </div>
       </div>
   );

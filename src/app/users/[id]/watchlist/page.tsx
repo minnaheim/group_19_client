@@ -24,9 +24,6 @@ const WatchList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedMoviesToRemove, setSelectedMoviesToRemove] = useState<
-    number[]
-  >([]);
 
   // search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -40,6 +37,7 @@ const WatchList: React.FC = () => {
   // action feedback
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { value: token } = useLocalStorage<string>("token", "");
   const { value: userId } = useLocalStorage<string>("userId", "");
@@ -55,7 +53,6 @@ const WatchList: React.FC = () => {
           apiService.get(`/users/${id}/profile`)
         );
         setUser(userData as User);
-        showMessage("User profile loaded");
       } catch (error: unknown) {
         if (
           error instanceof Error && "status" in error &&
@@ -77,6 +74,7 @@ const WatchList: React.FC = () => {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
+      setFilteredMovies(user?.watchlist || []);
       return;
     }
 
@@ -95,7 +93,7 @@ const WatchList: React.FC = () => {
     if (userId === id) {
       router.push(`/users/${id}/movie_search`);
     } else {
-      showMessage("You can only edit your own movie lists!");
+      setActionError("You can only edit your own movie lists!");
     }
   };
 
@@ -105,77 +103,45 @@ const WatchList: React.FC = () => {
       setSearchQuery("");
       setIsSearching(false);
     } else {
-      showMessage("You can only edit your own movie lists!");
+      setActionError("You can only edit your own movie lists!");
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedMoviesToRemove([]);
-  };
-
-  const handleMovieSelect = (movieId: number) => {
-    if (selectedMoviesToRemove.includes(movieId)) {
-      setSelectedMoviesToRemove(
-        selectedMoviesToRemove.filter((id) => id !== movieId),
-      );
-    } else {
-      setSelectedMoviesToRemove([...selectedMoviesToRemove, movieId]);
-    }
   };
 
   const handleMovieClick = (movie: Movie) => {
-    // If in editing mode, select/deselect the movie
-    if (isEditing) {
-      handleMovieSelect(movie.movieId);
-      return;
-    }
-
-    // Otherwise open the details modal
     setSelectedMovie(movie);
     setIsModalOpen(true);
   };
 
-  const handleSaveChanges = async () => {
-    if (!user) return;
-    for (const movieId of selectedMoviesToRemove) {
-      try {
-        await apiService.delete(`/users/${id}/watchlist/${movieId}`, {});
-        showMessage("Movie removed from watchlist");
-      } catch (error: unknown) {
-        if (error instanceof Error && "status" in error) {
-          const status = (error as ApplicationError).status;
-          switch (status) {
-            case 401:
-              showMessage(
-                "Please log in again to remove movies from your watchlist.",
-              );
-              break;
-            case 403:
-              showMessage(
-                "You don't have permission to modify this watchlist.",
-              );
-              break;
-            case 404:
-              showMessage(
-                "Could not find the user, movie, or watchlist entry.",
-              );
-              break;
-            default:
-              showMessage("Failed to remove movie from watchlist.");
-          }
-        } else {
-          showMessage("Failed to remove movie from watchlist.");
-        }
-      }
+  const handleDirectRemoveFromWatchlist = async (movieToRemove: Movie) => {
+    if (userId !== id) {
+      setActionError("You can only edit your own watchlist!");
+      return;
     }
-    // Update local state
-    const updatedMovies = user.watchlist.filter(
-      (movie) => !selectedMoviesToRemove.includes(movie.movieId),
-    );
-    setUser({ ...user, watchlist: updatedMovies });
-    setIsEditing(false);
-    setSelectedMoviesToRemove([]);
+    try {
+      await apiService.delete(`/users/${userId}/watchlist/${movieToRemove.movieId}`);
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        return {
+          ...prevUser,
+          watchlist: prevUser.watchlist.filter(
+            (movie) => movie.movieId !== movieToRemove.movieId
+          ),
+        };
+      });
+      if (isSearching) {
+        setFilteredMovies((prevFiltered) => 
+          prevFiltered.filter((movie) => movie.movieId !== movieToRemove.movieId)
+        );
+      }
+      showMessage(`'${movieToRemove.title}' removed from watchlist.`);
+    } catch (error) {
+      console.error("Failed to remove movie from watchlist:", error);
+      setActionError("Error removing movie from watchlist. Please try again.");
+    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,69 +154,60 @@ const WatchList: React.FC = () => {
   };
 
   const closeModal = () => {
+    setSelectedMovie(null);
     setIsModalOpen(false);
-    setTimeout(() => setSelectedMovie(null), 300);
   };
 
-  const isInSeenList = (movie: Movie) => {
-    return user?.watchedMovies.some((m) => m.movieId === movie.movieId) ||
-      false;
+  const isInSeenList = (movie: Movie): boolean => {
+    return !!user?.watchedMovies?.find((m) => m.movieId === movie.movieId);
   };
 
   const handleMarkAsSeen = async (movie: Movie) => {
-    if (isInSeenList(movie)) {
-      showMessage("You've already marked this movie as watched.");
+    if (userId !== id) {
+      setActionError("You can only modify your own lists!");
       return;
     }
     try {
-      await apiService.post(`/users/${id}/watched/${movie.movieId}`, {});
-      // Update local state
-      if (user) {
-        setUser({
-          ...user,
-          watchedMovies: [...user.watchedMovies, movie],
-          watchlist: user.watchlist.filter((m) => m.movieId !== movie.movieId),
-        });
+      await apiService.post(`/users/${userId}/watchedMovies`, {
+        movieId: movie.movieId,
+      });
+      await apiService.delete(`/users/${userId}/watchlist/${movie.movieId}`);
+
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        const updatedWatchlist = prevUser.watchlist.filter(
+          (m) => m.movieId !== movie.movieId
+        );
+        const updatedWatchedMovies = prevUser.watchedMovies ? [...prevUser.watchedMovies, movie] : [movie];
+        
+        return {
+          ...prevUser,
+          watchlist: updatedWatchlist,
+          watchedMovies: updatedWatchedMovies,
+        };
+      });
+      if (isSearching) {
+        setFilteredMovies((prevFiltered) => 
+          prevFiltered.filter((m) => m.movieId !== movie.movieId)
+        );
       }
-      showMessage("Marked as seen");
-    } catch (error: unknown) {
-      if (error instanceof Error && "status" in error) {
-        const status = (error as ApplicationError).status;
-        switch (status) {
-          case 401:
-            showMessage("Please log in again to mark movies as watched.");
-            break;
-          case 403:
-            showMessage(
-              "You don't have permission to modify this watched list.",
-            );
-            break;
-          case 404:
-            showMessage(
-              "Could not find the user or movie to add to the watched list.",
-            );
-            break;
-          case 409:
-            showMessage("You've already marked this movie as watched.");
-            break;
-          default:
-            showMessage("Failed to mark movie as seen.");
-        }
-      } else {
-        showMessage("Failed to mark movie as seen.");
-      }
+      showMessage(`'${movie.title}' marked as seen and removed from watchlist.`);
+      closeModal();
+    } catch (error) {
+      console.error("Failed to mark movie as seen:", error);
+      setActionError("Error marking movie as seen. Please try again.");
     }
   };
 
-  const handleRemoveFromWatchlist = (movie: Movie) => {
-    setIsEditing(true);
-    setSelectedMoviesToRemove([movie.movieId]);
+  const handleRemoveFromWatchlist = async (movie: Movie) => {
+    await handleDirectRemoveFromWatchlist(movie);
     closeModal();
   };
 
   const showMessage = (message: string) => {
     setActionMessage(message);
     setShowActionMessage(true);
+    setActionError(null);
     setTimeout(() => {
       setShowActionMessage(false);
     }, 3000);
@@ -269,7 +226,6 @@ const WatchList: React.FC = () => {
     return <ErrorMessage message={error} onClose={() => setError(null)} />;
   }
 
-  // Determine which movies to display
   const displayMovies = isSearching ? filteredMovies : (user?.watchlist || []);
 
   return (
@@ -305,9 +261,8 @@ const WatchList: React.FC = () => {
           isLoading={loading}
           isEditing={isEditing}
           isSearching={isSearching}
-          selectedMovieIds={selectedMoviesToRemove}
           onMovieClick={handleMovieClick}
-          onMovieSelect={handleMovieSelect}
+          onCardRemoveClick={handleDirectRemoveFromWatchlist}
           onAddMovieClick={handleAddMovie}
           onClearSearch={clearSearch}
           emptyMessage="Your watchlist is empty"
@@ -324,25 +279,16 @@ const WatchList: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex justify-between">
+        <div className="mt-8 flex justify-end space-x-4">
           {isEditing
             ? (
-              <>
-                <Button variant="destructive" onClick={handleCancelEdit}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleSaveChanges}
-                  disabled={selectedMoviesToRemove.length === 0}
-                >
-                  Remove {selectedMoviesToRemove.length} movie(s)
-                </Button>
-              </>
+              <Button variant="secondary" onClick={handleCancelEdit}>
+                Done Editing
+              </Button>
             )
             : (
               <Button variant="secondary" onClick={handleEdit}>
-                Edit
+                Edit Watchlist
               </Button>
             )}
         </div>
@@ -355,6 +301,11 @@ const WatchList: React.FC = () => {
         >
           Back to Dashboard
         </Button>
+
+        {/* Display Action Error Message */}
+        {actionError && (
+          <ErrorMessage message={actionError} onClose={() => setActionError(null)} />
+        )}
 
         {/* Movie Details Modal */}
         {selectedMovie && (

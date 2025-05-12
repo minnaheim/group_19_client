@@ -383,6 +383,11 @@ const GroupsManagement: React.FC = () => {
       );
     } finally {
       setIsSubmittingInvite(false);
+      // Ensure success message is not lingering if error occurred
+      if (inviteError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -760,6 +765,11 @@ const GroupsManagement: React.FC = () => {
       setCreateGroupError(specificErrorMessage);
     } finally {
       setIsSubmittingGroup(false);
+      // Ensure success message is not lingering if error occurred
+      if (createGroupError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -826,11 +836,13 @@ const GroupsManagement: React.FC = () => {
               "Could not find the specified group or user.";
             break;
           case 409:
-            specificErrorMessage =
-              "User is already a member or has a pending invitation.";
+            specificErrorMessage = getErrorMessage(
+              err,
+              "User is already a member or has a pending invitation.",
+            );
             break;
           default:
-            specificErrorMessage = getErrorMessage(err, specificErrorMessage);
+            specificErrorMessage = getErrorMessage(err, specificErrorMessage); // Handles custom Error messages too
             break;
         }
       } else {
@@ -839,6 +851,11 @@ const GroupsManagement: React.FC = () => {
       setInviteError(specificErrorMessage);
     } finally {
       setIsSubmittingInvite(false);
+      // Ensure success message is not lingering if error occurred
+      if (inviteError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -883,6 +900,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setError(specificErrorMessage); // Set PAGE level error
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (error && !showActionMessage) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -929,6 +952,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setError(specificErrorMessage); // Set PAGE level error
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (error && !showActionMessage) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -976,6 +1005,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setError(specificErrorMessage); // Set PAGE level error
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (error && !showActionMessage) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -1015,6 +1050,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (dialogError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -1057,6 +1098,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (dialogError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -1096,6 +1143,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (dialogError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -1146,6 +1199,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (dialogError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
@@ -1199,6 +1258,12 @@ const GroupsManagement: React.FC = () => {
         specificErrorMessage = getErrorMessage(err, specificErrorMessage);
       }
       setDialogError(specificErrorMessage); // Show error INSIDE the dialog
+    } finally {
+      // Ensure success message is not lingering if error occurred
+      if (dialogError) {
+        setShowActionMessage(false);
+        setActionMessage("");
+      }
     }
   };
 
