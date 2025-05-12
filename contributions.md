@@ -160,8 +160,8 @@ reason).
 
 | **Student**  | **Date**   | **Link to Commit**                                                        | **Description**                                                           | **Relevance**                                                             |
 | ------------ | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| BeneJung     | [date]     | [Link to Commit 1]                                                        | [Brief description of the task]                                           | [Why this contribution is relevant]                                       |
-| BeneJung     | [date]     | [Link to Commit 2]                                                        | [Brief description of the task]                                           | [Why this contribution is relevant]                                       |
+| BeneJung     | Joker | Joker                                            |Joker                          | Joker                              |
+| BeneJung     | Joker | Joker                                            |Joker                          | Joker                              |
 | ellaruby0    | [date]     | [Link to Commit 1]                                                        | [Brief description of the task]                                           | [Why this contribution is relevant]                                       |
 | ellaruby0    | [date]     | [Link to Commit 2]                                                        | [Brief description of the task]                                           | [Why this contribution is relevant]                                       |
 | AnabelNigsch | 20.04.2025 | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description | worked forward in Week 4 - 17.04.2025 to 29.04.2025, refer to description |
