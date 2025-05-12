@@ -236,7 +236,7 @@ const LandingPage = () => {
             Ready to transform movie night?
           </h3>
           <p className="text-white/90 max-w-2xl mx-auto mb-8">
-            Be part of a growing community that's redefining movie nights. Sign up today and make your next movie night drama-free
+            Be part of a growing community that is redefining movie nights. Sign up today and make your next movie night drama-free
             (except for the movies themselves).
           </p>
           <Button
