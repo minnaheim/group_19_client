@@ -39,7 +39,7 @@ const LandingPage = () => {
           >
             <Image src="/Projector.png" alt="App Icon" width={50} height={50} />
             <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-              Movie Night
+              Movie Night Planner
             </div>
           </div>
         </div>
