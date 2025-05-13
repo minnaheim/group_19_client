@@ -81,6 +81,9 @@ const GroupsManagement: React.FC = () => {
     "groups"
   );
 
+  // Flag for combined loading: data fetched but details not enriched yet
+  const isGroupDataLoading = loading || (groups.length > 0 && groupsWithDetails.length === 0);
+
   // --- Refactored State for Errors and Success ---
   const [error, setError] = useState<string | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
@@ -580,9 +583,17 @@ const GroupsManagement: React.FC = () => {
     [apiService, fetchUserById, isGroupDetailDialogOpen]
   ); // Dependencies
 
-  const refreshGroupsData = useCallback(async () => {
-    if (!userId) return;
+  useEffect(() => {
+    if (!usersLoaded && !isLoadingUsers) {
+      fetchAllUsers();
+    }
+  }, []);
 
+  const isMountedRef = useRef(true);
+  const fetchGroupsData = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
     try {
       const [groupsData, receivedData, sentData] = await Promise.all([
         retry(() => apiService.get<Group[]>("/groups")),
@@ -593,138 +604,48 @@ const GroupsManagement: React.FC = () => {
           apiService.get<GroupInvitation[]>("/groups/invitations/sent")
         ),
       ]);
-
-      setGroups(
-        Array.isArray(groupsData)
-          ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
-          : []
-      );
+      if (!isMountedRef.current) return;
+      const base = Array.isArray(groupsData)
+        ? groupsData.sort((a, b) => a.groupName.localeCompare(b.groupName))
+        : [];
+      setGroups(base);
       setReceivedInvitations(Array.isArray(receivedData) ? receivedData : []);
       setSentInvitations(Array.isArray(sentData) ? sentData : []);
-    } catch (err: unknown) {
-      console.error("Error refreshing groups data:", err);
-      // Handle error as needed
-    }
-  }, [apiService, userId]);
-
-  const enhanceGroupsWithDetails = useCallback(async () => {
-    if (groups.length === 0) {
-      setGroupsWithDetails([]); // Clear details if no base groups
-      setLoading(false);
-      return;
-    }
-    setError(null); // Clear page error before attempting enhancement
-
-    try {
-      // Map over groups, attempt to load details, handle individual failures gracefully
-      const enhancedPromises = groups.map((g) =>
-        loadGroupDetails(g.groupId).catch((e) => {
-          console.error(`Failed to enhance group ${g.groupId}:`, e.message);
-          // Return a placeholder structure on failure so Promise.all doesn't reject entirely
-          return {
+      const details = await Promise.all(
+        base.map((g) =>
+          loadGroupDetails(g.groupId).catch(() => ({
             groupId: g.groupId,
-            groupName: g.groupName + " (Details Failed)",
+            groupName: g.groupName,
             creatorId: g.creatorId,
-            creator: { userId: g.creatorId, username: "Unknown" } as User, // Placeholder User
+            creator: { userId: g.creatorId, username: "Unknown" } as User,
             members: [],
             movies: [],
             phase: g.phase,
-          } as GroupWithDetails; // Assert type
-        })
+          } as GroupWithDetails))
+        )
       );
-      const enhanced = await Promise.all(enhancedPromises);
-      setGroupsWithDetails(enhanced); // Set state with potentially mixed results (successful + placeholders)
-      setLoading(false);
-    } catch (error) {
-      // This catch block might be less likely to hit if individual errors are caught above
-      console.error(
-        "Unexpected error during group enhancement process:",
-        error
-      );
-      setError("An unexpected error occurred while loading group details.");
-    }
-  }, [groups, loadGroupDetails]); // Dependencies
-
-  useEffect(() => {
-    // If user is typing/changing the username, reset valid state
-    if (inviteUsername.trim().length > 0) {
-      setIsValidUser(false);
-    }
-  }, [inviteUsername]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchGroupsData = async () => {
-      if (!userId) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const [groupsData, receivedData, sentData] = await Promise.all([
-          retry(() => apiService.get<Group[]>("/groups")),
-          retry(() =>
-            apiService.get<GroupInvitation[]>("/groups/invitations/received")
-          ),
-          retry(() =>
-            apiService.get<GroupInvitation[]>("/groups/invitations/sent")
-          ),
-        ]);
-
-        if (mounted) {
-          setGroups(
-            Array.isArray(groupsData)
-              ? groupsData.sort((a, b) =>
-                  a.groupName.localeCompare(b.groupName)
-                )
-              : []
-          );
-          setReceivedInvitations(
-            Array.isArray(receivedData) ? receivedData : []
-          );
-          setSentInvitations(Array.isArray(sentData) ? sentData : []);
-        }
-      } catch (err: unknown) {
-        console.error("Error loading initial groups/invitations data:", err);
-        if (mounted) {
-          let message =
-            "Failed to load groups or invitations. Please try refreshing the page.";
-          if (
-            err instanceof Error &&
-            "status" in err &&
-            (err as ApplicationError).status === 401
-          ) {
-            message = "Your session has expired. Please log in again.";
-          } else {
-            message = getErrorMessage(err, message);
-          }
-          setError(message);
-          setGroups([]);
-          setReceivedInvitations([]);
-          setSentInvitations([]);
-        }
-      } finally {
-        // loading will be cleared after enriching group details
+      if (!isMountedRef.current) return;
+      setGroupsWithDetails(details);
+    } catch (err) {
+      if (isMountedRef.current) {
+        setError(getErrorMessage(err, "Failed to load groups."));
+        setGroups([]);
+        setReceivedInvitations([]);
+        setSentInvitations([]);
+        setGroupsWithDetails([]);
       }
-    };
-
-    fetchGroupsData(); // Call the local function, not refreshGroupsData
-
-    return () => {
-      mounted = false;
-    };
-  }, [userId]); // Only depend on userId
-
-  useEffect(() => {
-    if (!usersLoaded && !isLoadingUsers) {
-      fetchAllUsers();
+    } finally {
+      if (isMountedRef.current) setLoading(false);
     }
-  }, []);
+  }, [apiService, userId, loadGroupDetails]);
 
   useEffect(() => {
-    enhanceGroupsWithDetails();
-  }, [enhanceGroupsWithDetails]);
+    isMountedRef.current = true;
+    fetchGroupsData();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [fetchGroupsData]);
 
   // --- Filtering State ---
   const [filteredGroups, setFilteredGroups] = useState<GroupWithDetails[]>([]);
@@ -757,7 +678,7 @@ const GroupsManagement: React.FC = () => {
       await retry(() =>
         apiService.post("/groups", { groupName: newGroupName })
       );
-      await refreshGroupsData(); // Refresh lists is crucial
+      await fetchGroupsData(); // Refresh lists is crucial
       showSuccessMessage(`Group "${newGroupName}" created successfully`);
       setNewGroupName("");
       setIsCreateGroupDialogOpen(false);
@@ -886,7 +807,7 @@ const GroupsManagement: React.FC = () => {
     );
     try {
       await apiService.post(`/groups/invitations/${invitationId}/accept`, {});
-      await refreshGroupsData(); // Refresh everything
+      await fetchGroupsData(); // Refresh everything
       showSuccessMessage("Group invitation accepted"); // Show success message (will likely be cleared by state update)
     } catch (err: unknown) {
       console.error("Error accepting invitation:", err);
@@ -1045,7 +966,7 @@ const GroupsManagement: React.FC = () => {
 
     try {
       await apiService.delete(`/groups/${groupToLeave}/leave`);
-      await refreshGroupsData(); // Refresh lists
+      await fetchGroupsData(); // Refresh lists
       showSuccessMessage("Left group successfully");
       setIsGroupDetailDialogOpen(false);
       setSelectedGroup(null);
@@ -1100,7 +1021,7 @@ const GroupsManagement: React.FC = () => {
 
     try {
       await apiService.delete(`/groups/${groupToDelete}`);
-      await refreshGroupsData(); // Refresh lists
+      await fetchGroupsData(); // Refresh lists
       showSuccessMessage("Group deleted successfully");
       setIsGroupDetailDialogOpen(false);
       setSelectedGroup(null);
@@ -1160,7 +1081,7 @@ const GroupsManagement: React.FC = () => {
       // Refresh details in the dialog
       const refreshedGroup = await loadGroupDetails(memberToRemove.groupId);
       setSelectedGroup(refreshedGroup);
-      refreshGroupsData(); // Refresh main list (for member counts, etc.)
+      fetchGroupsData(); // Refresh main list (for member counts, etc.)
     } catch (err: unknown) {
       console.error("Error removing member:", err);
       let specificErrorMessage = "An error occurred while removing the member.";
@@ -1215,7 +1136,7 @@ const GroupsManagement: React.FC = () => {
       const refreshedGroup = await loadGroupDetails(groupId);
       setSelectedGroup(refreshedGroup);
       input.value = newName; // Reflect change in input
-      refreshGroupsData(); // Refresh main list
+      fetchGroupsData(); // Refresh main list
     } catch (err: unknown) {
       console.error("Error updating group name:", err);
       let specificErrorMessage =
@@ -1374,7 +1295,7 @@ const GroupsManagement: React.FC = () => {
             <Button
               onClick={() => {
                 setError(null);
-                refreshGroupsData();
+                fetchGroupsData();
               }}
               className="mt-6 bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
             >
@@ -1500,7 +1421,11 @@ const GroupsManagement: React.FC = () => {
             </div>
 
             {/* Groups grid */}
-            {filteredGroups.length > 0 ? (
+            {isGroupDataLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]" />
+              </div>
+            ) : filteredGroups.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredGroups.map((group) => (
                   <div
@@ -1613,7 +1538,7 @@ const GroupsManagement: React.FC = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
                           ></path>
                         </svg>
                       </div>
