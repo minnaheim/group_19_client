@@ -31,8 +31,7 @@ const Timer: React.FC<TimerProps> = ({ groupId }) => {
           setRemaining(seconds);
           setNoTimeLimit(false);
         }
-      } catch (err: any) {
-        console.log("err", err);
+      } catch {
         setNoTimeLimit(true);
       }
     };
