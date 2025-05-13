@@ -30,7 +30,6 @@ const MoviePool: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const router = useRouter();
-  const { phaseGroupId } = useParams();
   const apiService = useApi();
   const [moviePool, setMoviePool] = useState<PoolEntry[]>([]);
   const [userWatchlist, setUserWatchlist] = useState<Movie[]>([]);

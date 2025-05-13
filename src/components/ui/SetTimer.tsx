@@ -32,7 +32,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
     try {
       await apiService.post(`/groups/${groupId}/voting-timer`, votingSeconds);
       setMessage("Set voting Timer");
-    } catch (err) {
+    } catch {
       setError("Failed to set voting timer.");
     } finally {
       setLoading(false);
@@ -46,7 +46,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
     try {
       await apiService.post(`/groups/${groupId}/pool-timer`, poolSeconds);
       setMessage("Set pool Timer");
-    } catch (err) {
+    } catch {
       setError("Failed to set pool timer.");
     } finally {
       setLoading(false);
@@ -61,9 +61,8 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
       await apiService.post(`/groups/${groupId}/start-pool-timer`, {});
       setMessage("Pool timer started!");
       setOpen(false); // Close the dialog
-    } catch (err) {
+    } catch {
       setError("Failed to start pool timer.");
-      console.log(err);
     } finally {
       setLoading(false);
     }
