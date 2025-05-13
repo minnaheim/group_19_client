@@ -1047,7 +1047,7 @@ const SearchMovies: React.FC = () => {
           <h2 className="text-xl font-medium text-[#3b3e88]">
             {isSearching || (showAdvancedSearch && searchResults.length > 0)
               ? `Search Results (${searchResults.length})`
-              : "Browse movies based on your favorites"}
+              : "Browse movies based on your genre, actor and director preferences."}
           </h2>
 
           {/* Add refresh button for recommendations */}
