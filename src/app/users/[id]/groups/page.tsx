@@ -2157,15 +2157,14 @@ const GroupsManagement: React.FC = () => {
                         Leave Group
                       </Button>
                     )}
-                    </div>
-                        {["voting", "pool"].includes(
-                          selectedGroup.phase.toLowerCase()
-                        ) && (
-                          <SetTimer
-                            groupId={selectedGroup.groupId}
-                            isCreator={true}
-                          />
-                        )}
+                    {selectedGroup.creatorId === parseInt(userId || "-1") && ['voting', 'pool'].includes(
+                      selectedGroup.phase.toLowerCase()
+                    ) && (
+                      <SetTimer
+                        groupId={selectedGroup.groupId}
+                        isCreator={true}
+                      />
+                    )}
                   </div>
                 </DialogHeader>
                 <div className="py-4">
