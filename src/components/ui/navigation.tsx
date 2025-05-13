@@ -100,7 +100,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
 
     try {
       setIsLoggingOut(true);
-      await apiService.post("/auth/logout", {});
+      await apiService.post("/logout", {});
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
     
