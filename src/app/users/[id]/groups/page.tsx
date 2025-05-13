@@ -610,6 +610,7 @@ const GroupsManagement: React.FC = () => {
   const enhanceGroupsWithDetails = useCallback(async () => {
     if (groups.length === 0) {
       setGroupsWithDetails([]); // Clear details if no base groups
+      setLoading(false);
       return;
     }
     setError(null); // Clear page error before attempting enhancement
@@ -633,6 +634,7 @@ const GroupsManagement: React.FC = () => {
       );
       const enhanced = await Promise.all(enhancedPromises);
       setGroupsWithDetails(enhanced); // Set state with potentially mixed results (successful + placeholders)
+      setLoading(false);
     } catch (error) {
       // This catch block might be less likely to hit if individual errors are caught above
       console.error(
@@ -703,9 +705,7 @@ const GroupsManagement: React.FC = () => {
           setSentInvitations([]);
         }
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        // loading will be cleared after enriching group details
       }
     };
 
