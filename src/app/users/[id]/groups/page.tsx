@@ -2074,8 +2074,8 @@ const GroupsManagement: React.FC = () => {
                   >
                     {isSubmittingInvite
                         ? "Sending..."
-                        : !isValidUser && inviteUsername.trim().length > 0 && usersLoaded
-                            ? "The username provided doesn't exist"
+                        : !isValidUser && usersLoaded
+                            ? "Please search for and select an existing user"
                             : "Send Invitation"}
                   </Button>
                 </div>
