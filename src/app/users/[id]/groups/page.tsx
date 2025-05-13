@@ -1616,7 +1616,7 @@ const GroupsManagement: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-[#838bad] mb-2">
-                      You aren&#39;t part of any groups yet
+                      You are not part of any groups yet
                     </p>
                     <p className="text-[#b9c0de] mb-6">
                       Create a group to start watching movies with friends!
