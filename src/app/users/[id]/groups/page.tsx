@@ -1993,11 +1993,15 @@ const GroupsManagement: React.FC = () => {
 
                 <div className="flex justify-end mt-6">
                   <Button
-                    type="submit"
-                    className="bg-[#3b3e88] hover:bg-[#3b3e88]/90"
-                    disabled={isSubmittingInvite || !isValidUser}
+                      type="submit"
+                      className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 min-w-[220px]"
+                      disabled={isSubmittingInvite || !isValidUser}
                   >
-                    {isSubmittingInvite ? "Sending..." : "Send Invitation"}
+                    {isSubmittingInvite
+                        ? "Sending..."
+                        : !isValidUser && inviteUsername.trim().length > 0 && usersLoaded
+                            ? "The username provided doesn't exist"
+                            : "Send Invitation"}
                   </Button>
                 </div>
               </form>
