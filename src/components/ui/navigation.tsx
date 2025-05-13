@@ -69,12 +69,12 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
       <div className="flex items-center gap-2.5 relative cursor-pointer">
         <Icon
           size={20}
-          stroke={active ? "#1657FF" : "#B9C0DE"}
-          className={active ? "text-[#1657FF]" : "text-[#B9C0DE]"}
+          stroke={active ? "#1657FF" : "#3b3e88"}
+          className={active ? "text-[#1657FF]" : "text-[#3b3e88]"}
         />
         <div
           className={`font-normal text-[15px] tracking-wide ${
-            active ? "text-[#1657ff]" : "text-[#b9c0de]"
+            active ? "text-[#1657ff]" : "text-[#3b3e88]"
           }`}
         >
           {id}
@@ -153,10 +153,10 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
               >
                 <LogOut 
                   size={20} 
-                  stroke={isLoggingOut ? "#1657FF" : "#B9C0DE"} 
-                  className={`text-[${isLoggingOut ? "#1657FF" : "#B9C0DE"}]`} 
+                  stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
                 />
-                <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
+                <div className="font-normal text-[15px] tracking-wide text-[#3b3e88]">
                   {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>
@@ -207,10 +207,10 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
               >
                 <LogOut 
                   size={20} 
-                  stroke={isLoggingOut ? "#1657FF" : "#B9C0DE"} 
-                  className={`text-[${isLoggingOut ? "#1657FF" : "#B9C0DE"}]`} 
+                  stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
                 />
-                <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
+                <div className="font-normal text-[15px] tracking-wide text-[#3b3e88]">
                   {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>

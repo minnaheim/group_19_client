@@ -45,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">
                     Let&apos;s get to know you!
                   </h2>
-                  <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
+                  <p className="text-[#3b3e88] mt-1 sm:mt-2 text-sm sm:text-base">
                     Select your preferences to personalize your movie experience
                   </p>
                 </div>

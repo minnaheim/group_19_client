@@ -1344,7 +1344,7 @@ const GroupsManagement: React.FC = () => {
             className={`px-6 py-3 font-medium text-base ${
               activeTab === "groups"
                 ? "text-[#3b3e88] border-b-2 border-violet-600"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                : "text-[#3b3e88]/80 hover:text-[#3b3e88]/70"
             }`}
             onClick={() => setActiveTab("groups")}
           >
@@ -1354,7 +1354,7 @@ const GroupsManagement: React.FC = () => {
             className={`px-6 py-3 font-medium text-base relative ${
               activeTab === "invitations"
                 ? "text-[#3b3e88] border-b-2 border-violet-600"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                : "text-[#3b3e88]/80 hover:text-[#3b3e88]/70"
             }`}
             onClick={() => setActiveTab("invitations")}
           >
@@ -1451,7 +1451,7 @@ const GroupsManagement: React.FC = () => {
                     <div className="mb-4 min-h-[80px] flex flex-col justify-end">
                       {group.movies && group.movies.length > 0 ? (
                         <>
-                          <p className="text-xs text-[#3b3e88]/60 mb-2">
+                          <p className="text-xs text-[#3b3e88]/80 mb-2">
                             Movie Pool ({group.movies.length})
                           </p>
                           <div className="flex gap-2 overflow-x-auto pb-2">
@@ -1486,13 +1486,13 @@ const GroupsManagement: React.FC = () => {
                           </div>
                         </>
                       ) : (
-                        <p className="text-[#b9c0de] text-xs">
+                        <p className="text-[#3b3e88]/80 text-xs">
                           No movies in pool yet
                         </p>
                       )}
                     </div>
                     {/* Creator and Phase */}
-                    <div className="flex justify-between items-center text-xs text-[#b9c0de]">
+                    <div className="flex justify-between items-center text-xs text-[#3b3e88]/80">
                       <span>
                         {group.creator
                           ? group.creator.userId.toString() === userId
@@ -1546,7 +1546,7 @@ const GroupsManagement: React.FC = () => {
                     <p className="text-[#838bad] mb-2">
                       You are not part of any groups yet
                     </p>
-                    <p className="text-[#b9c0de] mb-6">
+                    <p className="text-[#3b3e88]/80 mb-6">
                       Create a group to start watching movies with friends!
                     </p>
                     <Button
@@ -1582,7 +1582,7 @@ const GroupsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {invitation.group.groupName}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs mb-1">
+                        <p className="text-[#3b3e88]/80 text-xs mb-1">
                           Invited by {invitation.sender.username} on{" "}
                           {new Date(
                             invitation.creationTime
@@ -1629,7 +1629,7 @@ const GroupsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {invitation.group.groupName}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs mb-1">
+                        <p className="text-[#3b3e88]/80 text-xs mb-1">
                           Invited {invitation.receiver.username} on{" "}
                           {new Date(
                             invitation.creationTime
@@ -1676,7 +1676,7 @@ const GroupsManagement: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-[#838bad] mb-2">No pending invitations</p>
-                  <p className="text-[#b9c0de]">
+                  <p className="text-[#3b3e88]/80">
                     Invite friends to your groups or wait for invitations
                   </p>
                 </div>
@@ -1778,7 +1778,7 @@ const GroupsManagement: React.FC = () => {
                 className={`px-4 py-2 font-medium text-sm ${
                   inviteMethod === "friends"
                     ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                    : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                    : "text-[#3b3e88]/80 hover:text-[#3b3e88]/80"
                 }`}
                 onClick={() => setInviteMethod("friends")}
               >
@@ -1788,7 +1788,7 @@ const GroupsManagement: React.FC = () => {
                 className={`px-4 py-2 font-medium text-sm ${
                   inviteMethod === "search"
                     ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                    : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                      : "text-[#3b3e88]/80 hover:text-[#3b3e88]/80"
                 }`}
                 onClick={() => setInviteMethod("search")}
               >
@@ -1918,7 +1918,7 @@ const GroupsManagement: React.FC = () => {
                     <p className="text-[#838bad]">
                       You have no further friends to invite
                     </p>
-                    <p className="text-[#b9c0de] text-sm mb-4">
+                    <p className="text-[#3b3e88]/80 text-sm mb-4">
                       Add friends first or use the search option
                     </p>
                     <Button
@@ -2218,7 +2218,7 @@ const GroupsManagement: React.FC = () => {
                                 <p className="font-medium text-[#3b3e88] truncate text-sm">
                                   {movie.title}
                                 </p>
-                                <p className="text-xs text-[#b9c0de]">
+                                <p className="text-xs text-[#3b3e88]/80">
                                   {movie.year} •{" "}
                                   {movie.genres?.slice(0, 2).join(", ")}
                                 </p>
@@ -2228,10 +2228,10 @@ const GroupsManagement: React.FC = () => {
                         </div>
                       ) : (
                         <div className="bg-indigo-50 rounded-xl p-6 text-center">
-                          <p className="text-[#838bad] mb-2">
+                          <p className="text-[#3b3e88]/90 mb-2">
                             No movies in pool yet
                           </p>
-                          <p className="text-[#b9c0de] text-sm mb-4">
+                          <p className="text-[#3b3e88]/80 text-sm mb-4">
                             Add movies to the pool for your group to vote on
                           </p>
                         </div>

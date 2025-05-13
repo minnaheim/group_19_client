@@ -714,10 +714,10 @@ const Vote: React.FC = () => {
                             : ""
                         }`}
                       >
-                        <p className="text-[#b9c0de] text-lg font-semibold">
+                        <p className="text-[#3b3e88]/60 text-lg font-semibold">
                           Rank #{index + 1}
                         </p>
-                        <p className="text-[#b9c0de] text-sm">
+                        <p className="text-[#3b3e88]/60 text-sm">
                           {selectingForRank === index
                             ? "Select a movie"
                             : "Tap to select"}
@@ -819,10 +819,10 @@ const Vote: React.FC = () => {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-[#b9c0de] text-lg font-semibold">
+                        <p className="text-[#3b3e88]/60 text-lg font-semibold">
                           Rank #{index + 1}
                         </p>
-                        <p className="text-[#b9c0de] text-sm">
+                        <p className="text-[#3b3e88]/60 text-sm">
                           Drop a movie here
                         </p>
                       </div>

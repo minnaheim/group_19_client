@@ -362,7 +362,7 @@ const MovieFavorites: React.FC = () => {
           </div>
         )
         : (
-          <p className="text-center text-[#b9c0de] italic">
+          <p className="text-center text-[#3b3e88] italic">
             Select your favorite movie to continue
           </p>
         )}

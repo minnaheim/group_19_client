@@ -179,7 +179,7 @@ const Register: React.FC = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">
                   Create Account
                 </h2>
-                <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
+                <p className="text-[#3b3e88] mt-1 sm:mt-2 text-sm sm:text-base">
                   Sign up and start planning your perfect movie nights
                 </p>
               </div>
@@ -384,7 +384,7 @@ const Register: React.FC = () => {
               </form>
 
               <div className="mt-6 sm:mt-8 text-center">
-                <p className="text-[#b9c0de] text-sm sm:text-base">
+                <p className="text-[#3b3e88] text-sm sm:text-base">
                   Already have an account?{" "}
                   <a
                     href="/login"
