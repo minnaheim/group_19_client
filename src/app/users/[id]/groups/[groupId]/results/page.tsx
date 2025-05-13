@@ -266,7 +266,7 @@ const Results: React.FC = () => {
         {Array.from({ length: count }).map((_, idx) => (
           <img
             key={idx}
-            src="/projector.png"
+            src="/Projector.png"
             alt="Projector"
             style={{
               display: "inline-block",
