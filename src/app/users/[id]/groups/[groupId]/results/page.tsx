@@ -75,7 +75,7 @@ const Results: React.FC = () => {
   useEffect(() => {
     if (rankingResult) {
       apiService
-        .get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
+        .get<Movie>(`/movies/${rankingResult?.winningMovie?.movieId}`)
         .then((movie) => setFullWinningMovie(movie))
         .catch((err) => console.error("Failed to fetch full movie data:", err));
     }
@@ -85,8 +85,10 @@ const Results: React.FC = () => {
   useEffect(() => {
     const fetchCombined = async () => {
       if (!groupId || !id || phaseFromHook !== "RESULTS") return;
+      
+      setLoading(true);
+      
       try {
-        setLoading(true);
         const response = await retry(() =>
           apiService.get<RankingResultsDTO>(
             `/groups/${groupId}/rankings/results`
@@ -120,11 +122,19 @@ const Results: React.FC = () => {
         setShowActionMessage(false); // Clear success on new error
         setActionMessage("");
       } finally {
+        
+        // Delay for testing
+        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
         setLoading(false);
       }
     };
+
+    // Only fetch results when we're in the RESULTS phase and phase data is loaded
+    if (!phaseLoading && phaseFromHook === "RESULTS") {
     fetchCombined();
-  }, [apiService, groupId, id, phaseFromHook]);
+      // We'll check if the movie is watched after we have the results
+    }
+  }, [id, groupId, phaseFromHook, apiService, phaseLoading]);
 
   // ANI CHANGE: useEffect to check if the movie is already in the watched list on load
   useEffect(() => {
@@ -216,9 +226,9 @@ const Results: React.FC = () => {
     if (phaseLoading) return;
     if (phaseError) {
       setError(phaseError as string);
+      setLoading(false);
       setShowActionMessage(false); // Clear success on new error
       setActionMessage("");
-      setLoading(false);
       return;
     }
     if (phaseFromHook && phaseFromHook !== "RESULTS") {
@@ -227,7 +237,9 @@ const Results: React.FC = () => {
       } else if (phaseFromHook === "VOTING") {
         router.replace(`/users/${userId}/groups/${groupId}/vote`);
       }
+      return;
     }
+    // Keep loading true until data is fetched
   }, [phaseFromHook, phaseLoading, phaseError, router, userId, groupId]);
 
   useEffect(() => {
@@ -282,10 +294,10 @@ const Results: React.FC = () => {
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
-      {/* Sidebar navigation */}
+    {/* Sidebar Navigation - always visible even during loading */}
       <Navigation userId={userId} activeItem="Movie Groups" />
 
-      {/* Main content */}
+    {/* Main Content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         {/* Header */}
         <div className="mb-8 flex items-center">
@@ -312,6 +324,14 @@ const Results: React.FC = () => {
           className="bg-green-500"
         />
 
+      {/* Conditional rendering for loading state */}
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+          </div>
+        </div>
+      ) : (
+        <>
         {/* Winner Section */}
         <div className="flex flex-col items-center justify-center text-center mb-12">
           {phaseFromHook !== "RESULTS" ? (
@@ -325,8 +345,6 @@ const Results: React.FC = () => {
               </p>
               <p className="text-[#3b3e88]/60">Please check back later!</p>
             </div>
-          ) : loading ? (
-            <p className="text-[#3b3e88]/60 text-lg mt-2">Loading results...</p>
           ) : rankingResult ? (
             <>
               <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
@@ -336,16 +354,16 @@ const Results: React.FC = () => {
                 <img
                   src={getFullPosterUrl(
                     fullWinningMovie?.posterURL ??
-                      rankingResult.winningMovie.posterURL
+                        rankingResult?.winningMovie?.posterURL
                   )}
                   alt={
-                    fullWinningMovie?.title || rankingResult.winningMovie.title
+                      fullWinningMovie?.title || rankingResult?.winningMovie?.title
                   }
                   className="w-full h-full object-cover"
                 />
               </div>
               <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
-                {fullWinningMovie?.title || rankingResult.winningMovie.title}
+                  {fullWinningMovie?.title || rankingResult?.winningMovie?.title}
               </h2>
 
               {detailedResults.length > 0 && (
@@ -367,7 +385,7 @@ const Results: React.FC = () => {
                     detailedResults.find(
                       (item) =>
                         item.movie.movieId ===
-                        rankingResult.winningMovie.movieId
+                          rankingResult?.winningMovie?.movieId
                     )?.averageRank || null
                   )}
                   */}
@@ -463,6 +481,8 @@ const Results: React.FC = () => {
             Go to Dashboard
           </Button>
         </div>
+        </>
+      )}
       </div>
     </div>
   );

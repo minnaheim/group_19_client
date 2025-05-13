@@ -37,6 +37,7 @@ const MoviePool: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAddingWatchlist, setIsAddingWatchlist] = useState<boolean>(false);
+  const [dataLoading, setDataLoading] = useState<boolean>(true); // Added data loading state
   const {
     group: phaseGroup,
     phase,
@@ -50,6 +51,7 @@ const MoviePool: React.FC = () => {
       setSubmitError(phaseError as string);
       setShowSuccessMessage(false); // Clear success message on new error
       setSuccessMessage("");
+      setDataLoading(false); // Set dataLoading to false on error
       return;
     }
     if (phase && phase !== "POOL") {
@@ -58,7 +60,9 @@ const MoviePool: React.FC = () => {
       } else if (phase === "RESULTS") {
         router.replace(`/users/${userId}/groups/${groupId}/results`);
       }
+      return;
     }
+    // Keep loading true until data is fetched
   }, [phase, phaseLoading, phaseError, router, userId, groupId]);
 
   useEffect(() => {
@@ -122,15 +126,22 @@ const MoviePool: React.FC = () => {
       }
     };
 
-    fetchWatchlist();
-  }, [userId, apiService]);
+    // Only fetch watchlist when we're in the POOL phase and phase data is loaded
+    if (!phaseLoading && phase === "POOL") {
+      fetchWatchlist();
+    }
+  }, [userId, apiService, phaseLoading, phase]);
 
-  // Fetch movie pool
+  // Fetch movie pool after getting watchlist and once group is in POOL phase
   useEffect(() => {
     const fetchMoviePool = async () => {
       if (!groupId) return;
 
       try {
+        // Clear previous error on successful fetch
+        setSubmitError("");
+
+        // Fetch movie pool
         const poolEntries = await apiService.get<PoolEntry[]>(
           `/groups/${groupId}/pool`
         );
@@ -159,11 +170,19 @@ const MoviePool: React.FC = () => {
         }
         setShowSuccessMessage(false); // Clear success message on new error
         setSuccessMessage("");
+      } finally {
+        // Add delay here for testing
+        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+        // Set dataLoading to false after movie pool has been fetched
+        setDataLoading(false);
       }
     };
 
-    fetchMoviePool();
-  }, [groupId, apiService]);
+    // Only fetch movie pool when we're in the POOL phase and phase data is loaded
+    if (!phaseLoading && phase === "POOL") {
+      fetchMoviePool();
+    }
+  }, [apiService, groupId, phase, phaseLoading]);
 
   // Modified to add movie directly to pool on click
   const handleAddToPool = async (movie: Movie) => {
@@ -307,7 +326,7 @@ const MoviePool: React.FC = () => {
 
   return (
     <>
-      {submitError && (
+      {!(phaseLoading || dataLoading) && submitError && (
         <ErrorMessage
           message={submitError}
           onClose={() => setSubmitError("")}
@@ -322,180 +341,196 @@ const MoviePool: React.FC = () => {
         </div>
       )}
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
-        {/* Sidebar navigation */}
+        {/* Sidebar navigation - always visible even during loading */}
         <Navigation userId={userId} activeItem="Movie Groups" />
 
         {/* Main content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
-          <div className="mb-8">
+          {/* Page Title - Displayed during loading */}
+          <div className="mb-6">
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
               {phaseGroup
                 ? `${phaseGroup.groupName} - Movie Pool`
                 : "Movie Pool"}
             </h1>
+          </div>
+
+          {phaseLoading || dataLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="mb-8">
+              
             {/* <p className="text-[#b9c0de] mt-2">
               Choose Movies to Vote and Watch
             </p> */}
-            <div className="text-[#3b3e88]">
-              {phaseGroup?.groupId && (
-                <Timer groupId={phaseGroup?.groupId.toString()} />
-              )}
-            </div>
-          </div>
-
-          {/* Show User's Watchlist */}
-          <div className="mb-8">
-            <h2 className="font-semibold text-[#3b3e88] text-xl">
-              Your Watchlist
-            </h2>
-            {userWatchlist.length > 0 && (
-              <p className="mt-1 text-sm text-[#3C3F88]">
-                Click on a movie to add it to the pool.
-              </p>
-            )}
-          </div>
-          <div className="overflow-x-auto mb-8">
-            <MovieListHorizontal
-              movies={userWatchlist}
-              onMovieClick={handleAddToPool}
-              emptyMessage="Your watchlist is empty"
-              noResultsMessage="No movies match your search"
-              hasOuterContainer={false}
-              selectedMovieIds={selectedMovies.map((m) => m.movieId)}
-              onAddMovieClick={navigateToMovieSearch}
-            />
-          </div>
-          {/* Informational message for non-pool phase */}
-          {phase !== "POOL" && (
-            <div className="flex justify-center mt-4">
-              <ErrorMessage
-                message="You can only add movies during the POOL phase."
-                onClose={() => setSubmitError("")}
-              />
-            </div>
-          )}
-
-          {/* Movie Pool */}
-          <div className="mb-8">
-            <h2 className="mt-15 font-semibold text-[#3b3e88] text-xl">
-              Current Movie Pool
-            </h2>
-            {/* Always show added count; text is orange when full */}
-            <p
-              className={`text-sm ${
-                moviePool.filter(
-                  (entry) => entry.addedBy === parseInt(userId || "0")
-                ).length === 2
-                  ? "text-orange-600"
-                  : "text-[#3C3F88]"
-              }`}
-            >
-              You have added{" "}
-              {
-                moviePool.filter(
-                  (entry) => entry.addedBy === parseInt(userId || "0")
-                ).length
-              }
-              /2 movies.
-            </p>
-          </div>
-
-          {/* Display movie pool or placeholder */}
-          <div className="overflow-x-auto mb-8">
-            {moviePool.length === 0 ? (
-              <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded">
-                <p className="text-gray-500">No movies in the pool yet.</p>
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                {moviePool.map((entry) => (
-                  <div
-                    key={entry.movie.movieId}
-                    className="relative flex-shrink-0"
-                  >
-                    <MovieCard movie={entry.movie} onClick={handleMovieClick} />
-                    {phase === "POOL" &&
-                      entry.addedBy === parseInt(userId || "0") && (
-                        <button
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={() =>
-                            handleRemoveFromPool(entry.movie.movieId)
-                          }
-                          className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
-                          title="Remove from pool"
-                        >
-                          <Trash2 size={16} className="text-red-500" />
-                        </button>
-                      )}
+                <div className="text-[#3b3e88]">
+                  {phaseGroup?.groupId && (
+                    <Timer groupId={phaseGroup?.groupId.toString()} />
+                  )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              
 
-          <div className="flex justify-between items-center mt-8 gap-2">
-            {/* Back to dashboard (left) */}
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/users/${userId}/groups`)}
-            >
-              Back to Group Overview
-            </Button>
-            {/* Start Voting (creator only, right) */}
-            {phase === "POOL" &&
-              phaseGroup &&
-              String(phaseGroup.creatorId) === String(userId) && (
+              {/* Show User's Watchlist */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-[#3b3e88] text-xl">
+                  Your Watchlist
+                </h2>
+                {userWatchlist.length > 0 && (
+                  <p className="mt-1 text-sm text-[#3C3F88]">
+                    Click on a movie to add it to the pool.
+                  </p>
+                )}
+              </div>
+              <div className="overflow-x-auto mb-8">
+                <MovieListHorizontal
+                  movies={userWatchlist}
+                  onMovieClick={handleAddToPool}
+                  emptyMessage="Your watchlist is empty"
+                  noResultsMessage="No movies match your search"
+                  hasOuterContainer={false}
+                  selectedMovieIds={selectedMovies.map((m) => m.movieId)}
+                  onAddMovieClick={navigateToMovieSearch}
+                />
+              </div>
+
+              {/* Informational message for non-pool phase */}
+              {phase !== "POOL" && (
+                <div className="flex justify-center mt-4">
+                  <ErrorMessage
+                    message={`This group is currently in the ${phase} phase. You cannot modify the pool now.`}
+                    onClose={() => setSubmitError("")}
+                  />
+                </div>
+              )}
+
+              {/* Movie Pool */}
+              <div className="mb-8">
+                <h2 className="mt-15 font-semibold text-[#3b3e88] text-xl">
+                  Current Movie Pool
+                </h2>
+                {/* Always show added count; text is orange when full */}
+                <p
+                  className={`text-sm ${
+                    moviePool.filter(
+                      (entry) => entry.addedBy === parseInt(userId || "0")
+                    ).length === 2
+                      ? "text-orange-600"
+                      : "text-[#3C3F88]"
+                  }`}
+                >
+                  You have added{" "}
+                  {
+                    moviePool.filter(
+                      (entry) => entry.addedBy === parseInt(userId || "0")
+                    ).length
+                  }
+                  /2 movies.
+                </p>
+              </div>
+
+              {/* Display movie pool or placeholder */}
+              <div className="overflow-x-auto mb-8">
+                {moviePool.length === 0 ? (
+                  <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded">
+                    <p className="text-gray-500">No movies in the pool yet.</p>
+                  </div>
+                ) : (
+                  <div className="flex gap-4">
+                    {moviePool.map((entry) => (
+                      <div
+                        key={entry.movie.movieId}
+                        className="relative flex-shrink-0"
+                      >
+                        <MovieCard movie={entry.movie} onClick={handleMovieClick} />
+                        {phase === "POOL" &&
+                          entry.addedBy === parseInt(userId || "0") && (
+                            <button
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={() =>
+                                handleRemoveFromPool(entry.movie.movieId)
+                              }
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
+                              title="Remove from pool"
+                            >
+                              <Trash2 size={16} className="text-red-500" />
+                            </button>
+                          )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center mt-8 gap-2">
+                {/* Back to dashboard (left) */}
                 <Button
-                  variant="secondary"
-                  disabled={moviePool.length < 2}
-                  onClick={async () => {
-                    try {
-                      await apiService.post(
-                        `/groups/${groupId}/start-voting`,
-                        {}
-                      );
-                      setSuccessMessage("Voting started successfully!");
-                      setShowSuccessMessage(true);
-                      setSubmitError(""); // Clear error on success
-                      router.replace(`/users/${userId}/groups/${groupId}/vote`);
-                    } catch (err: unknown) {
-                      if (err instanceof Error && "status" in err) {
-                        const appErr = err as ApplicationError;
-                        switch (appErr.status) {
-                          case 403:
-                            setSubmitError(
-                              "Only the group creator can start the voting phase."
-                            );
-                            break;
-                          case 404:
-                            setSubmitError(
-                              "The specified group could not be found."
-                            );
-                            break;
-                          case 409:
-                            setSubmitError(
-                              "Voting can only be started when the group is in the 'Pool' phase."
-                            );
-                            break;
-                          default:
+                  variant="outline"
+                  onClick={() => router.push(`/users/${userId}/groups`)}
+                >
+                  Back to Group Overview
+                </Button>
+                {/* Start Voting (creator only, right) */}
+                {phase === "POOL" &&
+                  phaseGroup &&
+                  String(phaseGroup.creatorId) === String(userId) && (
+                    <Button
+                      variant="secondary"
+                      disabled={moviePool.length < 2}
+                      onClick={async () => {
+                        try {
+                          await apiService.post(
+                            `/groups/${groupId}/start-voting`,
+                            {}
+                          );
+                          setSuccessMessage("Voting started successfully!");
+                          setShowSuccessMessage(true);
+                          setSubmitError(""); // Clear error on success
+                          router.replace(`/users/${userId}/groups/${groupId}/vote`);
+                        } catch (err: unknown) {
+                          if (err instanceof Error && "status" in err) {
+                            const appErr = err as ApplicationError;
+                            switch (appErr.status) {
+                              case 403:
+                                setSubmitError(
+                                  "Only the group creator can start the voting phase."
+                                );
+                                break;
+                              case 404:
+                                setSubmitError(
+                                  "The specified group could not be found."
+                                );
+                                break;
+                              case 409:
+                                setSubmitError(
+                                  "Voting can only be started when the group is in the 'Pool' phase."
+                                );
+                                break;
+                              default:
+                                setSubmitError(
+                                  "An error occurred while starting voting. Please try again."
+                                );
+                            }
+                          } else {
                             setSubmitError(
                               "An error occurred while starting voting. Please try again."
                             );
+                          }
+                          setShowSuccessMessage(false); // Clear success message on new error
+                          setSuccessMessage("");
                         }
-                      } else {
-                        setSubmitError(
-                          "An error occurred while starting voting. Please try again."
-                        );
-                      }
-                      setShowSuccessMessage(false); // Clear success message on new error
-                      setSuccessMessage("");
-                    }
-                  }}
-                >
-                  End Pooling & Start Voting
-                </Button>
-              )}
-          </div>
+                      }}
+                    >
+                      End Pooling & Start Voting
+                    </Button>
+                  )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       {/* Movie details modal */}
