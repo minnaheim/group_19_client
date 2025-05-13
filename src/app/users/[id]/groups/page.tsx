@@ -1241,21 +1241,25 @@ const GroupsManagement: React.FC = () => {
   const navigateToGroupResults = (groupId: number) =>
     router.push(`/users/${userId}/groups/${groupId}/results`);
 
-  // Open group details dialog using cached data, refresh in background
-  const openGroupDetails = (group: GroupWithDetails) => {
+  // Open group details dialog (loads fresh data)
+  const openGroupDetails = async (group: GroupWithDetails) => {
     setDialogError(null);
-    setError(null);
-    setShowActionMessage(false);
+    setError(null); // Clear page errors too
+    setShowActionMessage(false); // Hide old success messages
     setActionMessage("");
-    // Display cached details immediately
-    setSelectedGroup(group);
-    setIsGroupDetailDialogOpen(true);
-    // Background refresh of details
-    loadGroupDetails(group.groupId)
-      .then((fresh) => setSelectedGroup(fresh))
-      .catch((err) => {
-        console.error("Background refresh failed for group details:", err);
-      });
+    try {
+      // Trigger loading state maybe?
+      const freshDetails = await loadGroupDetails(group.groupId);
+      setSelectedGroup(freshDetails);
+      setIsGroupDetailDialogOpen(true);
+    } catch (err) {
+      // Error is set by loadGroupDetails, log maybe?
+      console.error("Failed to open group details due to load error:", err);
+      // If dialog didn't open, page error might still be relevant
+      if (!isGroupDetailDialogOpen && !error) {
+        setError("Could not load group details. Please try again.");
+      }
+    }
   };
 
   // Get invitation count for badge (Adjust logic as needed, e.g., sum received + sent?)
