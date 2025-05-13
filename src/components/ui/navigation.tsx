@@ -15,6 +15,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { ApiService } from "@/app/api/apiService";
 
 // Define all navigation item configurations with Lucide icons
 const NAV_ITEMS = [
@@ -88,18 +89,26 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
 
 const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
   const router = useRouter();
-  // adding this so that when X clicked, menu opens (to look more like web version)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const apiService = new ApiService();
 
   usePathname();
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
     try {
+      setIsLoggingOut(true);
+      await apiService.post("/auth/logout", {});
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
+    
       router.push("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -142,9 +151,13 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer mt-auto"
                 onClick={handleLogout}
               >
-                <LogOut size={20} stroke="#B9C0DE" className="text-[#B9C0DE]" />
+                <LogOut 
+                  size={20} 
+                  stroke={isLoggingOut ? "#1657FF" : "#B9C0DE"} 
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#B9C0DE"}]`} 
+                />
                 <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
-                  Logout
+                  {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>
             </nav>
@@ -192,9 +205,13 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer"
                 onClick={handleLogout}
               >
-                <LogOut size={20} stroke="#B9C0DE" className="text-[#B9C0DE]" />
+                <LogOut 
+                  size={20} 
+                  stroke={isLoggingOut ? "#1657FF" : "#B9C0DE"} 
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#B9C0DE"}]`} 
+                />
                 <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
-                  Logout
+                  {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>
             </nav>
