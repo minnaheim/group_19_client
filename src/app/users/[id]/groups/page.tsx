@@ -1988,7 +1988,7 @@ const GroupsManagement: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-[#838bad]">
-                      You don&#39;t have any friends to invite
+                      You have no further friends to invite
                     </p>
                     <p className="text-[#b9c0de] text-sm mb-4">
                       Add friends first or use the search option
