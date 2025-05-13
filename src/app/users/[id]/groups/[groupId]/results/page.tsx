@@ -51,11 +51,11 @@ const Results: React.FC = () => {
   } = useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
-  const [rankingResult, setRankingResult] = useState<
-    RankingResultsDTO | null
-  >(null);
+  const [rankingResult, setRankingResult] = useState<RankingResultsDTO | null>(
+    null
+  );
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>(
-    [],
+    []
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -64,19 +64,18 @@ const Results: React.FC = () => {
   const apiService = useApi();
 
   // ANI CHANGE: Added state to track adding movies to watched list
-  const [isAddingToWatchedList, setIsAddingToWatchedList] = useState<boolean>(
-    false,
-  );
+  const [isAddingToWatchedList, setIsAddingToWatchedList] =
+    useState<boolean>(false);
   // ANI CHANGE: Added state to track if movie was already added to watched list
-  const [movieAddedToWatchedList, setMovieAddedToWatchedList] = useState<
-    boolean
-  >(false);
+  const [movieAddedToWatchedList, setMovieAddedToWatchedList] =
+    useState<boolean>(false);
 
   // Full winning movie details (fetch for posterURL)
   const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
   useEffect(() => {
     if (rankingResult) {
-      apiService.get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
+      apiService
+        .get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
         .then((movie) => setFullWinningMovie(movie))
         .catch((err) => console.error("Failed to fetch full movie data:", err));
     }
@@ -90,7 +89,7 @@ const Results: React.FC = () => {
         setLoading(true);
         const response = await retry(() =>
           apiService.get<RankingResultsDTO>(
-            `/groups/${groupId}/rankings/results`,
+            `/groups/${groupId}/rankings/results`
           )
         );
         setRankingResult(response);
@@ -104,18 +103,18 @@ const Results: React.FC = () => {
           const appErr = err as ApplicationError;
           if (appErr.status === 404) {
             setError(
-              "Could not find the group or results are not yet available.",
+              "Could not find the group or results are not yet available."
             );
           } else if (appErr.status === 409) {
             setError("Results can only be viewed after voting has ended.");
           } else {
             setError(
-              "An error occurred while loading results. Please try again.",
+              "An error occurred while loading results. Please try again."
             );
           }
         } else {
           setError(
-            "An error occurred while loading results. Please try again.",
+            "An error occurred while loading results. Please try again."
           );
         }
         setShowActionMessage(false); // Clear success on new error
@@ -130,7 +129,8 @@ const Results: React.FC = () => {
   // ANI CHANGE: useEffect to check if the movie is already in the watched list on load
   useEffect(() => {
     const checkIfMovieIsWatched = async () => {
-      if (fullWinningMovie && userId && apiService) { // Ensure apiService is defined
+      if (fullWinningMovie && userId && apiService) {
+        // Ensure apiService is defined
         try {
           // Assuming apiService.get returns the data directly or data wrapped in a response object
           // Adjust based on your apiService implementation
@@ -140,7 +140,8 @@ const Results: React.FC = () => {
           if (Array.isArray(response)) {
             watchedMoviesList = response;
           } else if (
-            response && typeof response === "object" &&
+            response &&
+            typeof response === "object" &&
             Array.isArray((response as { data: WatchedMovieDTO[] }).data)
           ) {
             watchedMoviesList = (response as { data: WatchedMovieDTO[] }).data;
@@ -150,7 +151,7 @@ const Results: React.FC = () => {
             const isWatched = watchedMoviesList.some(
               (movie: WatchedMovieDTO) =>
                 movie.movieId === fullWinningMovie.movieId ||
-                movie.id === fullWinningMovie.movieId, // Check both movieId and id just in case
+                movie.id === fullWinningMovie.movieId // Check both movieId and id just in case
             );
             if (isWatched) {
               setMovieAddedToWatchedList(true);
@@ -194,7 +195,7 @@ const Results: React.FC = () => {
         const appErr = error as ApplicationError;
         if (appErr.status === 409) {
           setActionMessage(
-            "This movie is already marked as seen in your profile page!",
+            "This movie is already marked as seen in your profile page!"
           );
           setMovieAddedToWatchedList(true); // Mark as added since it's already there
         } else {
@@ -258,6 +259,27 @@ const Results: React.FC = () => {
     return rank.toFixed(2);
   };
 
+  // Helper function to render projector icons
+  const renderProjectors = (count: number) => {
+    return (
+      <span>
+        {Array.from({ length: count }).map((_, idx) => (
+          <img
+            key={idx}
+            src="/projector.png"
+            alt="Projector"
+            style={{
+              display: "inline-block",
+              width: 32,
+              height: 32,
+              marginRight: 4,
+            }}
+          />
+        ))}
+      </span>
+    );
+  };
+
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
       {/* Sidebar navigation */}
@@ -273,11 +295,9 @@ const Results: React.FC = () => {
                 ? `${phaseGroup.groupName} - Final Movie Ranking`
                 : "Final Movie Ranking"}
             </h1>
-            {
-              /* <p className="text-[#b9c0de] mt-2">
+            {/* <p className="text-[#b9c0de] mt-2">
               See what your group has chosen to watch
-            </p> */
-            }
+            </p> */}
           </div>
         </div>
 
@@ -294,89 +314,91 @@ const Results: React.FC = () => {
 
         {/* Winner Section */}
         <div className="flex flex-col items-center justify-center text-center mb-12">
-          {phaseFromHook !== "RESULTS"
-            ? (
-              <div className="text-center p-6 bg-white rounded-lg shadow-md">
-                <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-                  Results Not Available Yet
-                </h2>
-                <p className="text-[#b9c0de] mb-4">
-                  The results will be available once the group enters the
-                  RESULTS phase.
-                </p>
-                <p className="text-[#b9c0de]">
-                  Please check back later!
-                </p>
+          {phaseFromHook !== "RESULTS" ? (
+            <div className="text-center p-6 bg-white rounded-lg shadow-md">
+              <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                Results Not Available Yet
+              </h2>
+              <p className="text-[#b9c0de] mb-4">
+                The results will be available once the group enters the RESULTS
+                phase.
+              </p>
+              <p className="text-[#b9c0de]">Please check back later!</p>
+            </div>
+          ) : loading ? (
+            <p className="text-[#b9c0de] text-lg mt-2">Loading results...</p>
+          ) : rankingResult ? (
+            <>
+              <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
+                And the winner is...
+              </h2>
+              <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
+                <img
+                  src={getFullPosterUrl(
+                    fullWinningMovie?.posterURL ??
+                      rankingResult.winningMovie.posterURL
+                  )}
+                  alt={
+                    fullWinningMovie?.title || rankingResult.winningMovie.title
+                  }
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )
-            : loading
-            ? <p className="text-[#b9c0de] text-lg mt-2">Loading results...</p>
-            : rankingResult
-            ? (
-              <>
-                <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
-                  And the winner is...
-                </h2>
-                <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
-                  <img
-                    src={getFullPosterUrl(
-                      fullWinningMovie?.posterURL ??
-                        rankingResult.winningMovie.posterURL,
-                    )}
-                    alt={fullWinningMovie?.title ||
-                      rankingResult.winningMovie.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
-                  {fullWinningMovie?.title || rankingResult.winningMovie.title}
-                </h2>
+              <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
+                {fullWinningMovie?.title || rankingResult.winningMovie.title}
+              </h2>
 
-                {detailedResults.length > 0 && (
-                  <p className="text-[#b9c0de] text-lg mt-2">
-                    With an average rank of {formatAverageRank(
-                      detailedResults.find((item) =>
+              {detailedResults.length > 0 && (
+                <p className="text-[#b9c0de] text-lg mt-2">
+                  With an average rank of{" "}
+                  {formatAverageRank(
+                    detailedResults.find(
+                      (item) =>
                         item.movie.movieId ===
-                          rankingResult.winningMovie.movieId
-                      )?.averageRank || null,
-                    )}!
-                  </p>
-                )}
+                        rankingResult.winningMovie.movieId
+                    )?.averageRank || null
+                  )}
+                  !
+                </p>
+              )}
 
-                <p className="text-[#b9c0de] mt-2">
-                  Based on votes from {rankingResult.numberOfVoters}{" "}
-                  group members
-                </p>
+              <p className="text-[#b9c0de] mt-2">
+                Based on votes from {rankingResult.numberOfVoters} group members
+              </p>
 
-                {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
-                <div className="mt-6">
-                  <Button
-                    onClick={addToMyWatchedList}
-                    disabled={!fullWinningMovie || loading || !!error ||
-                      movieAddedToWatchedList || isAddingToWatchedList}
-                    className="bg-[#7824ec] hover:bg-opacity-90"
-                  >
-                    {movieAddedToWatchedList
-                      ? "Movie marked as seen ✓"
-                      : "Mark movie as seen"}
-                  </Button>
-                </div>
-              </>
-            )
-            : (
-              <div className="text-center p-6 bg-white rounded-lg shadow-md">
-                <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-                  No Results Available Yet
-                </h2>
-                <p className="text-[#b9c0de] mb-4">
-                  It looks like the voting period is still ongoing or not enough
-                  members have voted yet.
-                </p>
-                <p className="text-[#b9c0de]">
-                  Check back later to see the winning movie!
-                </p>
+              {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
+              <div className="mt-6">
+                <Button
+                  onClick={addToMyWatchedList}
+                  disabled={
+                    !fullWinningMovie ||
+                    loading ||
+                    !!error ||
+                    movieAddedToWatchedList ||
+                    isAddingToWatchedList
+                  }
+                  className="bg-[#7824ec] hover:bg-opacity-90"
+                >
+                  {movieAddedToWatchedList
+                    ? "Movie marked as seen ✓"
+                    : "Mark movie as seen"}
+                </Button>
               </div>
-            )}
+            </>
+          ) : (
+            <div className="text-center p-6 bg-white rounded-lg shadow-md">
+              <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                No Results Available Yet
+              </h2>
+              <p className="text-[#b9c0de] mb-4">
+                It looks like the voting period is still ongoing or not enough
+                members have voted yet.
+              </p>
+              <p className="text-[#b9c0de]">
+                Check back later to see the winning movie!
+              </p>
+            </div>
+          )}
         </div>
 
         {/* All Rankings Section (if we have detailed results) */}
@@ -392,7 +414,7 @@ const Results: React.FC = () => {
                     <th className="text-left py-2 text-[#3b3e88]">Rank</th>
                     <th className="text-left py-2 text-[#3b3e88]">Movie</th>
                     <th className="text-right py-2 text-[#3b3e88]">
-                      Average Score
+                      Final Score
                     </th>
                   </tr>
                 </thead>
@@ -407,7 +429,7 @@ const Results: React.FC = () => {
                         {item.movie.title}
                       </td>
                       <td className="py-2 text-right text-[#3b3e88]">
-                        {formatAverageRank(item.averageRank)}
+                        {renderProjectors(detailedResults.length - index)}
                       </td>
                     </tr>
                   ))}

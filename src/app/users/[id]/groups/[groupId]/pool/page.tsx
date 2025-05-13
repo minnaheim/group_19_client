@@ -15,6 +15,7 @@ import MovieListHorizontal from "@/components/ui/movie_list_horizontal";
 import MovieCard from "@/components/ui/Movie_card";
 import MovieDetailsModal from "@/components/ui/movie_details";
 import { Trash2 } from "lucide-react";
+import Timer from "@/components/ui/Timer";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
@@ -29,6 +30,7 @@ const MoviePool: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const router = useRouter();
+  const { phaseGroupId } = useParams();
   const apiService = useApi();
   const [moviePool, setMoviePool] = useState<PoolEntry[]>([]);
   const [userWatchlist, setUserWatchlist] = useState<Movie[]>([]);
@@ -36,8 +38,12 @@ const MoviePool: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAddingWatchlist, setIsAddingWatchlist] = useState<boolean>(false);
-  const { group: phaseGroup, phase, loading: phaseLoading, error: phaseError } =
-    useGroupPhase(groupId as string);
+  const {
+    group: phaseGroup,
+    phase,
+    loading: phaseLoading,
+    error: phaseError,
+  } = useGroupPhase(groupId as string);
 
   useEffect(() => {
     if (phaseLoading) return;
@@ -78,7 +84,9 @@ const MoviePool: React.FC = () => {
         // Clear previous error on successful fetch
         setSubmitError("");
         if (
-          response && typeof response === "object" && "watchlist" in response
+          response &&
+          typeof response === "object" &&
+          "watchlist" in response
         ) {
           setUserWatchlist((response as User).watchlist);
           if ("watchedMovies" in response) {
@@ -98,16 +106,16 @@ const MoviePool: React.FC = () => {
             setSubmitError("User profile not found. Could not load watchlist.");
           } else if (appErr.status === 401) {
             setSubmitError(
-              "Session expired. Please log in again to load watchlist.",
+              "Session expired. Please log in again to load watchlist."
             );
           } else {
             setSubmitError(
-              "Failed to load your watchlist. Please try refreshing.",
+              "Failed to load your watchlist. Please try refreshing."
             );
           }
         } else {
           setSubmitError(
-            "An unexpected error occurred while loading your watchlist.",
+            "An unexpected error occurred while loading your watchlist."
           );
         }
         setShowSuccessMessage(false); // Clear success message on new error
@@ -125,7 +133,7 @@ const MoviePool: React.FC = () => {
 
       try {
         const poolEntries = await apiService.get<PoolEntry[]>(
-          `/groups/${groupId}/pool`,
+          `/groups/${groupId}/pool`
         );
         if (Array.isArray(poolEntries)) {
           setMoviePool(poolEntries as PoolEntry[]);
@@ -142,12 +150,12 @@ const MoviePool: React.FC = () => {
             setSubmitError("Could not find the group or you are not a member.");
           } else {
             setSubmitError(
-              "An error occurred while loading the movie pool. Please try again.",
+              "An error occurred while loading the movie pool. Please try again."
             );
           }
         } else {
           setSubmitError(
-            "An error occurred while loading the movie pool. Please try again.",
+            "An error occurred while loading the movie pool. Please try again."
           );
         }
         setShowSuccessMessage(false); // Clear success message on new error
@@ -174,7 +182,7 @@ const MoviePool: React.FC = () => {
     try {
       const response = await apiService.post<PoolEntry[]>(
         `/groups/${groupId}/pool/${movie.movieId}`,
-        {},
+        {}
       );
       if (response && Array.isArray(response)) {
         setMoviePool(response);
@@ -189,16 +197,13 @@ const MoviePool: React.FC = () => {
         let specificError = "";
         switch (appErr.status) {
           case 403:
-            specificError =
-              `You have already added the maximum number of movies (2).`;
+            specificError = `You have already added the maximum number of movies (2).`;
             break;
           case 404:
-            specificError =
-              `Movie with ID ${movie.movieId} not found or group not found.`;
+            specificError = `Movie with ID ${movie.movieId} not found or group not found.`;
             break;
           case 409:
-            specificError =
-              `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOL phase.`;
+            specificError = `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOL phase.`;
             break;
           default:
             specificError = `Failed to add '${movie.title}'.`;
@@ -206,7 +211,7 @@ const MoviePool: React.FC = () => {
         setSubmitError(specificError);
       } else {
         setSubmitError(
-          `An unknown error occurred while adding '${movie.title}'.`,
+          `An unknown error occurred while adding '${movie.title}'.`
         );
       }
       setShowSuccessMessage(false); // Clear success message on new error
@@ -231,7 +236,7 @@ const MoviePool: React.FC = () => {
       setSuccessMessage(
         removedTitle
           ? `Removed '${removedTitle}'`
-          : "Movie removed successfully!",
+          : "Movie removed successfully!"
       );
       setShowSuccessMessage(true);
       setSubmitError(""); // Clear error on success
@@ -262,7 +267,7 @@ const MoviePool: React.FC = () => {
     try {
       const detailed = await apiService.get<Movie>(`/movies/${movie.movieId}`);
       setSelectedMovie(
-        detailed && typeof detailed === "object" ? detailed as Movie : movie,
+        detailed && typeof detailed === "object" ? (detailed as Movie) : movie
       );
       setIsModalOpen(true);
     } catch {
@@ -329,11 +334,14 @@ const MoviePool: React.FC = () => {
                 ? `${phaseGroup.groupName} - Movie Pool`
                 : "Movie Pool"}
             </h1>
-            {
-              /* <p className="text-[#b9c0de] mt-2">
+            {/* <p className="text-[#b9c0de] mt-2">
               Choose Movies to Vote and Watch
-            </p> */
-            }
+            </p> */}
+            <div className="text-[#3b3e88]">
+              {phaseGroup?.groupId && (
+                <Timer groupId={phaseGroup?.groupId.toString()} />
+              )}
+            </div>
           </div>
 
           {/* Show User's Watchlist */}
@@ -376,55 +384,54 @@ const MoviePool: React.FC = () => {
             {/* Always show added count; text is orange when full */}
             <p
               className={`text-sm ${
-                moviePool.filter((entry) =>
-                    entry.addedBy === parseInt(userId || "0")
-                  ).length === 2
+                moviePool.filter(
+                  (entry) => entry.addedBy === parseInt(userId || "0")
+                ).length === 2
                   ? "text-orange-600"
                   : "text-[#3C3F88]"
               }`}
             >
               You have added{" "}
-              {moviePool.filter((entry) =>
-                entry.addedBy === parseInt(userId || "0")
-              ).length}/2 movies.
+              {
+                moviePool.filter(
+                  (entry) => entry.addedBy === parseInt(userId || "0")
+                ).length
+              }
+              /2 movies.
             </p>
           </div>
 
           {/* Display movie pool or placeholder */}
           <div className="overflow-x-auto mb-8">
-            {moviePool.length === 0
-              ? (
-                <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded">
-                  <p className="text-gray-500">No movies in the pool yet.</p>
-                </div>
-              )
-              : (
-                <div className="flex gap-4">
-                  {moviePool.map((entry) => (
-                    <div
-                      key={entry.movie.movieId}
-                      className="relative flex-shrink-0"
-                    >
-                      <MovieCard
-                        movie={entry.movie}
-                        onClick={handleMovieClick}
-                      />
-                      {phase === "POOL" &&
-                        entry.addedBy === parseInt(userId || "0") && (
+            {moviePool.length === 0 ? (
+              <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded">
+                <p className="text-gray-500">No movies in the pool yet.</p>
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                {moviePool.map((entry) => (
+                  <div
+                    key={entry.movie.movieId}
+                    className="relative flex-shrink-0"
+                  >
+                    <MovieCard movie={entry.movie} onClick={handleMovieClick} />
+                    {phase === "POOL" &&
+                      entry.addedBy === parseInt(userId || "0") && (
                         <button
                           onPointerDown={(e) => e.stopPropagation()}
                           onClick={() =>
-                            handleRemoveFromPool(entry.movie.movieId)}
+                            handleRemoveFromPool(entry.movie.movieId)
+                          }
                           className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-sm hover:bg-red-100"
                           title="Remove from pool"
                         >
                           <Trash2 size={16} className="text-red-500" />
                         </button>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-center mt-8 gap-2">
@@ -436,58 +443,59 @@ const MoviePool: React.FC = () => {
               Back to group overview
             </Button>
             {/* Start Voting (creator only, right) */}
-            {phase === "POOL" && phaseGroup &&
+            {phase === "POOL" &&
+              phaseGroup &&
               String(phaseGroup.creatorId) === String(userId) && (
-              <Button
-                variant="secondary"
-                disabled={moviePool.length < 2}
-                onClick={async () => {
-                  try {
-                    await apiService.post(
-                      `/groups/${groupId}/start-voting`,
-                      {},
-                    );
-                    setSuccessMessage("Voting started successfully!");
-                    setShowSuccessMessage(true);
-                    setSubmitError(""); // Clear error on success
-                    router.replace(`/users/${userId}/groups/${groupId}/vote`);
-                  } catch (err: unknown) {
-                    if (err instanceof Error && "status" in err) {
-                      const appErr = err as ApplicationError;
-                      switch (appErr.status) {
-                        case 403:
-                          setSubmitError(
-                            "Only the group creator can start the voting phase.",
-                          );
-                          break;
-                        case 404:
-                          setSubmitError(
-                            "The specified group could not be found.",
-                          );
-                          break;
-                        case 409:
-                          setSubmitError(
-                            "Voting can only be started when the group is in the 'Pool' phase.",
-                          );
-                          break;
-                        default:
-                          setSubmitError(
-                            "An error occurred while starting voting. Please try again.",
-                          );
-                      }
-                    } else {
-                      setSubmitError(
-                        "An error occurred while starting voting. Please try again.",
+                <Button
+                  variant="secondary"
+                  disabled={moviePool.length < 2}
+                  onClick={async () => {
+                    try {
+                      await apiService.post(
+                        `/groups/${groupId}/start-voting`,
+                        {}
                       );
+                      setSuccessMessage("Voting started successfully!");
+                      setShowSuccessMessage(true);
+                      setSubmitError(""); // Clear error on success
+                      router.replace(`/users/${userId}/groups/${groupId}/vote`);
+                    } catch (err: unknown) {
+                      if (err instanceof Error && "status" in err) {
+                        const appErr = err as ApplicationError;
+                        switch (appErr.status) {
+                          case 403:
+                            setSubmitError(
+                              "Only the group creator can start the voting phase."
+                            );
+                            break;
+                          case 404:
+                            setSubmitError(
+                              "The specified group could not be found."
+                            );
+                            break;
+                          case 409:
+                            setSubmitError(
+                              "Voting can only be started when the group is in the 'Pool' phase."
+                            );
+                            break;
+                          default:
+                            setSubmitError(
+                              "An error occurred while starting voting. Please try again."
+                            );
+                        }
+                      } else {
+                        setSubmitError(
+                          "An error occurred while starting voting. Please try again."
+                        );
+                      }
+                      setShowSuccessMessage(false); // Clear success message on new error
+                      setSuccessMessage("");
                     }
-                    setShowSuccessMessage(false); // Clear success message on new error
-                    setSuccessMessage("");
-                  }
-                }}
-              >
-                End Pooling & Start Voting
-              </Button>
-            )}
+                  }}
+                >
+                  End Pooling & Start Voting
+                </Button>
+              )}
           </div>
         </div>
       </div>
@@ -497,11 +505,11 @@ const MoviePool: React.FC = () => {
           movie={selectedMovie}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          isInWatchlist={userWatchlist.some((m) =>
-            m.movieId === selectedMovie.movieId
+          isInWatchlist={userWatchlist.some(
+            (m) => m.movieId === selectedMovie.movieId
           )}
-          isInSeenList={userWatched.some((m) =>
-            m.movieId === selectedMovie.movieId
+          isInSeenList={userWatched.some(
+            (m) => m.movieId === selectedMovie.movieId
           )}
           onAddToWatchlist={handleAddToWatchlist}
         />
