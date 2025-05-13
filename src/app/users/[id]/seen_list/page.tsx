@@ -216,7 +216,7 @@ const SeenList: React.FC = () => {
           <h1 className="font-semibold text-[#3b3e88] text-3xl">
             Already Seen
           </h1>
-          <p className="text-[#b9c0de] mt-2">
+          <p className="text-[#3b3e88]/60 mt-2">
             These movies will not be recommended to you in groups.
           </p>
         </div>

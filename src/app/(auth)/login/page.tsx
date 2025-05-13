@@ -191,7 +191,7 @@ const Login: React.FC = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">
                   Welcome Back
                 </h2>
-                <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
+                <p className="text-[#3b3e88] mt-1 sm:mt-2 text-sm sm:text-base">
                   Sign in to continue planning amazing movie nights
                 </p>
               </div>
@@ -353,7 +353,7 @@ const Login: React.FC = () => {
               </form>
 
               <div className="mt-6 sm:mt-8 text-center">
-                <p className="text-[#b9c0de] text-sm sm:text-base">
+                <p className="text-[#3b3e88] text-sm sm:text-base">
                   Don&#39;t have an account?{" "}
                   <a
                     href="/register"

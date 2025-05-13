@@ -315,8 +315,8 @@ const MoviePool: React.FC = () => {
       )}
       {/* Centered overlay for success messages */}
       {showSuccessMessage && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
-          <div className="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
             {successMessage}
           </div>
         </div>

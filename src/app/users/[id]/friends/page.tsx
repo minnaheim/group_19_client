@@ -724,7 +724,7 @@ const FriendsManagement: React.FC = () => {
           <h1 className="font-semibold text-[#3b3e88] text-3xl">
             Your Friends
           </h1>
-          <p className="text-[#b9c0de] mt-2">
+          <p className="text-[#3b3e88] mt-2">
             Connect and share movie experiences with friends
           </p>
         </div>
@@ -806,8 +806,8 @@ const FriendsManagement: React.FC = () => {
           <button
             className={`px-6 py-3 font-medium text-base ${
               activeTab === "friends"
-                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]" 
+                : "text-[#3b3e88]/60 hover:text-[#3b3e88]/80"
             }`}
             onClick={() => setActiveTab("friends")}
           >
@@ -817,7 +817,7 @@ const FriendsManagement: React.FC = () => {
             className={`px-6 py-3 font-medium text-base relative ${
               activeTab === "requests"
                 ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                : "text-[#3b3e88]/60 hover:text-[#3b3e88]/80"
             }`}
             onClick={() => setActiveTab("requests")}
           >
@@ -1016,10 +1016,10 @@ const FriendsManagement: React.FC = () => {
                             </svg>
                           </div>
                         </div>
-                        <p className="text-[#838bad] mb-2">
+                        <p className="text-[#3b3e88] mb-2">
                           You don&#39;t have any friends yet
                         </p>
-                        <p className="text-[#b9c0de] mb-6">
+                        <p className="text-[#838bad] mb-6">
                           Send a friend request to get started!
                         </p>
                       </div>
@@ -1047,7 +1047,7 @@ const FriendsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {request.sender.username}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs">
+                        <p className="text-[#3b3e88] text-xs">
                           Sent{" "}
                           {new Date(request.creationTime).toLocaleDateString()}
                         </p>
@@ -1089,7 +1089,7 @@ const FriendsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {request.receiver.username}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs">
+                        <p className="text-[#3b3e88] text-xs">
                           Sent{" "}
                           {new Date(request.creationTime).toLocaleDateString()}
                         </p>
@@ -1129,10 +1129,10 @@ const FriendsManagement: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-[#838bad] mb-2">
+                <p className="text-[#3b3e88] mb-2">
                   No pending friend requests
                 </p>
-                <p className="text-[#b9c0de]">
+                <p className="text-[#838bad]">
                   Send a request or wait for someone to add you!
                 </p>
               </div>

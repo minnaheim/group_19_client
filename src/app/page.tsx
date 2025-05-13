@@ -108,7 +108,7 @@ const LandingPage = () => {
             <span className="text-rose-500">No</span> More Movie Night
             <span className="block text-rose-500">Debates</span>
           </h2>
-          <p className="text-lg md:text-xl text-[#b9c0de] max-w-lg">
+          <p className="text-lg md:text-xl text-[#3b3e88] max-w-lg">
             Plan the perfect movie night with friends, without the endless
             &#34;what should we watch?&#34; back-and-forth.
           </p>
@@ -144,8 +144,8 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="p-2">
-                <div className="h-3 w-3/4 bg-[#b9c0de] rounded-full mb-2"></div>
-                <div className="h-2 w-1/2 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
+                <div className="h-2 w-1/2 bg-[#3b3e88] rounded-full"></div>
               </div>
             </div>
 
@@ -155,22 +155,22 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="p-2">
-                <div className="h-3 w-3/4 bg-[#b9c0de] rounded-full mb-2"></div>
-                <div className="h-2 w-1/2 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
+                <div className="h-2 w-1/2 bg-[#3b3e88] rounded-full"></div>
               </div>
             </div>
 
             {/* Voting UI */}
             <div className="absolute bottom-10 right-10 w-48 bg-white/80 backdrop-blur-md rounded-xl p-3 border border-[#3b3e88]/10 shadow-lg">
               <div className="flex justify-between items-center mb-2">
-                <div className="h-3 w-20 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-20 bg-[#3b3e88] rounded-full"></div>
                 <div className="h-5 w-5 bg-orange-500 rounded-full"></div>
               </div>
               <div className="space-y-2">
-                <div className="h-6 w-full bg-[#b9c0de]/30 rounded-lg"></div>
+                <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
                 <div className="h-6 w-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg">
                 </div>
-                <div className="h-6 w-full bg-[#b9c0de]/30 rounded-lg"></div>
+                <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
               </div>
             </div>
           </div>

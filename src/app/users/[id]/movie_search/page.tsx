@@ -92,11 +92,11 @@ const PersonSearch: React.FC<PersonSearchProps> = (
         placeholder={`Search for ${type}s...`}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full p-3 border border-[#3b3e88]/20 rounded-2xl text-[#3b3e88] placeholder-[#b9c0de] focus:ring-2 focus:ring-[#3b3e88]/30 focus:border-[#3b3e88]/50"
+        className="w-full p-3 border border-[#3b3e88]/20 rounded-2xl text-[#3b3e88] placeholder-[#3b3e88]/60 focus:ring-2 focus:ring-[#3b3e88]/30 focus:border-[#3b3e88]/50"
       />
 
       {isSearching && (
-        <div className="text-sm text-[#b9c0de]">
+        <div className="text-sm text-[#3b3e88]/60">
           Searching...
         </div>
       )}
@@ -864,7 +864,7 @@ const SearchMovies: React.FC = () => {
           <h1 className="font-semibold text-[#3b3e88] text-3xl">
             Search Movies
           </h1>
-          <p className="text-[#b9c0de] mt-2">
+          <p className="text-[#3b3e88]/60 mt-2">
             Find movies to add to your watchlist!
           </p>
         </div>
@@ -1024,7 +1024,7 @@ const SearchMovies: React.FC = () => {
 
         {/* favorite movie selection info */}
         {isSelectingFavoriteMovie && (
-          <div className="bg-gradient-to-r from-rose-400 to-rose-500 rounded-3xl p-6 mb-6 text-white">
+          <div className="bg-gradient-to-r from-rose-400 to-rose-500 rounded-3xl p-6 mb-6 text-[#3b3e88]">
             <h3 className="font-semibold mb-2">
               Select your favorite movie
             </h3>

@@ -319,14 +319,14 @@ const Results: React.FC = () => {
               <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
                 Results Not Available Yet
               </h2>
-              <p className="text-[#b9c0de] mb-4">
+              <p className="text-[#3b3e88]/60 mb-4">
                 The results will be available once the group enters the RESULTS
                 phase.
               </p>
-              <p className="text-[#b9c0de]">Please check back later!</p>
+              <p className="text-[#3b3e88]/60">Please check back later!</p>
             </div>
           ) : loading ? (
-            <p className="text-[#b9c0de] text-lg mt-2">Loading results...</p>
+            <p className="text-[#3b3e88]/60 text-lg mt-2">Loading results...</p>
           ) : rankingResult ? (
             <>
               <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
@@ -349,7 +349,7 @@ const Results: React.FC = () => {
               </h2>
 
               {detailedResults.length > 0 && (
-                <p className="text-[#b9c0de] text-lg mt-2">
+                <p className="text-[#3b3e88] text-lg mt-2">
                   With a score of{" "}
                   {renderProjectors(
                       detailedResults.findIndex(
@@ -375,7 +375,7 @@ const Results: React.FC = () => {
                 </p>
               )}
 
-              <p className="text-[#b9c0de] mt-2">
+              <p className="text-[#3b3e88]/60 mt-2">
                 Based on votes from {rankingResult.numberOfVoters} group members
               </p>
 
@@ -403,7 +403,7 @@ const Results: React.FC = () => {
               <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
                 No Results Available
               </h2>
-              <p className="text-[#b9c0de]">
+              <p className="text-[#3b3e88]/60">
                 {`It looks like no one from the group "${phaseGroup?.groupName}" voted.`}
               </p>
               {/* <p className="text-[#b9c0de]">
