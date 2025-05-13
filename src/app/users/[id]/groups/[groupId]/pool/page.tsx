@@ -439,7 +439,7 @@ const MoviePool: React.FC = () => {
               variant="outline"
               onClick={() => router.push(`/users/${userId}/groups`)}
             >
-              Back to group overview
+              Back to Group Overview
             </Button>
             {/* Start Voting (creator only, right) */}
             {phase === "POOL" &&

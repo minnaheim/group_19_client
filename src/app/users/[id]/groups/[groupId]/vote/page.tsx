@@ -839,7 +839,7 @@ const Vote: React.FC = () => {
             variant="outline"
             onClick={() => router.push(`/users/${userId}/groups`)}
           >
-            Back to group overview
+            Back to Group Overview
           </Button>
           {phase === "VOTING" &&
             phaseGroup &&

@@ -599,7 +599,7 @@ const EditProfile: React.FC = () => {
                     onClick={handleResetFavoriteActors}
                     className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
                   >
-                    Reset favorite actors
+                    Reset Favorite Actors
                   </Button>
                 )}
               </div>
@@ -729,7 +729,7 @@ const EditProfile: React.FC = () => {
                     onClick={handleResetFavoriteDirectors}
                     className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
                   >
-                    Reset favorite directors
+                    Reset Favorite Directors
                   </Button>
                 )}
               </div>
@@ -913,7 +913,7 @@ const EditProfile: React.FC = () => {
                 variant="default"
                 className="bg-[#ff9a3e] hover:bg-[#e88b35]"
               >
-                save changes
+                Save Changes
               </Button>
               <Button
                 type="button"
@@ -921,7 +921,7 @@ const EditProfile: React.FC = () => {
                 className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
                 onClick={handleCancel}
               >
-                cancel
+                Cancel
               </Button>
             </div>
           </form>
@@ -932,7 +932,7 @@ const EditProfile: React.FC = () => {
           className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#e03e65] hover:opacity-60"
           onClick={handleCancel}
         >
-          back
+          Back
         </Button>
       </div>
     </div>

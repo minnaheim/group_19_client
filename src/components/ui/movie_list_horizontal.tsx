@@ -50,7 +50,7 @@ const MovieListHorizontal: React.FC<MovieListHorizontalProps> = ({
           <p className="text-gray-500 text-lg mb-4">{emptyMessage}</p>
           {onAddMovieClick && (
             <Button variant="secondary" onClick={onAddMovieClick}>
-              Add movies to your watchlist
+              Add Movies to your Watchlist
             </Button>
           )}
         </div>
