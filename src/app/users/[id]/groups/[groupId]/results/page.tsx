@@ -254,10 +254,10 @@ const Results: React.FC = () => {
   };
 
   // Helper function to format the average rank for display
-  const formatAverageRank = (rank: number | null): string => {
+  /* const formatAverageRank = (rank: number | null): string => {
     if (rank === null) return "N/A";
     return rank.toFixed(2);
-  };
+  };*/
 
   // Helper function to render projector icons
   const renderProjectors = (count: number) => {
@@ -350,6 +350,18 @@ const Results: React.FC = () => {
 
               {detailedResults.length > 0 && (
                 <p className="text-[#b9c0de] text-lg mt-2">
+                  With a score of{" "}
+                  {renderProjectors(
+                      detailedResults.findIndex(
+                          (item) => item.movie.movieId === rankingResult.winningMovie.movieId
+                      ) !== -1
+                          ? detailedResults.length -
+                          detailedResults.findIndex(
+                              (item) => item.movie.movieId === rankingResult.winningMovie.movieId
+                          )
+                          : 0
+                  )}
+                  {/*OLD:
                   With an average rank of{" "}
                   {formatAverageRank(
                     detailedResults.find(
@@ -358,6 +370,7 @@ const Results: React.FC = () => {
                         rankingResult.winningMovie.movieId
                     )?.averageRank || null
                   )}
+                  */}
                   !
                 </p>
               )}
