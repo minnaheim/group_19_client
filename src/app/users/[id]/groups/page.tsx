@@ -2240,17 +2240,16 @@ const GroupsManagement: React.FC = () => {
 
                           {/* Update the Add Member button with enhanced styling */}
                           <Button
-                            size="sm"
                             className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-white"
-                            onClick={() => {
-                              setSelectedGroupId(selectedGroup.groupId);
-                              setInviteMethod("friends"); // Default to friends tab
-                              setFriendSearchQuery(""); // Clear any previous search
-                              setSelectedFriends([]); // Clear any previous selections
-                              setInviteUsername(""); // Clear any previous search username
-                              setIsInviteDialogOpen(true);
-                            }}
-                          >
+                              onClick={() => {
+                                setSelectedGroupId(selectedGroup.groupId);
+                                setInviteMethod("friends"); // Default to friends tab
+                                setFriendSearchQuery(""); // Clear any previous search
+                                setSelectedFriends([]); // Clear any previous selections
+                                setInviteUsername(""); // Clear any previous search username
+                                setIsInviteDialogOpen(true);
+                              }}
+                           >
                             Invite Members
                           </Button>
                         </div>
