@@ -391,7 +391,7 @@ const Results: React.FC = () => {
                 No Results Available
               </h2>
               <p className="text-[#b9c0de]">
-                {`It looks like no one from the group ${phaseGroup?.groupName} voted.`}
+                {`It looks like no one from the group "${phaseGroup?.groupName}" voted.`}
               </p>
               {/* <p className="text-[#b9c0de]">
                 Check back later to see the winning movie!
