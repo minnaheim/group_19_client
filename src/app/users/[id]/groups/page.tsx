@@ -1349,8 +1349,11 @@ const GroupsManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12 min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-600"></div>
+      <div className="bg-[#ebefff] flex min-h-screen w-full">
+        <Navigation userId={userId} activeItem="Movie Groups" />
+        <div className="flex-1 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]" />
+        </div>
       </div>
     );
   }
