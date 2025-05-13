@@ -208,7 +208,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Create Your Watchlist
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Build your personal watchlist of movies you&#39;re dying to see.
               Search the vast library or browse by genre.
             </p>
@@ -235,7 +235,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Form Movie Crews
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Create groups with friends and easily schedule movie nights
               together. Invite anyone with just a username.
             </p>
@@ -262,7 +262,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Vote & Enjoy
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Everyone contributes movie suggestions and votes on their
               favorites. Our algorithm selects the winner - no more debating!
             </p>
