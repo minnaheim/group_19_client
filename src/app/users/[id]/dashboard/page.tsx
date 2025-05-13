@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
               });
             });
           }
-          showMessage("Group invitations loaded");
+          showMessage("Group invitations checked");
         } catch (err: unknown) {
           console.error("Error loading group invitations:", err);
           setActionError("Error loading group invitations");
