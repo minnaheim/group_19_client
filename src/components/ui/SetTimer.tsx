@@ -25,18 +25,29 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
 
   if (!isCreator) return null;
 
-  const handleSetTimers = async () => {
+  const handleSetVotingTimer = async () => {
     setLoading(true);
     setMessage("");
     setError("");
     try {
-      await Promise.all([
-        apiService.post(`/groups/${groupId}/voting-timer`, votingSeconds),
-        apiService.post(`/groups/${groupId}/pool-timer`, poolSeconds),
-      ]);
-      setMessage("Voting and Pool timers set successfully!");
+      await apiService.post(`/groups/${groupId}/voting-timer`, votingSeconds);
+      setMessage("Set voting Timer");
     } catch (err) {
-      setError("Failed to set one or both timers.");
+      setError("Failed to set voting timer.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetPoolTimer = async () => {
+    setLoading(true);
+    setMessage("");
+    setError("");
+    try {
+      await apiService.post(`/groups/${groupId}/pool-timer`, poolSeconds);
+      setMessage("Set pool Timer");
+    } catch (err) {
+      setError("Failed to set pool timer.");
     } finally {
       setLoading(false);
     }
@@ -108,10 +119,16 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
           </div>
           <div className="flex items-center gap-2 mb-2">
             <Button
-              onClick={handleSetTimers}
-              disabled={loading || votingSeconds <= 0 || poolSeconds <= 0}
+              onClick={handleSetPoolTimer}
+              disabled={loading || poolSeconds <= 0}
             >
-              Set Timers
+              Set Pool Time
+            </Button>
+            <Button
+              onClick={handleSetVotingTimer}
+              disabled={loading || votingSeconds <= 0}
+            >
+              Set Voting Time
             </Button>
             <Button onClick={handleStartPoolTimer} disabled={loading}>
               Start Pool Timer

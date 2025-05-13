@@ -2158,7 +2158,6 @@ const GroupsManagement: React.FC = () => {
                           <SetTimer
                             groupId={selectedGroup.groupId}
                             isCreator={true}
-                            phase={selectedGroup.phase}
                           />
                         )}
                       </div>
