@@ -61,8 +61,8 @@ const Timer: React.FC<TimerProps> = ({ groupId }) => {
   }, [remaining, noTimeLimit]);
 
   if (noTimeLimit) return <span>No time limit</span>;
-  if (remaining === null) return <span>Loading timer...</span>;
-  if (remaining <= 0) return <span>Time&apos;s up!</span>;
+  if (remaining === null) return <span>Loading Timer...</span>;
+  if (remaining <= 0) return <span>Time is up!</span>;
 
   return (
     <span
