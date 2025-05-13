@@ -388,15 +388,14 @@ const Results: React.FC = () => {
           ) : (
             <div className="text-center p-6 bg-white rounded-lg shadow-md">
               <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-                No Results Available Yet
+                No Results Available
               </h2>
-              <p className="text-[#b9c0de] mb-4">
-                It looks like the voting period is still ongoing or not enough
-                members have voted yet.
-              </p>
               <p className="text-[#b9c0de]">
-                Check back later to see the winning movie!
+                {`It looks like no one from the group ${phaseGroup?.groupName} voted.`}
               </p>
+              {/* <p className="text-[#b9c0de]">
+                Check back later to see the winning movie!
+              </p> */}
             </div>
           )}
         </div>
