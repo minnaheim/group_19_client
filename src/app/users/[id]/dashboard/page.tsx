@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
               });
             });
           }
-          showMessage("Received friend requests loaded");
+          showMessage("Received friend requests checked");
         } catch (err: unknown) {
           console.error("Error loading friend requests:", err);
           setActionError("Error loading friend requests");

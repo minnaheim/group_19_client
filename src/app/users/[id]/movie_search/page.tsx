@@ -227,7 +227,7 @@ const SearchMovies: React.FC = () => {
         dataUser = await retry(() =>
           apiService.get(`/users/${id}/profile`)
         ) as User;
-        showMessage("User profile loaded");
+        showMessage("User profile checked");
       } catch (err: unknown) {
         if (
           err instanceof Error && "status" in err &&
