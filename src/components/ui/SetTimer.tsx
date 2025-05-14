@@ -48,7 +48,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
       await apiService.post(`/groups/${groupId}/voting-timer`, seconds);
       await apiService.post(`/groups/${groupId}/start-voting-timer`, {});
       setMessage("Voting Timer started!");
-      setOpen(false); // Close the dialog
+      setOpen(true); // Close the dialog
     } catch {
       setError("Failed to set and start Voting Timer.");
     } finally {
