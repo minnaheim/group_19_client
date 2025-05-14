@@ -89,7 +89,7 @@ const FriendsManagement: React.FC = () => {
     setIsLoadingUsers(true);
     try {
       const users = await retry(() =>
-          apiService.get<UserSearchResponse[]>("/users/all")
+        apiService.get<UserSearchResponse[]>("/users/all")
       );
 
       if (Array.isArray(users)) {
@@ -126,19 +126,19 @@ const FriendsManagement: React.FC = () => {
     // Get existing friend IDs and usernames of pending requests
     const existingFriendIds = friends.map((friend) => friend.userId);
     const existingSentRequestUsernames = sentRequests.map((req) =>
-        req.receiver.username
+      req.receiver.username
     );
 
     // Filter users
     const filtered = allUsers.filter((user) =>
-        // Contains search term
-        user.username.toLowerCase().includes(normalizedSearch) &&
-        // Not already a friend
-        !existingFriendIds.includes(user.userId) &&
-        // Not already sent a request to
-        !existingSentRequestUsernames.includes(user.username) &&
-        // Not the current user
-        user.userId !== parseInt(userId)
+      // Contains search term
+      user.username.toLowerCase().includes(normalizedSearch) &&
+      // Not already a friend
+      !existingFriendIds.includes(user.userId) &&
+      // Not already sent a request to
+      !existingSentRequestUsernames.includes(user.username) &&
+      // Not the current user
+      user.userId !== parseInt(userId)
     );
 
     setFilteredUsers(filtered);
@@ -175,11 +175,15 @@ const FriendsManagement: React.FC = () => {
 
         // Fetch friends list
         try {
-          const friendsData = await retry(() => apiService.get<User[]>("/friends"));
+          const friendsData = await retry(() =>
+            apiService.get<User[]>("/friends")
+          );
           if (mounted) {
             const sortedFriends = Array.isArray(friendsData)
-                ? [...friendsData].sort((a, b) => a.username.localeCompare(b.username))
-                : [];
+              ? [...friendsData].sort((a, b) =>
+                a.username.localeCompare(b.username)
+              )
+              : [];
             setFriends(sortedFriends);
             showSuccessMessageFn("Friends list loaded");
           }
@@ -193,7 +197,9 @@ const FriendsManagement: React.FC = () => {
               } else if (status === 404) {
                 setError("Could not find your user account.");
               } else {
-                setError("Failed to load friends list. Please try again later.");
+                setError(
+                  "Failed to load friends list. Please try again later.",
+                );
               }
             } else {
               setError("Failed to load friends list. Please try again later.");
@@ -206,20 +212,23 @@ const FriendsManagement: React.FC = () => {
         // Get received friend requests
         try {
           const receivedRequestsData = await retry(() =>
-              apiService.get<FriendRequest[]>("/friends/friendrequests/received")
+            apiService.get<FriendRequest[]>("/friends/friendrequests/received")
           );
           if (mounted) {
             setReceivedRequests(
-                Array.isArray(receivedRequestsData) ? receivedRequestsData : []
+              Array.isArray(receivedRequestsData) ? receivedRequestsData : [],
             );
           }
         } catch (receivedRequestsError: unknown) {
-          console.error("Error fetching received friend requests:", receivedRequestsError);
+          console.error(
+            "Error fetching received friend requests:",
+            receivedRequestsError,
+          );
           if (mounted) {
             if (
-                receivedRequestsError instanceof Error &&
-                "status" in receivedRequestsError &&
-                (receivedRequestsError as ApplicationError).status === 401
+              receivedRequestsError instanceof Error &&
+              "status" in receivedRequestsError &&
+              (receivedRequestsError as ApplicationError).status === 401
             ) {
               setError("Session expired. Cannot load received requests.");
             } else {
@@ -231,20 +240,23 @@ const FriendsManagement: React.FC = () => {
         // Get sent friend requests
         try {
           const sentRequestsData = await retry(() =>
-              apiService.get<FriendRequest[]>("/friends/friendrequests/sent")
+            apiService.get<FriendRequest[]>("/friends/friendrequests/sent")
           );
           if (mounted) {
             setSentRequests(
-                Array.isArray(sentRequestsData) ? sentRequestsData : []
+              Array.isArray(sentRequestsData) ? sentRequestsData : [],
             );
           }
         } catch (sentRequestsError: unknown) {
-          console.error("Error fetching sent friend requests:", sentRequestsError);
+          console.error(
+            "Error fetching sent friend requests:",
+            sentRequestsError,
+          );
           if (mounted) {
             if (
-                sentRequestsError instanceof Error &&
-                "status" in sentRequestsError &&
-                (sentRequestsError as ApplicationError).status === 401
+              sentRequestsError instanceof Error &&
+              "status" in sentRequestsError &&
+              (sentRequestsError as ApplicationError).status === 401
             ) {
               setError("Session expired. Cannot load sent requests.");
             } else {
@@ -712,7 +724,7 @@ const FriendsManagement: React.FC = () => {
           <h1 className="font-semibold text-[#3b3e88] text-3xl">
             Your Friends
           </h1>
-          <p className="text-[#b9c0de] mt-2">
+          <p className="text-[#3b3e88] mt-2">
             Connect and share movie experiences with friends
           </p>
         </div>
@@ -794,8 +806,8 @@ const FriendsManagement: React.FC = () => {
           <button
             className={`px-6 py-3 font-medium text-base ${
               activeTab === "friends"
-                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]" 
+                : "text-[#3b3e88]/60 hover:text-[#3b3e88]/80"
             }`}
             onClick={() => setActiveTab("friends")}
           >
@@ -805,7 +817,7 @@ const FriendsManagement: React.FC = () => {
             className={`px-6 py-3 font-medium text-base relative ${
               activeTab === "requests"
                 ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                : "text-[#b9c0de] hover:text-[#3b3e88]/70"
+                : "text-[#3b3e88]/60 hover:text-[#3b3e88]/80"
             }`}
             onClick={() => setActiveTab("requests")}
           >
@@ -1004,10 +1016,10 @@ const FriendsManagement: React.FC = () => {
                             </svg>
                           </div>
                         </div>
-                        <p className="text-[#838bad] mb-2">
+                        <p className="text-[#3b3e88] mb-2">
                           You don&#39;t have any friends yet
                         </p>
-                        <p className="text-[#b9c0de] mb-6">
+                        <p className="text-[#838bad] mb-6">
                           Send a friend request to get started!
                         </p>
                       </div>
@@ -1035,7 +1047,7 @@ const FriendsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {request.sender.username}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs">
+                        <p className="text-[#3b3e88] text-xs">
                           Sent{" "}
                           {new Date(request.creationTime).toLocaleDateString()}
                         </p>
@@ -1077,7 +1089,7 @@ const FriendsManagement: React.FC = () => {
                         <h4 className="font-semibold text-[#3b3e88]">
                           {request.receiver.username}
                         </h4>
-                        <p className="text-[#b9c0de] text-xs">
+                        <p className="text-[#3b3e88] text-xs">
                           Sent{" "}
                           {new Date(request.creationTime).toLocaleDateString()}
                         </p>
@@ -1117,10 +1129,10 @@ const FriendsManagement: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-[#838bad] mb-2">
+                <p className="text-[#3b3e88] mb-2">
                   No pending friend requests
                 </p>
-                <p className="text-[#b9c0de]">
+                <p className="text-[#838bad]">
                   Send a request or wait for someone to add you!
                 </p>
               </div>

@@ -286,7 +286,7 @@ const Profile: React.FC = () => {
                 className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
                 onClick={handleEditProfile}
               >
-                edit profile
+                Edit Profile
               </Button>
             </div>
           </div>
@@ -317,7 +317,7 @@ const Profile: React.FC = () => {
                 className="bg-[#ff9a3e] hover:bg-[#ff9a3e]/90"
                 onClick={handleEditWatched}
               >
-                edit seen movies
+                Edit Seen Movies
               </Button>
             </div>
           </div>
@@ -328,7 +328,7 @@ const Profile: React.FC = () => {
           className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#f44771]/60 hover:opacity-80"
           onClick={handleBack}
         >
-          back to dashboard
+          Back to Dashboard
         </Button>
 
         {/* Action Message Component */}

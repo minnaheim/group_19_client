@@ -9,12 +9,13 @@ import {
   Home,
   ListChecks,
   LogOut,
+  Menu,
   Search,
   User,
   Users,
-  Menu,
   X,
 } from "lucide-react";
+import { ApiService } from "@/app/api/apiService";
 
 // Define all navigation item configurations with Lucide icons
 const NAV_ITEMS = [
@@ -68,12 +69,12 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
       <div className="flex items-center gap-2.5 relative cursor-pointer">
         <Icon
           size={20}
-          stroke={active ? "#1657FF" : "#B9C0DE"}
-          className={active ? "text-[#1657FF]" : "text-[#B9C0DE]"}
+          stroke={active ? "#1657FF" : "#3b3e88"}
+          className={active ? "text-[#1657FF]" : "text-[#3b3e88]"}
         />
         <div
           className={`font-normal text-[15px] tracking-wide ${
-            active ? "text-[#1657ff]" : "text-[#b9c0de]"
+            active ? "text-[#1657ff]" : "text-[#3b3e88]"
           }`}
         >
           {id}
@@ -88,18 +89,26 @@ const NavItem = ({ id, Icon, active, href }: NavItemProps) => {
 
 const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
   const router = useRouter();
-  // adding this so that when X clicked, menu opens (to look more like web version)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const apiService = new ApiService();
 
   usePathname();
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
     try {
+      setIsLoggingOut(true);
+      await apiService.post("/logout", {});
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
+    
       router.push("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -111,7 +120,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
           <div className="flex items-center mb-12">
             <div
               className="absolute top-4 left-4 flex items-center space-x-2 cursor-pointer"
-              onClick={() => router.push("/")}
+              onClick={() => router.push(`/users/${userId}/dashboard`)}
             >
               <Image
                 src="/Projector.png"
@@ -120,7 +129,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 height={50}
               />
               <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-                Movie Night
+                Movie Night Planner
               </div>
             </div>
           </div>
@@ -142,9 +151,13 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer mt-auto"
                 onClick={handleLogout}
               >
-                <LogOut size={20} stroke="#B9C0DE" className="text-[#B9C0DE]" />
-                <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
-                  Logout
+                <LogOut 
+                  size={20} 
+                  stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
+                />
+                <div className="font-normal text-[15px] tracking-wide text-[#3b3e88]">
+                  {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>
             </nav>
@@ -155,18 +168,19 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm p-4">
         <div className="flex justify-between items-center">
-          <div className="flex items-center" onClick={() => router.push("/")}>
+          <div
+            className="flex items-center"
+            onClick={() => router.push(`/users/${userId}/dashboard`)}
+          >
             <Image src="/Projector.png" alt="App Icon" width={30} height={30} />
             <div className="ml-2 font-semibold text-[#3b3e88] text-lg">
-              Movie Night
+              Movie Night Planner
             </div>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? (
-              <X size={24} className="text-[#3b3e88]" />
-            ) : (
-              <Menu size={24} className="text-[#3b3e88]" />
-            )}
+            {mobileMenuOpen
+              ? <X size={24} className="text-[#3b3e88]" />
+              : <Menu size={24} className="text-[#3b3e88]" />}
           </button>
         </div>
       </div>
@@ -191,9 +205,13 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer"
                 onClick={handleLogout}
               >
-                <LogOut size={20} stroke="#B9C0DE" className="text-[#B9C0DE]" />
-                <div className="font-normal text-[15px] tracking-wide text-[#b9c0de]">
-                  Logout
+                <LogOut 
+                  size={20} 
+                  stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
+                  className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
+                />
+                <div className="font-normal text-[15px] tracking-wide text-[#3b3e88]">
+                  {isLoggingOut ? "Logging out..." : "Logout"}
                 </div>
               </div>
             </nav>

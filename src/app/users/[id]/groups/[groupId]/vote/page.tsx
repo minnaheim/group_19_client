@@ -17,6 +17,7 @@ import { VoteStateDTO } from "@/app/types/vote";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ActionMessage from "@/components/ui/action_message";
 import type { ApplicationError } from "@/app/types/error";
+import Timer from "@/components/ui/Timer";
 
 // Define types to match backend DTOs
 interface RankingSubmitDTO {
@@ -113,7 +114,7 @@ const Vote: React.FC = () => {
   // PHASE GUARD: fetch and check phase
   const [availableMovies, setAvailableMovies] = useState<Movie[]>([]);
   const [rankings, setRankings] = useState<(Movie | null)[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [, setIsSubmitting] = useState<boolean>(false);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -141,7 +142,9 @@ const Vote: React.FC = () => {
   useEffect(() => {
     if (phaseLoading) return;
     if (phaseError) {
-      setError(phaseError);
+      setError(phaseError as string);
+      setShowSuccessMessage(false); // Clear success on new error
+      setSuccessMessage("");
       return;
     }
     if (phase && phase !== "VOTING") {
@@ -171,22 +174,32 @@ const Vote: React.FC = () => {
               setError(
                 "Your session has expired. Please log in again to view the vote state."
               );
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             case 404:
               setError("Could not find the group or you are not a member.");
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             case 409:
               setError("Voting is not currently active for this group.");
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
               break;
             default:
               setError(
                 "An error occurred while loading vote state. Please try again."
               );
+              setShowSuccessMessage(false); // Clear success on new error
+              setSuccessMessage("");
           }
         } else {
           setError(
             "An error occurred while loading vote state. Please try again."
           );
+          setShowSuccessMessage(false); // Clear success on new error
+          setSuccessMessage("");
         }
         return;
       }
@@ -208,6 +221,7 @@ const Vote: React.FC = () => {
       setAvailableMovies(pool);
       setRankings(initial);
       setHistory([{ availableMovies: pool, rankings: initial }]);
+      setError(""); // Clear error on successful fetch
     })();
   }, [phase, groupId, userId]);
 
@@ -270,7 +284,7 @@ const Vote: React.FC = () => {
   // Handle direct removal of a movie from ranking
   const handleRemoveFromRanking = (rankIndex: number) => {
     console.log("remove from ranking slot", rankIndex, rankings[rankIndex]);
-    if (hasSubmitted) return; // Prevent changes if already submitted
+    // allow removal anytime during voting
 
     saveToHistory();
 
@@ -285,6 +299,8 @@ const Vote: React.FC = () => {
     if (selectingForRank === rankIndex) {
       setSelectingForRank(null);
     }
+
+    setHasSubmitted(false);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -382,6 +398,8 @@ const Vote: React.FC = () => {
   const handleSubmitRanking = async () => {
     if (!isSubmitEnabled()) {
       setError(getRankingRequirementMessage());
+      setShowSuccessMessage(false); // Clear success on new error
+      setSuccessMessage("");
       return;
     }
 
@@ -393,6 +411,8 @@ const Vote: React.FC = () => {
         setError(
           "Missing user ID or group ID. Please go back to the main page."
         );
+        setShowSuccessMessage(false); // Clear success on new error
+        setSuccessMessage("");
         return;
       }
 
@@ -423,11 +443,9 @@ const Vote: React.FC = () => {
 
       // Send the request with proper JSON content
       await apiService.post(endpoint, rankingSubmitDTOs);
-      // Acknowledge submission visually
-      setSuccessMessage(
-        "Rankings submitted successfully! Please wait for results."
-      );
+      setSuccessMessage("Saved your Ranking");
       setShowSuccessMessage(true);
+      setError(""); // Clear error on success
       setHasSubmitted(true);
     } catch (err: unknown) {
       if (err instanceof Error && "status" in err) {
@@ -437,39 +455,65 @@ const Vote: React.FC = () => {
             setError(
               "There was an issue with your submitted ranks. Please check and try again."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           case 404:
             setError(
-              "We couldn&apos;t find the user or group for submitting ranks."
+              "We could not find the user or group for submitting ranks."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           case 409:
             setError(
               "Voting is not currently open for this group. Rankings cannot be submitted."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
             break;
           default:
             setError(
               "An error occurred while submitting your rankings. Please try again."
             );
+            setShowSuccessMessage(false); // Clear success on new error
+            setSuccessMessage("");
         }
       } else {
         setError(
           "An error occurred while submitting your rankings. Please try again."
         );
+        setShowSuccessMessage(false); // Clear success on new error
+        setSuccessMessage("");
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // auto-save when fully ranked
+  useEffect(() => {
+    const filledSlots = rankings.filter((m) => m !== null).length;
+    const totalMovies = Math.min(5, availableMovies.length + filledSlots);
+    if (filledSlots >= totalMovies && !hasSubmitted) {
+      handleSubmitRanking();
+    }
+  }, [rankings, availableMovies, hasSubmitted]);
+
   // Helper function to get complete image URL
   const getFullPosterUrl = (posterPath: string) => {
     return `https://image.tmdb.org/t/p/w500${posterPath}`;
   };
 
-  // Show remove icon only if ranking submitted = false
-  const showRemove = (movie: Movie | null) => !!movie && !hasSubmitted;
+  // Show remove icon only if phase is "VOTING", regardless of submission state
+  const showRemove = (movie: Movie | null) => !!movie && phase === "VOTING";
+
+  useEffect(() => {
+    if (successMessage === "Saved your Ranking" && showSuccessMessage) {
+      const timer = setTimeout(() => setShowSuccessMessage(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, showSuccessMessage]);
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
@@ -477,13 +521,22 @@ const Vote: React.FC = () => {
       <Navigation userId={userId} activeItem="Movie Groups" />
       {/* Error display */}
       {error && <ErrorMessage message={error} onClose={() => setError("")} />}
-      <ActionMessage
-        message={successMessage}
-        isVisible={showSuccessMessage}
-        onHide={() => setShowSuccessMessage(false)}
-        className="bg-green-500"
-      />
-
+      {successMessage !== "Saved your Ranking" && (
+        <ActionMessage
+          message={successMessage}
+          isVisible={showSuccessMessage}
+          onHide={() => setShowSuccessMessage(false)}
+          className="bg-green-500"
+        />
+      )}
+      {/* Overlay success for saved ranking only */}
+      {successMessage === "Saved your Ranking" && showSuccessMessage && (
+          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+            {successMessage}
+          </div>
+        </div>
+      )}
       {/* Main content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         {/* Header */}
@@ -493,16 +546,11 @@ const Vote: React.FC = () => {
               ? `${phaseGroup.groupName} - Vote for the Movie Night`
               : "Vote for the Movie Night"}
           </h1>
-          <p className="text-[#b9c0de] mt-2">
-            {availableMovies.length +
-              rankings.filter((m) => m !== null).length <
-            5
-              ? `Please rank all ${
-                  availableMovies.length +
-                  rankings.filter((m) => m !== null).length
-                } available movies`
-              : `Please rank at least 5 movies`}
-          </p>
+          <div className="text-[#3b3e88]">
+            {phaseGroup?.groupId && (
+              <Timer groupId={phaseGroup?.groupId.toString()} />
+            )}
+          </div>
 
           {/* Mobile instructions */}
           {isMobile && (
@@ -514,8 +562,8 @@ const Vote: React.FC = () => {
                   Then tap on a movie from the pool to assign it to that rank
                 </li>
                 <li>
-                  To change a movie&apos;s rank, first remove it, then select a
-                  new rank
+                  To change a movies rank, first remove it, then select a new
+                  rank
                 </li>
               </ol>
             </div>
@@ -544,7 +592,7 @@ const Vote: React.FC = () => {
               </h2>
               <div
                 id="movie-pool"
-                className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
+                className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
               >
                 {selectingForRank !== null ? (
                   // When selecting for a specific rank
@@ -568,7 +616,7 @@ const Vote: React.FC = () => {
                       </SortableItem>
                     ))
                   ) : (
-                    <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
+                    <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
                       All movies have been ranked or no movies are available.
                     </div>
                   )
@@ -592,7 +640,7 @@ const Vote: React.FC = () => {
                     </SortableItem>
                   ))
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
+                  <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
                     All movies have been ranked or no movies are available.
                   </div>
                 )}
@@ -604,6 +652,26 @@ const Vote: React.FC = () => {
               <h2 className="font-semibold text-[#3b3e88] text-xl">
                 Your Ranking
               </h2>
+              {(() => {
+                const filledSlots = rankings.filter(
+                  (movie) => movie !== null
+                ).length;
+                const totalMovies = Math.min(
+                  5,
+                  availableMovies.length + filledSlots
+                );
+                const isCompleted = filledSlots >= totalMovies;
+                return (
+                  <p
+                    className={`mt-6 text-sm ${
+                      isCompleted ? "text-[#3C3F88]" : "text-orange-600"
+                    }`}
+                  >
+                    You ranked {filledSlots}/{totalMovies} movies.
+                    {!isCompleted && ` Please rank ${totalMovies} movies.`}
+                  </p>
+                );
+              })()}
               <div className="flex flex-wrap gap-4 mt-4">
                 {rankings.map((movie, index) => (
                   <SortableItem
@@ -621,7 +689,11 @@ const Vote: React.FC = () => {
                   >
                     {movie ? (
                       <div
-                        className={`flex flex-col items-center ${selectingForRank === index ? "ring-2 ring-blue-500" : ""}`}
+                        className={`flex flex-col items-center ${
+                          selectingForRank === index
+                            ? "ring-2 ring-blue-500"
+                            : ""
+                        }`}
                       >
                         <div className="w-[100px] h-[150px] overflow-hidden rounded-md mb-2">
                           <img
@@ -636,12 +708,16 @@ const Vote: React.FC = () => {
                       </div>
                     ) : (
                       <div
-                        className={`flex flex-col items-center justify-center ${selectingForRank === index ? "ring-2 ring-blue-500" : ""}`}
+                        className={`flex flex-col items-center justify-center ${
+                          selectingForRank === index
+                            ? "ring-2 ring-blue-500"
+                            : ""
+                        }`}
                       >
-                        <p className="text-[#b9c0de] text-lg font-semibold">
+                        <p className="text-[#3b3e88]/60 text-lg font-semibold">
                           Rank #{index + 1}
                         </p>
-                        <p className="text-[#b9c0de] text-sm">
+                        <p className="text-[#3b3e88]/60 text-sm">
                           {selectingForRank === index
                             ? "Select a movie"
                             : "Tap to select"}
@@ -664,9 +740,12 @@ const Vote: React.FC = () => {
               <h2 className="font-semibold text-[#3b3e88] text-xl">
                 Movie Pool
               </h2>
+              <p className="text-sm text-[#3b3e88] mt-2">
+                Use drag and drop to rank the movies
+              </p>
               <div
                 id="movie-pool"
-                className="flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
+                className="relative flex flex-wrap gap-4 overflow-x-auto mt-4 p-4 min-h-[200px] bg-[#d9e1ff] rounded-lg"
               >
                 {availableMovies.map((movie, index) => (
                   <SortableItem key={`pool-${index}`} id={`pool-${index}`}>
@@ -682,7 +761,7 @@ const Vote: React.FC = () => {
                   </SortableItem>
                 ))}
                 {availableMovies.length === 0 && (
-                  <div className="flex items-center justify-center w-full h-full text-[#3b3e88]">
+                  <div className="absolute inset-0 flex items-center justify-center text-[#3b3e88]">
                     All movies have been ranked or no movies are available.
                   </div>
                 )}
@@ -694,6 +773,26 @@ const Vote: React.FC = () => {
               <h2 className="font-semibold text-[#3b3e88] text-xl">
                 Your Ranking
               </h2>
+              {(() => {
+                const filledSlots = rankings.filter(
+                  (movie) => movie !== null
+                ).length;
+                const totalMovies = Math.min(
+                  5,
+                  availableMovies.length + filledSlots
+                );
+                const isCompleted = filledSlots >= totalMovies;
+                return (
+                  <p
+                    className={`mt-6 text-sm ${
+                      isCompleted ? "text-[#3C3F88]" : "text-orange-600"
+                    }`}
+                  >
+                    You ranked {filledSlots}/{totalMovies} movies.
+                    {!isCompleted && ` Please rank ${totalMovies} movies.`}
+                  </p>
+                );
+              })()}
               <div className="flex flex-wrap gap-4 mt-4">
                 {rankings.map((movie, index) => (
                   <SortableItem
@@ -720,10 +819,10 @@ const Vote: React.FC = () => {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-[#b9c0de] text-lg font-semibold">
+                        <p className="text-[#3b3e88]/60 text-lg font-semibold">
                           Rank #{index + 1}
                         </p>
-                        <p className="text-[#b9c0de] text-sm">
+                        <p className="text-[#3b3e88]/60 text-sm">
                           Drop a movie here
                         </p>
                       </div>
@@ -734,23 +833,13 @@ const Vote: React.FC = () => {
             </div>
           </DndContext>
         )}
-        {/* Buttons */}
+        {/* Navigation Buttons: Back on left, End Voting on right */}
         <div className="flex justify-between items-center mt-4">
-          {/* <div className="flex gap-2"> */}
           <Button
-            onClick={handleSubmitRanking}
-            disabled={
-              isSubmitting ||
-              phase !== "VOTING" ||
-              !isSubmitEnabled() ||
-              hasSubmitted
-            }
+            variant="outline"
+            onClick={() => router.push(`/users/${userId}/groups`)}
           >
-            {hasSubmitted
-              ? "Submitted"
-              : isSubmitting
-                ? "Submitting..."
-                : "Submit Rankings"}
+            Back to Group Overview
           </Button>
           {phase === "VOTING" &&
             phaseGroup &&
@@ -767,6 +856,7 @@ const Vote: React.FC = () => {
                       "Voting ended, results are now available."
                     );
                     setShowSuccessMessage(true);
+                    setError(""); // Clear success on new error
                   } catch (err: unknown) {
                     if (err instanceof Error && "status" in err) {
                       const appErr = err as ApplicationError;
@@ -775,24 +865,34 @@ const Vote: React.FC = () => {
                           setError(
                             "Only the group creator can end voting and show results."
                           );
+                          setShowSuccessMessage(false);
+                          setSuccessMessage("");
                           break;
                         case 404:
                           setError("The specified group could not be found.");
+                          setShowSuccessMessage(false);
+                          setSuccessMessage("");
                           break;
                         case 409:
                           setError(
                             "This action can only be performed when voting is active for this group."
                           );
+                          setShowSuccessMessage(false);
+                          setSuccessMessage("");
                           break;
                         default:
                           setError(
                             "An error occurred while ending voting. Please try again."
                           );
+                          setShowSuccessMessage(false);
+                          setSuccessMessage("");
                       }
                     } else {
                       setError(
                         "An error occurred while ending voting. Please try again."
                       );
+                      setShowSuccessMessage(false);
+                      setSuccessMessage("");
                     }
                     return;
                   }
@@ -802,23 +902,7 @@ const Vote: React.FC = () => {
                 End Voting & Show Results
               </Button>
             )}
-          {/* </div> */}
         </div>
-        <div className="flex justify-between items-center mt-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/users/${userId}/groups`)}
-          >
-            Back to group overview
-          </Button>
-        </div>
-
-        {/* Ranking requirement message */}
-        {!isSubmitEnabled() && (
-          <p className="text-[#f97274] text-center mt-4">
-            {availableMovies.length > 0 ? getRankingRequirementMessage() : ""}
-          </p>
-        )}
       </div>
     </div>
   );

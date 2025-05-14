@@ -2,10 +2,29 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const LandingPage = () => {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const rawUid = localStorage.getItem("userId");
+    if (token && rawUid) {
+      setIsLoggedIn(true);
+      // strip extra quotes if present
+      const cleanUid = rawUid.replace(/^\"|\"$/g, "");
+      setUserId(cleanUid);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    router.push("/login");
+  };
 
   // Auth navigation
   const handleLogin = () => {
@@ -39,24 +58,46 @@ const LandingPage = () => {
           >
             <Image src="/Projector.png" alt="App Icon" width={50} height={50} />
             <div className="ml-4 font-semibold text-[#3b3e88] text-xl">
-              Movie Night
+              Movie Night Planner
             </div>
           </div>
         </div>
         <div className="flex gap-3">
-          <Button
-            variant="ghost"
-            className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
-            onClick={handleLogin}
-          >
-            Login
-          </Button>
-          <Button
-            className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
-            onClick={handleSignUp}
-          >
-            Sign Up
-          </Button>
+          {isLoggedIn
+            ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={() => router.push(`/users/${userId}/profile`)}
+                >
+                  My Profile
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            )
+            : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={handleLogin}
+                >
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleSignUp}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
         </div>
       </header>
 
@@ -67,7 +108,7 @@ const LandingPage = () => {
             <span className="text-rose-500">No</span> More Movie Night
             <span className="block text-rose-500">Debates</span>
           </h2>
-          <p className="text-lg md:text-xl text-[#b9c0de] max-w-lg">
+          <p className="text-lg md:text-xl text-[#3b3e88] max-w-lg">
             Plan the perfect movie night with friends, without the endless
             &#34;what should we watch?&#34; back-and-forth.
           </p>
@@ -103,8 +144,8 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="p-2">
-                <div className="h-3 w-3/4 bg-[#b9c0de] rounded-full mb-2"></div>
-                <div className="h-2 w-1/2 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
+                <div className="h-2 w-1/2 bg-[#3b3e88] rounded-full"></div>
               </div>
             </div>
 
@@ -114,22 +155,22 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="p-2">
-                <div className="h-3 w-3/4 bg-[#b9c0de] rounded-full mb-2"></div>
-                <div className="h-2 w-1/2 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
+                <div className="h-2 w-1/2 bg-[#3b3e88] rounded-full"></div>
               </div>
             </div>
 
             {/* Voting UI */}
             <div className="absolute bottom-10 right-10 w-48 bg-white/80 backdrop-blur-md rounded-xl p-3 border border-[#3b3e88]/10 shadow-lg">
               <div className="flex justify-between items-center mb-2">
-                <div className="h-3 w-20 bg-[#b9c0de] rounded-full"></div>
+                <div className="h-3 w-20 bg-[#3b3e88] rounded-full"></div>
                 <div className="h-5 w-5 bg-orange-500 rounded-full"></div>
               </div>
               <div className="space-y-2">
-                <div className="h-6 w-full bg-[#b9c0de]/30 rounded-lg"></div>
+                <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
                 <div className="h-6 w-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg">
                 </div>
-                <div className="h-6 w-full bg-[#b9c0de]/30 rounded-lg"></div>
+                <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -167,7 +208,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Create Your Watchlist
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Build your personal watchlist of movies you&#39;re dying to see.
               Search the vast library or browse by genre.
             </p>
@@ -194,7 +235,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Form Movie Crews
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Create groups with friends and easily schedule movie nights
               together. Invite anyone with just a username.
             </p>
@@ -221,7 +262,7 @@ const LandingPage = () => {
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
               Vote & Enjoy
             </h4>
-            <p className="text-[#b9c0de]">
+            <p className="text-[#3b3e88]">
               Everyone contributes movie suggestions and votes on their
               favorites. Our algorithm selects the winner - no more debating!
             </p>
@@ -236,9 +277,9 @@ const LandingPage = () => {
             Ready to transform movie night?
           </h3>
           <p className="text-white/90 max-w-2xl mx-auto mb-8">
-            Join thousands of movie lovers who have simplified their movie
-            nights. Sign up today and make your next movie night drama-free
-            (except for the movies themselves).
+            Be part of a growing community that is redefining movie nights. Sign
+            up today and make your next movie night drama-free (except for the
+            movies themselves).
           </p>
           <Button
             className="bg-white text-orange-500 hover:bg-white/90 text-lg h-12 px-8 rounded-2xl"
@@ -253,10 +294,10 @@ const LandingPage = () => {
       <footer className="bg-white py-8 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <Image src="/Projector.png" alt="App Icon" width={30} height={30}/>
+            <Image src="/Projector.png" alt="App Icon" width={30} height={30} />
             <span className="text-sm font-medium text-[#3b3e88]">
-        Movie Night Planner{" "}
-      </span>
+              Movie Night Planner{" "}
+            </span>
           </div>
         </div>
       </footer>

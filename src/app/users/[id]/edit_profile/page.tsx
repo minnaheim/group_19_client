@@ -64,16 +64,19 @@ const EditProfile: React.FC = () => {
 
   // state variables for actor search
   const [actorSearchQuery, setActorSearchQuery] = useState("");
-  const [actorSearchResults, setActorSearchResults] = useState<{ actorId: number, actorName: string }[]>([]);
+  const [actorSearchResults, setActorSearchResults] = useState<
+    { actorId: number; actorName: string }[]
+  >([]);
   const [actorSearchLoading, setActorSearchLoading] = useState(false);
   const [actorSearchError, setActorSearchError] = useState("");
 
   // state variables for director search
   const [directorSearchQuery, setDirectorSearchQuery] = useState("");
-  const [directorSearchResults, setDirectorSearchResults] = useState<{ directorId: number, directorName: string }[]>([]);
+  const [directorSearchResults, setDirectorSearchResults] = useState<
+    { directorId: number; directorName: string }[]
+  >([]);
   const [directorSearchLoading, setDirectorSearchLoading] = useState(false);
   const [directorSearchError, setDirectorSearchError] = useState("");
-
 
   // Track if we've already processed movie from session storage
   const [hasProcessedStoredMovie, setHasProcessedStoredMovie] = useState(false);
@@ -114,7 +117,11 @@ const EditProfile: React.FC = () => {
     setActorSearchError("");
 
     try {
-      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/actors?actorname=${encodeURIComponent(actorSearchQuery)}`);
+      const response = await fetch(
+        `https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/actors?actorname=${
+          encodeURIComponent(actorSearchQuery)
+        }`,
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -124,7 +131,11 @@ const EditProfile: React.FC = () => {
       const data = await response.json();
       setActorSearchResults(data);
     } catch (error) {
-      setActorSearchError(error instanceof Error ? error.message : "An error occurred while searching for actors");
+      setActorSearchError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while searching for actors",
+      );
       setActorSearchResults([]);
     } finally {
       setActorSearchLoading(false);
@@ -138,7 +149,11 @@ const EditProfile: React.FC = () => {
     setDirectorSearchError("");
 
     try {
-      const response = await fetch(`https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/directors?directorname=${encodeURIComponent(directorSearchQuery)}`);
+      const response = await fetch(
+        `https://sopra-fs25-group-19-server.oa.r.appspot.com/movies/directors?directorname=${
+          encodeURIComponent(directorSearchQuery)
+        }`,
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -148,7 +163,11 @@ const EditProfile: React.FC = () => {
       const data = await response.json();
       setDirectorSearchResults(data);
     } catch (error) {
-      setDirectorSearchError(error instanceof Error ? error.message : "An error occurred while searching for directors");
+      setDirectorSearchError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while searching for directors",
+      );
       setDirectorSearchResults([]);
     } finally {
       setDirectorSearchLoading(false);
@@ -574,14 +593,14 @@ const EditProfile: React.FC = () => {
                   Favorite Actors
                 </p>
                 {favoriteActors.length > 0 && (
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={handleResetFavoriteActors}
-                        className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
-                    >
-                      Reset favorite actors
-                    </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleResetFavoriteActors}
+                    className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
+                  >
+                    Reset Favorite Actors
+                  </Button>
                 )}
               </div>
               <p className="text-md text-gray-600 mb-2">
@@ -606,11 +625,14 @@ const EditProfile: React.FC = () => {
               {isSelectingActors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <p className="text-sm text-gray-600 mb-3">
-                    Please select amongst the actors în your favorite movie and in the movies in your Watch List
+                    Please select amongst the actors în your favorite movie and
+                    in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {[...actorOptions].sort((a, b) => a.localeCompare(b)).map((name) => (
-                        <button
+                    {[...actorOptions].sort((a, b) => a.localeCompare(b)).map((
+                      name,
+                    ) => (
+                      <button
                         key={name}
                         type="button"
                         onClick={() => {
@@ -629,58 +651,66 @@ const EditProfile: React.FC = () => {
                         {name}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Actor Search */}
+                  <div className="mt-4 border-t pt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Search for additional actors:
+                    </p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={actorSearchQuery}
+                        onChange={(e) => setActorSearchQuery(e.target.value)}
+                        placeholder="Enter actor name..."
+                        className="p-2 border rounded-md flex-grow"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleActorSearch}
+                        className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
+                      >
+                        Search
+                      </Button>
                     </div>
 
-                    {/* Actor Search */}
-                    <div className="mt-4 border-t pt-4">
-                      <p className="text-sm text-gray-600 mb-2">Search for additional actors:</p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <input
-                            type="text"
-                            value={actorSearchQuery}
-                            onChange={(e) => setActorSearchQuery(e.target.value)}
-                            placeholder="Enter actor name..."
-                            className="p-2 border rounded-md flex-grow"
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleActorSearch}
-                            className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
-                        >
-                          Search
-                        </Button>
+                    {actorSearchLoading && (
+                      <p className="text-sm text-gray-500">Searching...</p>
+                    )}
+                    {actorSearchError && (
+                      <p className="text-sm text-red-500">{actorSearchError}</p>
+                    )}
+
+                    {actorSearchResults.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Search results:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {actorSearchResults.map((actor) => (
+                            <button
+                              key={actor.actorId}
+                              type="button"
+                              onClick={() => {
+                                setFavoriteActors((prev) =>
+                                  prev.includes(actor.actorName)
+                                    ? prev.filter((n) => n !== actor.actorName)
+                                    : [...prev, actor.actorName]
+                                );
+                              }}
+                              className={`px-3 py-1 rounded-full border ${
+                                favoriteActors.includes(actor.actorName)
+                                  ? "bg-[#AFB3FF] text-white"
+                                  : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                              }`}
+                            >
+                              {actor.actorName}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-
-                      {actorSearchLoading && <p className="text-sm text-gray-500">Searching...</p>}
-                      {actorSearchError && <p className="text-sm text-red-500">{actorSearchError}</p>}
-
-                      {actorSearchResults.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-600 mb-2">Search results:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {actorSearchResults.map((actor) => (
-                                  <button
-                                      key={actor.actorId}
-                                      type="button"
-                                      onClick={() => {
-                                        setFavoriteActors((prev) =>
-                                            prev.includes(actor.actorName)
-                                                ? prev.filter((n) => n !== actor.actorName)
-                                                : [...prev, actor.actorName]
-                                        );
-                                      }}
-                                      className={`px-3 py-1 rounded-full border ${
-                                          favoriteActors.includes(actor.actorName)
-                                              ? "bg-[#AFB3FF] text-white"
-                                              : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
-                                      }`}
-                                  >
-                                    {actor.actorName}
-                                  </button>
-                              ))}
-                            </div>
-                          </div>
-                      )}
+                    )}
                   </div>
                 </div>
               )}
@@ -693,14 +723,14 @@ const EditProfile: React.FC = () => {
                   Favorite Directors
                 </p>
                 {favoriteDirectors.length > 0 && (
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={handleResetFavoriteDirectors}
-                        className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
-                    >
-                      Reset favorite directors
-                    </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleResetFavoriteDirectors}
+                    className="bg-red-500 text-white hover:bg-red-600 text-xs py-1 px-2 h-auto"
+                  >
+                    Reset Favorite Directors
+                  </Button>
                 )}
               </div>
               <p className="text-md text-gray-600 mb-2">
@@ -725,81 +755,97 @@ const EditProfile: React.FC = () => {
               {isSelectingDirectors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <p className="text-sm text-gray-600 mb-3">
-                    Please select amongst the directors în your favorite movie and in the movies in your Watch List
+                    Please select amongst the directors în your favorite movie
+                    and in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {[...directorOptions].sort((a, b) => a.localeCompare(b)).map((name) => (
+                    {[...directorOptions].sort((a, b) => a.localeCompare(b))
+                      .map((name) => (
                         <button
-                        key={name}
+                          key={name}
+                          type="button"
+                          onClick={() => {
+                            setFavoriteDirectors((prev) =>
+                              prev.includes(name)
+                                ? prev.filter((n) => n !== name)
+                                : [...prev, name]
+                            );
+                          }}
+                          className={`px-3 py-1 rounded-full border ${
+                            favoriteDirectors.includes(name)
+                              ? "bg-[#AFB3FF] text-white"
+                              : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                  </div>
+
+                  {/* Director Search */}
+                  <div className="mt-4 border-t pt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Search for additional directors:
+                    </p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={directorSearchQuery}
+                        onChange={(e) => setDirectorSearchQuery(e.target.value)}
+                        placeholder="Enter director name..."
+                        className="p-2 border rounded-md flex-grow"
+                      />
+                      <Button
                         type="button"
-                        onClick={() => {
-                          setFavoriteDirectors((prev) =>
-                            prev.includes(name)
-                              ? prev.filter((n) => n !== name)
-                              : [...prev, name]
-                          );
-                        }}
-                        className={`px-3 py-1 rounded-full border ${
-                          favoriteDirectors.includes(name)
-                            ? "bg-[#AFB3FF] text-white"
-                            : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
-                        }`}
+                        onClick={handleDirectorSearch}
+                        className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
                       >
-                        {name}
-                      </button>
-                    ))}
+                        Search
+                      </Button>
                     </div>
 
-                    {/* Director Search */}
-                    <div className="mt-4 border-t pt-4">
-                      <p className="text-sm text-gray-600 mb-2">Search for additional directors:</p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <input
-                            type="text"
-                            value={directorSearchQuery}
-                            onChange={(e) => setDirectorSearchQuery(e.target.value)}
-                            placeholder="Enter director name..."
-                            className="p-2 border rounded-md flex-grow"
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleDirectorSearch}
-                            className="bg-[#AFB3FF] text-white hover:bg-[#9A9EE5]"
-                        >
-                          Search
-                        </Button>
+                    {directorSearchLoading && (
+                      <p className="text-sm text-gray-500">Searching...</p>
+                    )}
+                    {directorSearchError && (
+                      <p className="text-sm text-red-500">
+                        {directorSearchError}
+                      </p>
+                    )}
+
+                    {directorSearchResults.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Search results:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {directorSearchResults.map((director) => (
+                            <button
+                              key={director.directorId}
+                              type="button"
+                              onClick={() => {
+                                setFavoriteDirectors((prev) =>
+                                  prev.includes(director.directorName)
+                                    ? prev.filter((n) =>
+                                      n !== director.directorName
+                                    )
+                                    : [...prev, director.directorName]
+                                );
+                              }}
+                              className={`px-3 py-1 rounded-full border ${
+                                favoriteDirectors.includes(
+                                    director.directorName,
+                                  )
+                                  ? "bg-[#AFB3FF] text-white"
+                                  : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
+                              }`}
+                            >
+                              {director.directorName}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-
-                      {directorSearchLoading && <p className="text-sm text-gray-500">Searching...</p>}
-                      {directorSearchError && <p className="text-sm text-red-500">{directorSearchError}</p>}
-
-                      {directorSearchResults.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-600 mb-2">Search results:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {directorSearchResults.map((director) => (
-                                  <button
-                                      key={director.directorId}
-                                      type="button"
-                                      onClick={() => {
-                                        setFavoriteDirectors((prev) =>
-                                            prev.includes(director.directorName)
-                                                ? prev.filter((n) => n !== director.directorName)
-                                                : [...prev, director.directorName]
-                                        );
-                                      }}
-                                      className={`px-3 py-1 rounded-full border ${
-                                          favoriteDirectors.includes(director.directorName)
-                                              ? "bg-[#AFB3FF] text-white"
-                                              : "bg-[#CDD1FF] text-white hover:bg-[#AFB3FF]"
-                                      }`}
-                                  >
-                                    {director.directorName}
-                                  </button>
-                              ))}
-                            </div>
-                          </div>
-                      )}
+                    )}
                   </div>
                 </div>
               )}
@@ -867,7 +913,7 @@ const EditProfile: React.FC = () => {
                 variant="default"
                 className="bg-[#ff9a3e] hover:bg-[#e88b35]"
               >
-                save changes
+                Save Changes
               </Button>
               <Button
                 type="button"
@@ -875,7 +921,7 @@ const EditProfile: React.FC = () => {
                 className="bg-gray-200 text-[#3b3e88] hover:bg-gray-300"
                 onClick={handleCancel}
               >
-                cancel
+                Cancel
               </Button>
             </div>
           </form>
@@ -886,7 +932,7 @@ const EditProfile: React.FC = () => {
           className="mt-8 bg-[#f44771] opacity-50 hover:bg-[#e03e65] hover:opacity-60"
           onClick={handleCancel}
         >
-          back
+          Back
         </Button>
       </div>
     </div>

@@ -165,7 +165,7 @@ const Login: React.FC = () => {
             className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12"
           />
           <div className="ml-2 sm:ml-4 font-semibold text-[#3b3e88] text-base sm:text-lg md:text-xl">
-            Movie Night
+            Movie Night Planner
           </div>
         </div>
       </header>
@@ -191,7 +191,7 @@ const Login: React.FC = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3e88]">
                   Welcome Back
                 </h2>
-                <p className="text-[#b9c0de] mt-1 sm:mt-2 text-sm sm:text-base">
+                <p className="text-[#3b3e88] mt-1 sm:mt-2 text-sm sm:text-base">
                   Sign in to continue planning amazing movie nights
                 </p>
               </div>
@@ -353,7 +353,7 @@ const Login: React.FC = () => {
               </form>
 
               <div className="mt-6 sm:mt-8 text-center">
-                <p className="text-[#b9c0de] text-sm sm:text-base">
+                <p className="text-[#3b3e88] text-sm sm:text-base">
                   Don&#39;t have an account?{" "}
                   <a
                     href="/register"
@@ -386,10 +386,10 @@ const Login: React.FC = () => {
       <footer className="bg-white py-8 px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <Image src="/Projector.png" alt="App Icon" width={30} height={30}/>
+            <Image src="/Projector.png" alt="App Icon" width={30} height={30} />
             <span className="text-sm font-medium text-[#3b3e88]">
-        Movie Night Planner{" "}
-      </span>
+              Movie Night Planner{" "}
+            </span>
           </div>
         </div>
       </footer>
