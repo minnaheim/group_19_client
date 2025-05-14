@@ -144,10 +144,10 @@ The Movie Night Planner application is divided into the following main component
 
 ## Launch & Deployment
 
-Please refer to the [Launch_and_Deployment.md](https://github.com/minnaheim/group_19_client/blob/main/Launch_and_Deployment.md) file for a description on how to get started with this application, including
-which commands are required to build and run this project locally.
-
-[comment]: <> (ONLY SERVER SIDE: ... and how to run tests) 
+Please refer to the following files for a description on how to get started with this application, including
+which commands are required to build and run this project locally and how to run tests.
+* [Launch_and_Deployment_Client.md](https://github.com/minnaheim/group_19_client/blob/main/Launch_and_Deployment_Client.md)
+* [Launch_and_Deployment_Server](https://github.com/minnaheim/group_19_server/blob/main/Launch_and_Deployment_Server.md)
 
 ### Database:
 [comment]: <> (Minna i think this is best if you'd do this as you did the setup)
