@@ -6,11 +6,14 @@ interface TimerProps {
 }
 
 const formatTime = (seconds: number) => {
-  const m = Math.floor(seconds / 60)
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
     .toString()
     .padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
+  return `${h}:${m}:${s}`;
 };
 
 const Timer: React.FC<TimerProps> = ({ groupId }) => {
@@ -62,7 +65,7 @@ const Timer: React.FC<TimerProps> = ({ groupId }) => {
 
   if (noTimeLimit) return <span>No time limit</span>;
   if (remaining === null) return <span>Loading Timer...</span>;
-  if (remaining <= 0) return <span>Time is up!</span>;
+  if (remaining <= 0) return <span>Time's up!</span>;
 
   return (
     <span
