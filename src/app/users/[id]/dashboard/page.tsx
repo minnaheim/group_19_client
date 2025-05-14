@@ -296,231 +296,230 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="bg-indigo-50 flex flex-col md:flex-row min-h-screen w-full">
-      {/* Use your existing Navigation component */}
-      <Navigation userId={userId} activeItem="Dashboard" />
+      <div className="bg-indigo-50 flex flex-col md:flex-row min-h-screen w-full">
+        {/* Use your existing Navigation component */}
+        <Navigation userId={userId} activeItem="Dashboard" />
 
-      {/* Main content - Two column layout */}
-      <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
-        <h1 className="text-indigo-900 text-2xl font-semibold mb-6">
-          Dashboard
-        </h1>
+        {/* Main content - Two column layout with reduced padding */}
+        <div className="flex-1 p-3 md:p-4 lg:p-5 overflow-auto">
+          <h1 className="text-indigo-900 text-xl font-semibold mb-3">
+            Dashboard
+          </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-auto">
-          {/* Left Column - Navigation Cards */}
-          <div className="space-y-6 mb-6 md:mb-0">
-            {/* Increased spacing between cards */}
-            {/* Watch List Card */}
-            <div
-              onClick={navigateToWatchlist}
-              className="bg-rose-500 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
-            >
-              {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-40 h-40 bg-rose-400/30 rounded-full -mr-10 -mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto">
+            {/* Left Column - Navigation Cards */}
+            <div className="space-y-3 mb-4 md:mb-0">
+              {/* Watch List Card - reduced height */}
+              <div
+                  onClick={navigateToWatchlist}
+                  className="bg-rose-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+              >
+                {/* Decorative circles */}
+                <div className="absolute right-0 bottom-0 w-32 h-32 bg-rose-400/30 rounded-full -mr-8 -mb-8">
+                </div>
+                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+                </div>
+
+                <h2 className="text-white text-lg font-medium relative z-10">
+                  Watch List
+                </h2>
               </div>
-              <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14">
+
+              {/* Movie Groups Card */}
+              <div
+                  onClick={navigateToGroups}
+                  className="bg-orange-400 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+              >
+                {/* Decorative circles */}
+                <div className="absolute right-0 bottom-0 w-32 h-32 bg-orange-300/30 rounded-full -mr-8 -mb-8">
+                </div>
+                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+                </div>
+
+                <h2 className="text-white text-lg font-medium relative z-10">
+                  Movie Groups
+                </h2>
               </div>
 
-              <h2 className="text-white text-xl font-medium relative z-10">
-                Watch List
-              </h2>
+              {/* Friends Card */}
+              <div
+                  onClick={navigateToFriends}
+                  className="bg-indigo-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+              >
+                {/* Decorative circles */}
+                <div className="absolute right-0 bottom-0 w-32 h-32 bg-indigo-400/30 rounded-full -mr-8 -mb-8">
+                </div>
+                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+                </div>
+
+                <h2 className="text-white text-lg font-medium relative z-10">
+                  Friends
+                </h2>
+              </div>
+
+              {/* Search Movies Card */}
+              <div
+                  onClick={navigateToSearchMovies}
+                  className="bg-indigo-900 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+              >
+                {/* Decorative circles */}
+                <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-400/20 rounded-full -mr-8 -mb-8">
+                </div>
+                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+                </div>
+
+                <h2 className="text-white text-lg font-medium relative z-10">
+                  Search Movies
+                </h2>
+              </div>
+
+              {/* Profile Card */}
+              <div
+                  onClick={navigateToProfile}
+                  className="bg-violet-600 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+              >
+                {/* Decorative circles */}
+                <div className="absolute right-0 bottom-0 w-32 h-32 bg-violet-500/30 rounded-full -mr-8 -mb-8">
+                </div>
+                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+                </div>
+
+                <div className="relative z-10">
+                  <h2 className="text-white text-lg font-medium">Your Profile</h2>
+                  <p className="text-white/80 text-xs mt-0.5">
+                    {user?.username}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Movie Groups Card */}
-            <div
-              onClick={navigateToGroups}
-              className="bg-orange-400 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
-            >
-              {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-40 h-40 bg-orange-300/30 rounded-full -mr-10 -mb-10">
-              </div>
-              <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14">
-              </div>
+            {/* Right Column - Notifications with reduced size */}
+            <div className="mt-0">
+              <div
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 flex flex-col shadow-sm"
+                  style={{
+                    height: "auto",
+                    minHeight: "16rem",
+                    maxHeight: "calc(100vh - 160px)",
+                  }}
+              >
+                <h2 className="text-indigo-900 text-lg font-medium mb-3">
+                  Notifications
+                </h2>
 
-              <h2 className="text-white text-xl font-medium relative z-10">
-                Movie Groups
-              </h2>
-            </div>
-
-            {/* Friends Card */}
-            <div
-              onClick={navigateToFriends}
-              className="bg-indigo-500 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
-            >
-              {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-40 h-40 bg-indigo-400/30 rounded-full -mr-10 -mb-10">
-              </div>
-              <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14">
-              </div>
-
-              <h2 className="text-white text-xl font-medium relative z-10">
-                Friends
-              </h2>
-            </div>
-
-            {/* Search Movies Card */}
-            <div
-              onClick={navigateToSearchMovies}
-              className="bg-indigo-900 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
-            >
-              {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-40 h-40 bg-slate-400/20 rounded-full -mr-10 -mb-10">
-              </div>
-              <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14">
-              </div>
-
-              <h2 className="text-white text-xl font-medium relative z-10">
-                Search Movies
-              </h2>
-            </div>
-
-            {/* Profile Card */}
-            <div
-              onClick={navigateToProfile}
-              className="bg-violet-600 rounded-3xl p-6 h-32 relative overflow-hidden cursor-pointer hover:shadow-md"
-            >
-              {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-40 h-40 bg-violet-500/30 rounded-full -mr-10 -mb-10">
-              </div>
-              <div className="absolute right-0 bottom-0 w-48 h-48 border border-white/30 rounded-full -mr-14 -mb-14">
-              </div>
-
-              <div className="relative z-10">
-                <h2 className="text-white text-xl font-medium">Your Profile</h2>
-                <p className="text-white/80 text-sm mt-1">
-                  {user?.username}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Notifications */}
-          <div className="mt-6 md:mt-0">
-            <div
-              className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 flex flex-col shadow-sm"
-              style={{
-                height: "auto",
-                minHeight: "20rem",
-                maxHeight: "max(calc(100vh - 200px), 600px)",
-              }}
-            >
-              <h2 className="text-indigo-900 text-xl font-medium mb-5">
-                Notifications
-              </h2>
-
-              {/* Made this container scrollable with dynamic height */}
-              <div className="overflow-y-auto pr-2 flex-grow">
-                <div className="space-y-5">
-                  {notifications.length > 0
-                    ? notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`rounded-3xl p-5 shadow-sm ${
-                          notification.type === "friend_request"
-                            ? "bg-rose-50 border border-rose-100"
-                            : notification.type === "group_invite"
-                            ? "bg-orange-50 border border-orange-100"
-                            : notification.type === "group_update"
-                            ? "bg-indigo-50 border border-indigo-100"
-                            : "bg-violet-50 border border-violet-100"
-                        }`}
-                      >
-                        <p
-                          className={`mb-3 ${
-                            notification.type === "friend_request"
-                              ? "text-rose-800"
-                              : notification.type === "group_invite"
-                              ? "text-orange-800"
-                              : notification.type === "group_update"
-                              ? "text-indigo-800"
-                              : "text-violet-800"
-                          }`}
-                        >
-                          {notification.message}
-                        </p>
-
-                        {notification.actionType === "accept_decline" && (
-                          <div className="flex justify-end items-center">
-                            <Button
-                              className={`hover:bg-opacity-70 text-white rounded-3xl px-4 py-1 h-8 text-sm ${
-                                notification.type === "friend_request"
-                                  ? "bg-rose-500 hover:bg-rose-600"
-                                  : notification.type === "group_invite"
-                                  ? "bg-orange-400 hover:bg-orange-500"
-                                  : notification.type === "group_update"
-                                  ? "bg-indigo-500 hover:bg-indigo-600"
-                                  : "bg-violet-500 hover:bg-violet-600"
-                              }`}
-                              onClick={(e) => handleAccept(notification, e)}
+                {/* Scrollable container with optimized size */}
+                <div className="overflow-y-auto pr-2 flex-grow">
+                  <div className="space-y-3">
+                    {notifications.length > 0
+                        ? notifications.map((notification) => (
+                            <div
+                                key={notification.id}
+                                className={`rounded-xl p-3 shadow-sm ${
+                                    notification.type === "friend_request"
+                                        ? "bg-rose-50 border border-rose-100"
+                                        : notification.type === "group_invite"
+                                            ? "bg-orange-50 border border-orange-100"
+                                            : notification.type === "group_update"
+                                                ? "bg-indigo-50 border border-indigo-100"
+                                                : "bg-violet-50 border border-violet-100"
+                                }`}
                             >
-                              Accept
-                            </Button>
-                            <button
-                              className={`ml-4 underline text-sm ${
-                                notification.type === "friend_request"
-                                  ? "text-rose-700"
-                                  : notification.type === "group_invite"
-                                  ? "text-orange-700"
-                                  : notification.type === "group_update"
-                                  ? "text-indigo-700"
-                                  : "text-violet-700"
-                              }`}
-                              onClick={(e) => handleDecline(notification, e)}
-                            >
-                              Decline
-                            </button>
-                          </div>
+                              <p
+                                  className={`mb-2 text-sm ${
+                                      notification.type === "friend_request"
+                                          ? "text-rose-800"
+                                          : notification.type === "group_invite"
+                                              ? "text-orange-800"
+                                              : notification.type === "group_update"
+                                                  ? "text-indigo-800"
+                                                  : "text-violet-800"
+                                  }`}
+                              >
+                                {notification.message}
+                              </p>
+
+                              {notification.actionType === "accept_decline" && (
+                                  <div className="flex justify-end items-center">
+                                    <Button
+                                        className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                            notification.type === "friend_request"
+                                                ? "bg-rose-500 hover:bg-rose-600"
+                                                : notification.type === "group_invite"
+                                                    ? "bg-orange-400 hover:bg-orange-500"
+                                                    : notification.type === "group_update"
+                                                        ? "bg-indigo-500 hover:bg-indigo-600"
+                                                        : "bg-violet-500 hover:bg-violet-600"
+                                        }`}
+                                        onClick={(e) => handleAccept(notification, e)}
+                                    >
+                                      Accept
+                                    </Button>
+                                    <button
+                                        className={`ml-3 underline text-xs ${
+                                            notification.type === "friend_request"
+                                                ? "text-rose-700"
+                                                : notification.type === "group_invite"
+                                                    ? "text-orange-700"
+                                                    : notification.type === "group_update"
+                                                        ? "text-indigo-700"
+                                                        : "text-violet-700"
+                                        }`}
+                                        onClick={(e) => handleDecline(notification, e)}
+                                    >
+                                      Decline
+                                    </button>
+                                  </div>
+                              )}
+
+                              {(notification.actionType === "go_to" ||
+                                  notification.actionType === "view") && (
+                                  <div className="flex justify-end">
+                                    <Button
+                                        className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                            notification.type === "friend_request"
+                                                ? "bg-rose-500 hover:bg-rose-600"
+                                                : notification.type === "group_invite"
+                                                    ? "bg-orange-400 hover:bg-orange-500"
+                                                    : notification.type === "group_update"
+                                                        ? "bg-indigo-500 hover:bg-indigo-600"
+                                                        : "bg-violet-500 hover:bg-violet-600"
+                                        }`}
+                                        onClick={(e) => handleAction(notification, e)}
+                                    >
+                                      {notification.actionLabel || "View"}
+                                    </Button>
+                                  </div>
+                              )}
+                            </div>
+                        ))
+                        : (
+                            <p className="text-gray-500 text-center py-2 text-sm">
+                              No notifications
+                            </p>
                         )}
-
-                        {(notification.actionType === "go_to" ||
-                          notification.actionType === "view") && (
-                          <div className="flex justify-end">
-                            <Button
-                              className={`hover:bg-opacity-70 text-white rounded-3xl px-4 py-1 h-8 text-sm ${
-                                notification.type === "friend_request"
-                                  ? "bg-rose-500 hover:bg-rose-600"
-                                  : notification.type === "group_invite"
-                                  ? "bg-orange-400 hover:bg-orange-500"
-                                  : notification.type === "group_update"
-                                  ? "bg-indigo-500 hover:bg-indigo-600"
-                                  : "bg-violet-500 hover:bg-violet-600"
-                              }`}
-                              onClick={(e) => handleAction(notification, e)}
-                            >
-                              {notification.actionLabel || "View"}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                    : (
-                      <p className="text-gray-500 text-center py-4">
-                        No notifications
-                      </p>
-                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Message Component */}
-        <ActionMessage
-          message={actionMessage}
-          isVisible={showActionMessage}
-          onHide={() => setShowActionMessage(false)}
-          className="bg-green-500"
-        />
-
-        {/* Display Action Error Message */}
-        {actionError && (
-          <ErrorMessage
-            message={actionError}
-            onClose={() => setActionError(null)}
+          {/* Action Message Component */}
+          <ActionMessage
+              message={actionMessage}
+              isVisible={showActionMessage}
+              onHide={() => setShowActionMessage(false)}
+              className="bg-green-500"
           />
-        )}
+
+          {/* Display Action Error Message */}
+          {actionError && (
+              <ErrorMessage
+                  message={actionError}
+                  onClose={() => setActionError(null)}
+              />
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 
