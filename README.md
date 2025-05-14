@@ -2,7 +2,7 @@
 
 ## Introducing the Movie Night Planner
 
-Movie Night Planner is a collaboraive web applicaion that simplifies group decision-making for movie selection. 
+Movie Night Planner is a collaborative web application that simplifies group decision-making for movie selection. 
 Coordinating movie tastes among friends can be challenging, so our solution enables users to create personal profiles, 
 create and manage their Watch List (which is the list of movies a user wants so watch) and form groups. In those groups, 
 members can contribute to the group's pool of movies by adding up to two movies from their respective Watch List to it.  
