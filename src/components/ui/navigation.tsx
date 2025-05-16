@@ -103,7 +103,7 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
       await apiService.post("/logout", {});
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
-    
+
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -151,8 +151,8 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer mt-auto"
                 onClick={handleLogout}
               >
-                <LogOut 
-                  size={20} 
+                <LogOut
+                  size={20}
                   stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
                   className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
                 />
@@ -205,8 +205,8 @@ const Navigation = ({ userId, activeItem = "Dashboard" }: NavigationProps) => {
                 className="flex items-center gap-2.5 relative cursor-pointer"
                 onClick={handleLogout}
               >
-                <LogOut 
-                  size={20} 
+                <LogOut
+                  size={20}
                   stroke={isLoggingOut ? "#1657FF" : "#3b3e88"}
                   className={`text-[${isLoggingOut ? "#1657FF" : "#3b3e88"}]`}
                 />
