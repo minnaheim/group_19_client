@@ -206,6 +206,8 @@ const MoviePool: React.FC = () => {
   const handleAddToPool = async (movie: Movie) => {
     if (phase !== "POOLING") {
       setSubmitError("You can only add movies during the POOLING phase.");
+    if (phase !== "POOLING") {
+      setSubmitError("You can only add movies during the POOLING phase.");
       setShowSuccessMessage(false); // Clear success message on new error
       setSuccessMessage("");
       return;
