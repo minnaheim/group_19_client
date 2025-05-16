@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 
 interface TimerProps {
@@ -25,7 +25,7 @@ const Timer: React.FC<TimerProps> = ({ groupId }) => {
     const fetchTime = async () => {
       try {
         const seconds = await apiService.get<number>(
-          `/groups/${groupId}/timer`
+          `/groups/${groupId}/timer`,
         );
         if (isMounted) {
           setRemaining(seconds);

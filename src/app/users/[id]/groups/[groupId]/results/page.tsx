@@ -12,6 +12,8 @@ import { useGroupPhase } from "@/app/hooks/useGroupPhase";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ActionMessage from "@/components/ui/action_message";
 import type { ApplicationError } from "@/app/types/error";
+import ConfirmationDialog from "@/components/ui/confirmation_dialog";
+import { User } from "@/app/types/user";
 
 // Define interfaces for the data coming from the backend
 interface MovieAverageRankDTO {
@@ -52,46 +54,94 @@ const Results: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   const [rankingResult, setRankingResult] = useState<RankingResultsDTO | null>(
-    null
+    null,
   );
   const [detailedResults, setDetailedResults] = useState<MovieAverageRankDTO[]>(
-    []
+    [],
   );
-  const [loading, setLoading] = useState(true);
+  const [resultsLoading, setResultsLoading] = useState(true);
+  const [winningMovieLoading, setWinningMovieLoading] = useState(true);
+  const [isOverallLoading, setIsOverallLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [actionMessage, setActionMessage] = useState<string>("");
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
+
+  // State for User Profile (watchlist/seenlist)
+  const [currentUserProfile, setCurrentUserProfile] = useState<User | null>(
+    null,
+  );
+  const [profileLoading, setProfileLoading] = useState<boolean>(true);
+
+  // State for Confirmation Dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(
+    null,
+  );
   const apiService = useApi();
 
+  // Fetch current user's profile data
+  useEffect(() => {
+    if (userId) {
+      setProfileLoading(true);
+      const fetchProfile = async () => {
+        try {
+          const profileData = await retry(() =>
+            apiService.get<User>(`/users/${userId}/profile`)
+          );
+          setCurrentUserProfile(profileData);
+        } catch (err) {
+          console.error("ResultsPage: Error fetching user profile:", err);
+          setError(
+            "Could not load your profile data. Some actions might be affected.",
+          );
+        } finally {
+          setProfileLoading(false);
+        }
+      };
+      fetchProfile();
+    }
+  }, [userId, apiService]);
+
   // ANI CHANGE: Added state to track adding movies to watched list
-  const [isAddingToWatchedList, setIsAddingToWatchedList] =
-    useState<boolean>(false);
+  const [isAddingToWatchedList, setIsAddingToWatchedList] = useState<boolean>(
+    false,
+  );
   // ANI CHANGE: Added state to track if movie was already added to watched list
-  const [movieAddedToWatchedList, setMovieAddedToWatchedList] =
-    useState<boolean>(false);
+  const [movieAddedToWatchedList, setMovieAddedToWatchedList] = useState<
+    boolean
+  >(false);
 
   // Full winning movie details (fetch for posterURL)
   const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
   useEffect(() => {
     if (rankingResult) {
+      setWinningMovieLoading(true);
       apiService
         .get<Movie>(`/movies/${rankingResult?.winningMovie?.movieId}`)
         .then((movie) => setFullWinningMovie(movie))
-        .catch((err) => console.error("Failed to fetch full movie data:", err));
+        .catch((err) => {
+          console.error("Failed to fetch full movie data:", err);
+          setError(
+            "Failed to load details for the winning movie. Results might be incomplete.",
+          );
+        })
+        .finally(() => setWinningMovieLoading(false));
     }
   }, [apiService, rankingResult]);
 
   // Fetch combined results once RESULTS phase
   useEffect(() => {
     const fetchCombined = async () => {
-      if (!groupId || !id || phaseFromHook !== "RESULTS") return;
-      
-      setLoading(true);
-      
+      if (!groupId || !id || phaseFromHook !== "RESULTS") {
+        return;
+      }
+
+      setResultsLoading(true);
+
       try {
         const response = await retry(() =>
           apiService.get<RankingResultsDTO>(
-            `/groups/${groupId}/rankings/results`
+            `/groups/${groupId}/rankings/results`,
           )
         );
         setRankingResult(response);
@@ -105,34 +155,34 @@ const Results: React.FC = () => {
           const appErr = err as ApplicationError;
           if (appErr.status === 404) {
             setError(
-              "Could not find the group or results are not yet available."
+              "Could not find the group or results are not yet available.",
             );
           } else if (appErr.status === 409) {
             setError("Results can only be viewed after voting has ended.");
           } else {
             setError(
-              "An error occurred while loading results. Please try again."
+              "An error occurred while loading results. Please try again.",
             );
           }
         } else {
           setError(
-            "An error occurred while loading results. Please try again."
+            "An error occurred while loading results. Please try again.",
           );
         }
         setShowActionMessage(false); // Clear success on new error
         setActionMessage("");
       } finally {
-        
-        // Delay for testing
-        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
-        setLoading(false);
+        // Add a small delay before turning off loading to ensure all state updates are complete
+        // This prevents momentary flashing of error messages or incomplete content
+        setTimeout(() => {
+          setIsOverallLoading(false);
+        }, 100); // 100ms delay is barely noticeable but allows other state updates to settle
       }
     };
 
     // Only fetch results when we're in the RESULTS phase and phase data is loaded
     if (!phaseLoading && phaseFromHook === "RESULTS") {
-    fetchCombined();
-      // We'll check if the movie is watched after we have the results
+      fetchCombined();
     }
   }, [id, groupId, phaseFromHook, apiService, phaseLoading]);
 
@@ -140,12 +190,8 @@ const Results: React.FC = () => {
   useEffect(() => {
     const checkIfMovieIsWatched = async () => {
       if (fullWinningMovie && userId && apiService) {
-        // Ensure apiService is defined
         try {
-          // Assuming apiService.get returns the data directly or data wrapped in a response object
-          // Adjust based on your apiService implementation
           const response = await apiService.get(`/users/${userId}/watched`);
-          // ANI CHANGE: Refactor watchedMovies assignment to safely access response.data
           let watchedMoviesList: WatchedMovieDTO[] = [];
           if (Array.isArray(response)) {
             watchedMoviesList = response;
@@ -161,7 +207,7 @@ const Results: React.FC = () => {
             const isWatched = watchedMoviesList.some(
               (movie: WatchedMovieDTO) =>
                 movie.movieId === fullWinningMovie.movieId ||
-                movie.id === fullWinningMovie.movieId // Check both movieId and id just in case
+                movie.id === fullWinningMovie.movieId, // Check both movieId and id just in case
             );
             if (isWatched) {
               setMovieAddedToWatchedList(true);
@@ -169,8 +215,6 @@ const Results: React.FC = () => {
           }
         } catch (err) {
           console.error("Error fetching watched movies:", err);
-          //setActionMessage("Could not verify watched status.");
-          //setShowActionMessage(true);
         }
       }
     };
@@ -178,8 +222,98 @@ const Results: React.FC = () => {
     checkIfMovieIsWatched();
   }, [fullWinningMovie, userId, apiService]); // Dependencies for the useEffect hook
 
+  // --- Confirmation Dialog Handlers ---
+  const refreshUserProfile = async () => {
+    if (userId) {
+      try {
+        const profileData = await retry(() =>
+          apiService.get<User>(`/users/${userId}/profile`)
+        );
+        setCurrentUserProfile(profileData);
+      } catch (err) {
+        console.error("ResultsPage: Error refreshing user profile:", err);
+      }
+    }
+  };
+
+  const handleDialogConfirmKeep = async () => {
+    if (!confirmDialogMovie || !userId) return;
+    setIsAddingToWatchedList(true);
+    try {
+      await retry(() =>
+        apiService.post(`/users/${userId}/seenMovies`, {
+          movieId: confirmDialogMovie.movieId,
+        })
+      );
+      setMovieAddedToWatchedList(true);
+      setActionMessage(
+        `'${confirmDialogMovie.title}' marked as seen and kept in watchlist.`,
+      );
+      setShowActionMessage(true);
+      await refreshUserProfile();
+    } catch (err) {
+      console.error("Error in handleDialogConfirmKeep:", err);
+      setActionMessage("Failed to update movie status.");
+      setShowActionMessage(true);
+    } finally {
+      setIsAddingToWatchedList(false);
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+    }
+  };
+
+  const handleDialogCancelRemove = async () => {
+    if (!confirmDialogMovie || !userId) return;
+    setIsAddingToWatchedList(true);
+    try {
+      await retry(() =>
+        apiService.post(`/users/${userId}/seenMovies`, {
+          movieId: confirmDialogMovie.movieId,
+        })
+      );
+      await retry(() =>
+        apiService.delete(
+          `/users/${userId}/watchlist/${confirmDialogMovie.movieId}`,
+        )
+      );
+      setMovieAddedToWatchedList(true);
+      setActionMessage(
+        `'${confirmDialogMovie.title}' marked as seen and removed from watchlist.`,
+      );
+      setShowActionMessage(true);
+      await refreshUserProfile();
+    } catch (err) {
+      console.error("Error in handleDialogCancelRemove:", err);
+      setActionMessage("Failed to update movie status.");
+      setShowActionMessage(true);
+    } finally {
+      setIsAddingToWatchedList(false);
+      setShowConfirmDialog(false);
+      setConfirmDialogMovie(null);
+    }
+  };
+
   // ANI CHANGE: New function to add the winning movie to the current user's watched list
   const addToMyWatchedList = async () => {
+    if (profileLoading || !fullWinningMovie || !currentUserProfile) {
+      setActionMessage("Profile data is loading, please wait...");
+      setShowActionMessage(true);
+      return;
+    }
+
+    const movieInWatchlist = currentUserProfile.watchlist?.some((m: Movie) =>
+      m.movieId === fullWinningMovie.movieId
+    );
+    const movieInSeenlist = currentUserProfile.watchedMovies?.some((m: Movie) =>
+      m.movieId === fullWinningMovie.movieId
+    );
+
+    if (movieInWatchlist && !movieInSeenlist) {
+      setConfirmDialogMovie(fullWinningMovie);
+      setShowConfirmDialog(true);
+      return;
+    }
+
     if (!fullWinningMovie || isAddingToWatchedList || movieAddedToWatchedList) {
       return;
     }
@@ -191,34 +325,31 @@ const Results: React.FC = () => {
     try {
       const movieId = fullWinningMovie.movieId;
 
-      // Add movie to user's watched list
       await apiService.post(`/users/${userId}/watched/${movieId}`, {});
 
       setActionMessage("Marked winning movie as seen!");
-      setMovieAddedToWatchedList(true); // Mark as added to prevent duplicate additions
-      setError(""); // Clear error on success
+      setMovieAddedToWatchedList(true);
+      setError("");
     } catch (error) {
       console.error("Error marking movie as seen:", error);
 
-      // ANI CHANGE: Check for the specific error that indicates the movie is already in the watched list
       if (error instanceof Error && "status" in error) {
         const appErr = error as ApplicationError;
         if (appErr.status === 409) {
           setActionMessage(
-            "This movie is already marked as seen in your profile page!"
+            "This movie is already marked as seen in your profile page!",
           );
-          setMovieAddedToWatchedList(true); // Mark as added since it's already there
+          setMovieAddedToWatchedList(true);
         } else {
           setError("Failed to mark movie as seen");
         }
       } else {
         setError("Failed to mark movie as seen");
       }
-      setShowActionMessage(false); // Clear success on new error
+      setShowActionMessage(false);
       setActionMessage("");
     } finally {
       setIsAddingToWatchedList(false);
-      setShowActionMessage(true);
     }
   };
 
@@ -226,7 +357,7 @@ const Results: React.FC = () => {
     if (phaseLoading) return;
     if (phaseError) {
       setError(phaseError as string);
-      setLoading(false);
+
       setShowActionMessage(false); // Clear success on new error
       setActionMessage("");
       return;
@@ -247,11 +378,21 @@ const Results: React.FC = () => {
       setError(phaseError as string);
       setShowActionMessage(false);
       setActionMessage("");
-      setLoading(false); // Also ensure loading is stopped
+      // Also ensure loading is stopped
     }
   }, [phaseError]);
 
   // Helper function to get complete image URL
+  useEffect(() => {
+    if (
+      phaseLoading || profileLoading || resultsLoading || winningMovieLoading
+    ) {
+      setIsOverallLoading(true);
+    } else {
+      setIsOverallLoading(false);
+    }
+  }, [phaseLoading, profileLoading, resultsLoading, winningMovieLoading]);
+
   const getFullPosterUrl = (posterPath?: string | null): string => {
     // No poster provided, use placeholder
     if (!posterPath) {
@@ -294,92 +435,110 @@ const Results: React.FC = () => {
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
-    {/* Sidebar Navigation - always visible even during loading */}
+      {/* Sidebar Navigation - always visible even during loading */}
       <Navigation userId={userId} activeItem="Movie Groups" />
 
-    {/* Main Content */}
+      {/* Main Content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         {/* Header */}
         <div className="mb-8 flex items-center">
           <div>
             <h1 className="font-semibold text-[#3b3e88] text-3xl">
               {phaseGroup
-                ? `${phaseGroup.groupName} - Final Movie Ranking`
+                ? `Final Movie Ranking - ${phaseGroup.groupName}`
                 : "Final Movie Ranking"}
             </h1>
-            {/* <p className="text-[#b9c0de] mt-2">
+            {
+              /* <p className="text-[#b9c0de] mt-2">
               See what your group has chosen to watch
-            </p> */}
+            </p> */
+            }
           </div>
         </div>
 
-        {/* Error display */}
-        {error && <ErrorMessage message={error} onClose={() => setError("")} />}
-
-        {/* Success message box */}
-        <ActionMessage
-          message={actionMessage}
-          isVisible={showActionMessage}
-          onHide={() => setShowActionMessage(false)}
-          className="bg-green-500"
-        />
-
-      {/* Conditional rendering for loading state */}
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-          </div>
-        </div>
-      ) : (
-        <>
-        {/* Winner Section */}
-        <div className="flex flex-col items-center justify-center text-center mb-12">
-          {phaseFromHook !== "RESULTS" ? (
-            <div className="text-center p-6 bg-white rounded-lg shadow-md">
-              <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-                Results Not Available Yet
-              </h2>
-              <p className="text-[#3b3e88]/60 mb-4">
-                The results will be available once the group enters the RESULTS
-                phase.
-              </p>
-              <p className="text-[#3b3e88]/60">Please check back later!</p>
-            </div>
-          ) : rankingResult ? (
-            <>
-              <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
-                And the winner is...
-              </h2>
-              <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
-                <img
-                  src={getFullPosterUrl(
-                    fullWinningMovie?.posterURL ??
-                        rankingResult?.winningMovie?.posterURL
-                  )}
-                  alt={
-                      fullWinningMovie?.title || rankingResult?.winningMovie?.title
-                  }
-                  className="w-full h-full object-cover"
-                />
+        {/* Conditional rendering for loading state */}
+        {isOverallLoading
+          ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
               </div>
-              <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
-                  {fullWinningMovie?.title || rankingResult?.winningMovie?.title}
-              </h2>
+            </div>
+          )
+          : (
+            <>
+              {/* Error display - only shown AFTER overall loading is false */}
+              {error && (
+                <ErrorMessage
+                  message={error}
+                  onClose={() => setError("")}
+                />
+              )}
 
-              {detailedResults.length > 0 && (
-                <p className="text-[#3b3e88] text-lg mt-2">
-                  With a score of{" "}
-                  {renderProjectors(
-                      detailedResults.findIndex(
-                          (item) => item.movie.movieId === rankingResult.winningMovie.movieId
-                      ) !== -1
-                          ? detailedResults.length -
-                          detailedResults.findIndex(
-                              (item) => item.movie.movieId === rankingResult.winningMovie.movieId
-                          )
-                          : 0
-                  )}
-                  {/*OLD:
+              {/* Success message box - also shown AFTER overall loading */}
+              <ActionMessage
+                message={actionMessage}
+                isVisible={showActionMessage}
+                onHide={() => setShowActionMessage(false)}
+                className="bg-green-500"
+              />
+
+              {/* Winner Section */}
+              <div className="flex flex-col items-center justify-center text-center mb-12">
+                {phaseFromHook !== "RESULTS"
+                  ? (
+                    <div className="text-center p-6 bg-white rounded-lg shadow-md">
+                      <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                        Results Not Available Yet
+                      </h2>
+                      <p className="text-[#3b3e88]/60 mb-4">
+                        The results will be available once the group enters the
+                        RESULTS phase.
+                      </p>
+                      <p className="text-[#3b3e88]/60">
+                        Please check back later!
+                      </p>
+                    </div>
+                  )
+                  : rankingResult
+                  ? (
+                    <>
+                      <h2 className="font-semibold text-[#3b3e88] text-2xl mb-6">
+                        And the winner is...
+                      </h2>
+                      <div className="relative w-[200px] h-[300px] md:w-[250px] md:h-[375px] rounded-lg shadow-lg overflow-hidden mb-4">
+                        <img
+                          src={getFullPosterUrl(
+                            fullWinningMovie?.posterURL ??
+                              rankingResult?.winningMovie?.posterURL,
+                          )}
+                          alt={fullWinningMovie?.title ||
+                            rankingResult?.winningMovie?.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h2 className="font-semibold text-[#3b3e88] text-2xl mt-4">
+                        {fullWinningMovie?.title ||
+                          rankingResult?.winningMovie?.title}
+                      </h2>
+
+                      {detailedResults.length > 0 && (
+                        <p className="text-[#3b3e88] text-lg mt-2">
+                          With a score of {renderProjectors(
+                            detailedResults.findIndex(
+                                (item) =>
+                                  item.movie.movieId ===
+                                    rankingResult.winningMovie.movieId,
+                              ) !== -1
+                              ? detailedResults.length -
+                                detailedResults.findIndex(
+                                  (item) =>
+                                    item.movie.movieId ===
+                                      rankingResult.winningMovie.movieId,
+                                )
+                              : 0,
+                          )}
+                          {
+                            /*OLD:
                   With an average rank of{" "}
                   {formatAverageRank(
                     detailedResults.find(
@@ -388,101 +547,128 @@ const Results: React.FC = () => {
                           rankingResult?.winningMovie?.movieId
                     )?.averageRank || null
                   )}
-                  */}
-                  !
-                </p>
+                  */
+                          }
+                          !
+                        </p>
+                      )}
+
+                      <p className="text-[#3b3e88]/60 mt-2">
+                        Based on votes from {rankingResult.numberOfVoters}{" "}
+                        group members
+                      </p>
+
+                      {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
+                      <div className="mt-6">
+                        <Button
+                          onClick={addToMyWatchedList}
+                          disabled={!fullWinningMovie ||
+                            resultsLoading || // Changed from loading
+                            isOverallLoading || // Also consider overall loading state
+                            !!error ||
+                            movieAddedToWatchedList ||
+                            isAddingToWatchedList}
+                          className="bg-[#7824ec] hover:bg-opacity-90"
+                        >
+                          {movieAddedToWatchedList
+                            ? "Movie marked as seen ✓"
+                            : "Mark movie as seen"}
+                        </Button>
+                      </div>
+                    </>
+                  )
+                  : (
+                    <div className="text-center p-6 bg-white rounded-lg shadow-md">
+                      <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                        No Results Available
+                      </h2>
+                      <p className="text-[#3b3e88]/60">
+                        {`It looks like no one from the group "${phaseGroup?.groupName}" voted.`}
+                      </p>
+                      {
+                        /* <p className="text-[#b9c0de]">
+                Check back later to see the winning movie!
+              </p> */
+                      }
+                    </div>
+                  )}
+              </div>
+
+              {/* All Rankings Section (if we have detailed results) */}
+              {detailedResults.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
+                    All Rankings
+                  </h2>
+                  <div className="bg-white rounded-lg shadow-md p-4">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-2 text-[#3b3e88]">
+                            Rank
+                          </th>
+                          <th className="text-left py-2 text-[#3b3e88]">
+                            Movie
+                          </th>
+                          <th className="text-right py-2 text-[#3b3e88]">
+                            Final Score
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailedResults.map((item, index) => (
+                          <tr
+                            key={item.movie.movieId}
+                            className="border-b border-gray-100"
+                          >
+                            <td className="py-2 text-[#3b3e88]">{index + 1}</td>
+                            <td className="py-2 text-[#3b3e88]">
+                              {item.movie.title}
+                            </td>
+                            <td className="py-2 text-right text-[#3b3e88]">
+                              {renderProjectors(detailedResults.length - index)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
-              <p className="text-[#3b3e88]/60 mt-2">
-                Based on votes from {rankingResult.numberOfVoters} group members
-              </p>
-
-              {/* ANI CHANGE: Added button to add winning movie to all members' watchedlists */}
-              <div className="mt-6">
+              {/* Buttons */}
+              <div className="flex justify-between items-center mt-8">
                 <Button
-                  onClick={addToMyWatchedList}
-                  disabled={
-                    !fullWinningMovie ||
-                    loading ||
-                    !!error ||
-                    movieAddedToWatchedList ||
-                    isAddingToWatchedList
-                  }
-                  className="bg-[#7824ec] hover:bg-opacity-90"
+                  variant="outline"
+                  onClick={() => router.push(`/users/${userId}/groups`)}
                 >
-                  {movieAddedToWatchedList
-                    ? "Movie marked as seen ✓"
-                    : "Mark movie as seen"}
+                  Back to Group Overview
+                </Button>
+                <Button
+                  onClick={() => router.push(`/users/${userId}/dashboard`)}
+                >
+                  Go to Dashboard
                 </Button>
               </div>
             </>
-          ) : (
-            <div className="text-center p-6 bg-white rounded-lg shadow-md">
-              <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-                No Results Available
-              </h2>
-              <p className="text-[#3b3e88]/60">
-                {`It looks like no one from the group "${phaseGroup?.groupName}" voted.`}
-              </p>
-              {/* <p className="text-[#b9c0de]">
-                Check back later to see the winning movie!
-              </p> */}
-            </div>
           )}
-        </div>
 
-        {/* All Rankings Section (if we have detailed results) */}
-        {detailedResults.length > 0 && (
-          <div className="mb-8">
-            <h2 className="font-semibold text-[#3b3e88] text-xl mb-4">
-              All Rankings
-            </h2>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 text-[#3b3e88]">Rank</th>
-                    <th className="text-left py-2 text-[#3b3e88]">Movie</th>
-                    <th className="text-right py-2 text-[#3b3e88]">
-                      Final Score
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailedResults.map((item, index) => (
-                    <tr
-                      key={item.movie.movieId}
-                      className="border-b border-gray-100"
-                    >
-                      <td className="py-2 text-[#3b3e88]">{index + 1}</td>
-                      <td className="py-2 text-[#3b3e88]">
-                        {item.movie.title}
-                      </td>
-                      <td className="py-2 text-right text-[#3b3e88]">
-                        {renderProjectors(detailedResults.length - index)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* Confirmation Dialog for marking movie in watchlist as seen */}
+        {confirmDialogMovie && (
+          <ConfirmationDialog
+            isOpen={showConfirmDialog}
+            onClose={() => {
+              setShowConfirmDialog(false);
+              setConfirmDialogMovie(null);
+            }}
+            onConfirm={handleDialogConfirmKeep} // Yes, keep it
+            onCancel={handleDialogCancelRemove} // No, remove it
+            title={`Mark '${confirmDialogMovie.title}' as seen:`}
+            message={`'${confirmDialogMovie.title}' is already in your watchlist. Do you want to keep it there after marking it as seen?`}
+            confirmText="Yes, keep in watchlist"
+            cancelText="No, remove from watchlist"
+          />
         )}
-
-        {/* Buttons */}
-        <div className="flex justify-between items-center mt-8">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/users/${userId}/groups`)}
-          >
-            Back to Group Overview
-          </Button>
-          <Button onClick={() => router.push(`/users/${userId}/dashboard`)}>
-            Go to Dashboard
-          </Button>
-        </div>
-        </>
-      )}
       </div>
     </div>
   );
