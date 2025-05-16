@@ -114,7 +114,7 @@ const LandingPage = () => {
           </p>
           <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <Button
-              className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white text-lg h-12 px-8"
+              className="bg-orange-500 hover:bg-orange-600 transition-colors duration-200 text-white text-lg h-12 px-8"
               onClick={handleSignUp}
             >
               Get Started
