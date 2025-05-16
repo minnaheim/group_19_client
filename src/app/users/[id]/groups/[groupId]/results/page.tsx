@@ -363,7 +363,7 @@ const Results: React.FC = () => {
       return;
     }
     if (phaseFromHook && phaseFromHook !== "RESULTS") {
-      if (phaseFromHook === "POOL") {
+      if (phaseFromHook === "POOLING") {
         router.replace(`/users/${userId}/groups/${groupId}/pool`);
       } else if (phaseFromHook === "VOTING") {
         router.replace(`/users/${userId}/groups/${groupId}/vote`);

@@ -71,7 +71,7 @@ const MoviePool: React.FC = () => {
       // setDataLoading(false); // isOverallLoading will handle this based on phaseLoading
       return;
     }
-    if (phase && phase !== "POOL") {
+    if (phase && phase !== "POOLING") {
       if (phase === "VOTING") {
         router.replace(`/users/${userId}/groups/${groupId}/vote`);
       } else if (phase === "RESULTS") {
@@ -146,13 +146,13 @@ const MoviePool: React.FC = () => {
       }
     };
 
-    // Only fetch watchlist when we're in the POOL phase and phase data is loaded
-    if (!phaseLoading && phase === "POOL") {
+    // Only fetch watchlist when we're in the POOLING phase and phase data is loaded
+    if (!phaseLoading && phase === "POOLING") {
       fetchWatchlist();
     }
   }, [userId, apiService, phaseLoading, phase]);
 
-  // Fetch movie pool after getting watchlist and once group is in POOL phase
+  // Fetch movie pool after getting watchlist and once group is in POOLING phase
   useEffect(() => {
     const fetchMoviePool = async () => {
       setPoolLoading(true);
@@ -196,16 +196,16 @@ const MoviePool: React.FC = () => {
       }
     };
 
-    // Only fetch movie pool when we're in the POOL phase and phase data is loaded
-    if (!phaseLoading && phase === "POOL") {
+    // Only fetch movie pool when we're in the POOLING phase and phase data is loaded
+    if (!phaseLoading && phase === "POOLING") {
       fetchMoviePool();
     }
   }, [apiService, groupId, phase, phaseLoading]);
 
   // Modified to add movie directly to pool on click
   const handleAddToPool = async (movie: Movie) => {
-    if (phase !== "POOL") {
-      setSubmitError("You can only add movies during the POOL phase.");
+    if (phase !== "POOLING") {
+      setSubmitError("You can only add movies during the POOLING phase.");
       setShowSuccessMessage(false); // Clear success message on new error
       setSuccessMessage("");
       return;
@@ -242,7 +242,7 @@ const MoviePool: React.FC = () => {
             break;
           case 409:
             specificError =
-              `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOL phase.`;
+              `Movie '${movie.title}' is already in the pool, or you can only add movies during the POOLING phase.`;
             break;
           default:
             specificError = `Failed to add '${movie.title}'.`;
@@ -287,7 +287,7 @@ const MoviePool: React.FC = () => {
         switch (appErr.status) {
           case 403:
             errorMessage =
-              "You can only remove movies that you added, or you are not a member, or it's not POOL phase.";
+              "You can only remove movies that you added, or you are not a member, or it's not POOLING phase.";
             break;
           case 404:
             errorMessage = "Movie not found in the pool or group not found.";
@@ -422,7 +422,7 @@ const MoviePool: React.FC = () => {
                 </div>
 
                 {/* Informational message for non-pool phase */}
-                {phase !== "POOL" && (
+                {phase !== "POOLING" && (
                   <div className="flex justify-center mt-4">
                     <ErrorMessage
                       message={`This group is currently in the ${phase} phase. You cannot modify the pool now.`}
@@ -474,7 +474,7 @@ const MoviePool: React.FC = () => {
                               movie={entry.movie}
                               onClick={handleMovieClick}
                             />
-                            {phase === "POOL" &&
+                            {phase === "POOLING" &&
                               entry.addedBy === parseInt(userId || "0") && (
                               <button
                                 onPointerDown={(e) => e.stopPropagation()}
@@ -501,7 +501,7 @@ const MoviePool: React.FC = () => {
                     Back to Group Overview
                   </Button>
                   {/* Start Voting (creator only, right) */}
-                  {phase === "POOL" &&
+                  {phase === "POOLING" &&
                     phaseGroup &&
                     String(phaseGroup.creatorId) === String(userId) && (
                     <Button
