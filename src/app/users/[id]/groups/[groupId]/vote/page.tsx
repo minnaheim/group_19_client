@@ -547,8 +547,7 @@ const Vote: React.FC = () => {
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
       {/* Sidebar navigation */}
       <Navigation userId={userId} activeItem="Movie Groups" />
-      {/* Error display */}
-      {error && <ErrorMessage message={error} onClose={() => setError("")} />}
+      {/* Error display is handled below, after initial loading is complete */}
       {successMessage !== "Saved your Ranking" && (
         <ActionMessage
           message={successMessage}
