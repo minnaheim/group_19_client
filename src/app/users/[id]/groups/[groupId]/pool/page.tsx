@@ -167,8 +167,8 @@ const MoviePool: React.FC = () => {
 
   // Modified to add movie directly to pool on click
   const handleAddToPool = async (movie: Movie) => {
-    if (phase !== "POOL") {
-      setSubmitError("You can only add movies during the POOL phase.");
+    if (phase !== "POOLING") {
+      setSubmitError("You can only add movies during the POOLING phase.");
       setShowSuccessMessage(false); // Clear success message on new error
       setSuccessMessage("");
       return;
@@ -366,7 +366,7 @@ const MoviePool: React.FC = () => {
             />
           </div>
           {/* Informational message for non-pool phase */}
-          {phase !== "POOL" && (
+          {phase !== "POOLING" && (
             <div className="flex justify-center mt-4">
               <ErrorMessage
                 message="You can only add movies during the POOL phase."
@@ -414,7 +414,7 @@ const MoviePool: React.FC = () => {
                     className="relative flex-shrink-0"
                   >
                     <MovieCard movie={entry.movie} onClick={handleMovieClick} />
-                    {phase === "POOL" &&
+                    {phase === "POOLING" &&
                       entry.addedBy === parseInt(userId || "0") && (
                         <button
                           onPointerDown={(e) => e.stopPropagation()}
@@ -442,7 +442,7 @@ const MoviePool: React.FC = () => {
               Back to Group Overview
             </Button>
             {/* Start Voting (creator only, right) */}
-            {phase === "POOL" &&
+            {phase === "POOLING" &&
               phaseGroup &&
               String(phaseGroup.creatorId) === String(userId) && (
                 <Button
