@@ -52,7 +52,7 @@ const MoviePool: React.FC = () => {
       setSuccessMessage("");
       return;
     }
-    if (phase && phase !== "POOL") {
+    if (phase && phase !== "POOLING") {
       if (phase === "VOTING") {
         router.replace(`/users/${userId}/groups/${groupId}/vote`);
       } else if (phase === "RESULTS") {
