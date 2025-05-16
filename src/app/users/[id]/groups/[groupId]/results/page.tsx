@@ -172,11 +172,8 @@ const Results: React.FC = () => {
         setShowActionMessage(false); // Clear success on new error
         setActionMessage("");
       } finally {
-        // Add a small delay before turning off loading to ensure all state updates are complete
-        // This prevents momentary flashing of error messages or incomplete content
-        setTimeout(() => {
-          setIsOverallLoading(false);
-        }, 100); // 100ms delay is barely noticeable but allows other state updates to settle
+        setResultsLoading(false);
+        // setIsOverallLoading is now handled by the central useEffect
       }
     };
 
