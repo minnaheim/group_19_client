@@ -20,7 +20,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/app/hooks/useLocalStorage";
 
-const MoviePool: React.FC = () => {
+const MoviePool = () => {
   const [selectedMovies] = useState<Movie[]>([]);
   const params = useParams();
   let groupId = params.groupId;
@@ -147,7 +147,7 @@ const MoviePool: React.FC = () => {
     };
 
     // Only fetch watchlist when we're in the POOLING phase and phase data is loaded
-    if (!phaseLoading && phase === "POOLING") {
+    if (!phaseLoading && (phase === "POOLING")) {
       fetchWatchlist();
     }
   }, [userId, apiService, phaseLoading, phase]);
@@ -197,15 +197,13 @@ const MoviePool: React.FC = () => {
     };
 
     // Only fetch movie pool when we're in the POOLING phase and phase data is loaded
-    if (!phaseLoading && phase === "POOLING") {
+    if (!phaseLoading && (phase === "POOLING")) {
       fetchMoviePool();
     }
   }, [apiService, groupId, phase, phaseLoading]);
 
   // Modified to add movie directly to pool on click
   const handleAddToPool = async (movie: Movie) => {
-    if (phase !== "POOLING") {
-      setSubmitError("You can only add movies during the POOLING phase.");
     if (phase !== "POOLING") {
       setSubmitError("You can only add movies during the POOLING phase.");
       setShowSuccessMessage(false); // Clear success message on new error
