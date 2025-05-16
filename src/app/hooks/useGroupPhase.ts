@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 
-export type GroupPhase = "POOL" | "VOTING" | "RESULTS";
+export type GroupPhase = "POOLING" | "VOTING" | "RESULTS";
 
 export interface GroupDetails {
   groupId: number;

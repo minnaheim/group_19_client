@@ -152,7 +152,7 @@ const Vote: React.FC = () => {
       return;
     }
     if (phase && phase !== "VOTING") {
-      if (phase === "POOL") {
+      if (phase === "POOLING") {
         router.replace(`/users/${userId}/groups/${groupId}/pool`);
       }
       if (phase === "RESULTS") {
