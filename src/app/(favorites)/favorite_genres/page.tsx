@@ -152,7 +152,8 @@ const GenreFavorites: React.FC = () => {
         </div>
 
         <p className="text-center text-[#b9c0de] text-sm">
-          {selectedGenres.length} genre{selectedGenres.length !== 1 && "s"} selected
+          {selectedGenres.length} genre{selectedGenres.length !== 1 && "s"}{" "}
+          selected
         </p>
       </div>
 

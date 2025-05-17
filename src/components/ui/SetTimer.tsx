@@ -1,9 +1,9 @@
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
@@ -14,9 +14,23 @@ interface SetTimerProps {
   isCreator: boolean;
 }
 
+const parseHHMMSS = (value: string): number => {
+  const parts = value.split(":").map(Number);
+  if (parts.length === 3) {
+    const [h, m, s] = parts;
+    return h * 3600 + m * 60 + s;
+  } else if (parts.length === 2) {
+    const [m, s] = parts;
+    return m * 60 + s;
+  } else if (parts.length === 1) {
+    return parts[0];
+  }
+  return 0;
+};
+
 const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
-  const [votingSeconds, setVotingSeconds] = useState(120);
-  const [poolSeconds, setPoolSeconds] = useState(120);
+  const [votingInput, setVotingInput] = useState("00:05:00");
+  const [poolInput, setPoolInput] = useState("00:05:00");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -30,10 +44,13 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
     setMessage("");
     setError("");
     try {
-      await apiService.post(`/groups/${groupId}/voting-timer`, votingSeconds);
-      setMessage("Set voting Timer");
+      const seconds = parseHHMMSS(votingInput);
+      await apiService.post(`/groups/${groupId}/voting-timer`, seconds);
+      await apiService.post(`/groups/${groupId}/start-voting-timer`, {});
+      setMessage("Voting Timer started!");
+      setOpen(true); // Close the dialog
     } catch {
-      setError("Failed to set voting timer.");
+      setError("Failed to set and start Voting Timer.");
     } finally {
       setLoading(false);
     }
@@ -44,8 +61,10 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
     setMessage("");
     setError("");
     try {
-      await apiService.post(`/groups/${groupId}/pool-timer`, poolSeconds);
-      setMessage("Set pool Timer");
+      const seconds = parseHHMMSS(poolInput);
+      await apiService.post(`/groups/${groupId}/pool-timer`, seconds);
+      await apiService.post(`/groups/${groupId}/start-pool-timer`, {});
+      setMessage("Pool Timer started!");
     } catch {
       setError("Failed to set pool timer.");
     } finally {
@@ -53,20 +72,20 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
     }
   };
 
-  const handleStartPoolTimer = async () => {
-    setLoading(true);
-    setMessage("");
-    setError("");
-    try {
-      await apiService.post(`/groups/${groupId}/start-pool-timer`, {});
-      setMessage("Pool timer started!");
-      setOpen(false); // Close the dialog
-    } catch {
-      setError("Failed to start pool timer.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleStartPoolTimer = async () => {
+  //   setLoading(true);
+  //   setMessage("");
+  //   setError("");
+  //   try {
+  //     await apiService.post(`/groups/${groupId}/start-pool-timer`, {});
+  //     setMessage("Pool timer started!");
+  //     setOpen(false); // Close the dialog
+  //   } catch {
+  //     setError("Failed to start pool timer.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -79,58 +98,53 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
             Set Voting and Pool Timers
           </DialogTitle>
         </DialogHeader>
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <label
-              htmlFor="voting-seconds"
-              className="font-medium text-[#838bad]"
-            >
-              Voting Seconds:
-            </label>
-            <input
-              id="voting-seconds"
-              type="number"
-              min={0}
-              value={votingSeconds}
-              onChange={(e) => setVotingSeconds(Number(e.target.value))}
-              className="border rounded px-2 py-1 w-24"
-              placeholder="Voting Seconds"
-              disabled={loading}
-            />
-          </div>
-          <div className="flex items-center gap-2 mb-2">
+        <div className="flex flex-col gap-3 w-full">
+          <div className="flex items-center gap-2 w-full">
             <label
               htmlFor="pool-seconds"
               className="font-medium text-[#838bad]"
             >
-              Pool Seconds:
+              Time to Pool (HH:MM:SS):
             </label>
             <input
               id="pool-seconds"
-              type="number"
-              min={0}
-              value={poolSeconds}
-              onChange={(e) => setPoolSeconds(Number(e.target.value))}
+              type="text"
+              pattern="^\\d{2}:\\d{2}:\\d{2}$"
+              value={poolInput}
+              onChange={(e) => setPoolInput(e.target.value)}
               className="border rounded px-2 py-1 w-24"
-              placeholder="Pool Seconds"
+              placeholder="00:05:00"
               disabled={loading}
             />
-          </div>
-          <div className="flex items-center gap-2 mb-2">
             <Button
               onClick={handleSetPoolTimer}
-              disabled={loading || poolSeconds <= 0}
+              disabled={loading || poolInput === "00:00:00"}
             >
               Set Pool Time
             </Button>
+          </div>
+          <div className="flex items-center gap-2 w-full">
+            <label
+              htmlFor="voting-seconds"
+              className="font-medium text-[#838bad]"
+            >
+              Time to Vote (HH:MM:SS):
+            </label>
+            <input
+              id="voting-seconds"
+              type="text"
+              pattern="^\\d{2}:\\d{2}:\\d{2}$"
+              value={votingInput}
+              onChange={(e) => setVotingInput(e.target.value)}
+              className="border rounded px-2 py-1 w-24"
+              placeholder="00:05:00"
+              disabled={loading}
+            />
             <Button
               onClick={handleSetVotingTimer}
-              disabled={loading || votingSeconds <= 0}
+              disabled={loading || votingInput === "00:00:00"}
             >
               Set Voting Time
-            </Button>
-            <Button onClick={handleStartPoolTimer} disabled={loading}>
-              Start Pool Timer
             </Button>
           </div>
           {message && (
