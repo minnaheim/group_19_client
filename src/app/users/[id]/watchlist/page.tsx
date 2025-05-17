@@ -44,7 +44,7 @@ const WatchList: React.FC = () => {
   // confirmation dialog
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [confirmDialogMovie, setConfirmDialogMovie] = useState<Movie | null>(
-    null,
+    null
   );
 
   const { value: token } = useLocalStorage<string>("token", "");
@@ -64,7 +64,7 @@ const WatchList: React.FC = () => {
       setLoading(true);
       try {
         console.log(
-          `Watchlist (trigger: ${refreshTrigger}): Fetching user data for ID: ${id}`,
+          `Watchlist (trigger: ${refreshTrigger}): Fetching user data for ID: ${id}`
         ); // Diagnostic log
         const userData = await retry(() =>
           apiService.get(`/users/${id}/profile`)
@@ -75,7 +75,8 @@ const WatchList: React.FC = () => {
         console.error("Watchlist: Error loading user data:", error); // Diagnostic log
         setUser(null); // Clear user data on error
         if (
-          error instanceof Error && "status" in error &&
+          error instanceof Error &&
+          "status" in error &&
           (error as ApplicationError).status === 404
         ) {
           setError("Oops! We couldn't find your profile details.");
@@ -156,21 +157,21 @@ const WatchList: React.FC = () => {
     }
     try {
       await apiService.delete(
-        `/users/${userId}/watchlist/${movieToRemove.movieId}`,
+        `/users/${userId}/watchlist/${movieToRemove.movieId}`
       );
       setUser((prevUser) => {
         if (!prevUser) return null;
         return {
           ...prevUser,
           watchlist: prevUser.watchlist.filter(
-            (movie) => movie.movieId !== movieToRemove.movieId,
+            (movie) => movie.movieId !== movieToRemove.movieId
           ),
         };
       });
       if (isSearching) {
         setFilteredMovies((prevFiltered) =>
-          prevFiltered.filter((movie) =>
-            movie.movieId !== movieToRemove.movieId
+          prevFiltered.filter(
+            (movie) => movie.movieId !== movieToRemove.movieId
           )
         );
       }
@@ -205,8 +206,8 @@ const WatchList: React.FC = () => {
       return;
     }
 
-    const movieIsInWatchlist = user?.watchlist.some((m) =>
-      m.movieId === movie.movieId
+    const movieIsInWatchlist = user?.watchlist.some(
+      (m) => m.movieId === movie.movieId
     );
 
     // If the movie is in the watchlist, show confirmation dialog
@@ -262,7 +263,7 @@ const WatchList: React.FC = () => {
     // Pass the keepInWatchlist parameter to the API
     await apiService.post(
       `/users/${userId}/watched/${movie.movieId}?keepInWatchlist=${keepInWatchlist}`,
-      {},
+      {}
     );
 
     // Update local state and show message
@@ -272,7 +273,7 @@ const WatchList: React.FC = () => {
       showMessage(`'${movie.title}' marked as seen and kept in watchlist.`);
     } else {
       showMessage(
-        `'${movie.title}' marked as seen and removed from watchlist.`,
+        `'${movie.title}' marked as seen and removed from watchlist.`
       );
     }
     closeModal();
@@ -281,7 +282,7 @@ const WatchList: React.FC = () => {
   const updateUserAfterMarkAsSeen = (
     movie: Movie,
     movieIsInWatchlist: boolean,
-    keepInWatchlist: boolean,
+    keepInWatchlist: boolean
   ) => {
     try {
       // Update local state to reflect the changes that happened on the server
@@ -289,8 +290,8 @@ const WatchList: React.FC = () => {
         if (!prevUser) return null;
 
         // Add to watched movies if not already there
-        const alreadyWatched = prevUser.watchedMovies.some((m) =>
-          m.movieId === movie.movieId
+        const alreadyWatched = prevUser.watchedMovies.some(
+          (m) => m.movieId === movie.movieId
         );
         const updatedWatchedMovies = alreadyWatched
           ? prevUser.watchedMovies
@@ -299,8 +300,8 @@ const WatchList: React.FC = () => {
         // If we chose not to keep in watchlist, update local watchlist state
         let updatedWatchlist = prevUser.watchlist;
         if (movieIsInWatchlist && !keepInWatchlist) {
-          updatedWatchlist = prevUser.watchlist.filter((m) =>
-            m.movieId !== movie.movieId
+          updatedWatchlist = prevUser.watchlist.filter(
+            (m) => m.movieId !== movie.movieId
           );
 
           // Also update filtered movies if searching
@@ -340,8 +341,7 @@ const WatchList: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
       </div>
     );
   }
@@ -350,7 +350,7 @@ const WatchList: React.FC = () => {
     return <ErrorMessage message={error} onClose={() => setError(null)} />;
   }
 
-  const displayMovies = isSearching ? filteredMovies : (user?.watchlist || []);
+  const displayMovies = isSearching ? filteredMovies : user?.watchlist || [];
 
   return (
     <div className="bg-[#ebefff] flex flex-col md:flex-row justify-center min-h-screen w-full">
@@ -397,34 +397,40 @@ const WatchList: React.FC = () => {
         {/* Search Results Summary */}
         {searchQuery && !isEditing && displayMovies.length > 0 && (
           <div className="mt-4 text-[#3b3e88]">
-            Found {displayMovies.length}{" "}
-            movies matching &#34;{searchQuery}&#34; in title
+            Found {displayMovies.length} movies matching &#34;{searchQuery}&#34;
+            in title
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex justify-end space-x-4">
-          {isEditing
-            ? (
-              <Button variant="secondary" onClick={handleCancelEdit}>
-                Done Editing
-              </Button>
-            )
-            : (
-              <Button variant="secondary" onClick={handleEdit}>
-                Edit Watchlist
-              </Button>
-            )}
+        <div className="mt-8 flex flex-col sm:flex-row sm:justify-between items-center gap-4">
+          {/* Back button on the left */}
+          <Button
+            variant="destructive"
+            className="order-1 sm:order-none"
+            onClick={() => router.push(`/users/${id}/dashboard`)}
+          >
+            Back to Dashboard
+          </Button>
+          {/* Edit/Done Editing button on the right */}
+          {isEditing ? (
+            <Button
+              variant="secondary"
+              className="order-2 sm:order-none"
+              onClick={handleCancelEdit}
+            >
+              Done Editing
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              className="order-2 sm:order-none"
+              onClick={handleEdit}
+            >
+              Edit Watchlist
+            </Button>
+          )}
         </div>
-
-        {/* Back button */}
-        <Button
-          variant="destructive"
-          className="mt-4"
-          onClick={() => router.push(`/users/${id}/dashboard`)}
-        >
-          Back to Dashboard
-        </Button>
 
         {/* Display Action Error Message */}
         {actionError && (

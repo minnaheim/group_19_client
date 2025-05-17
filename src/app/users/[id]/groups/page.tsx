@@ -82,7 +82,8 @@ const GroupsManagement: React.FC = () => {
   );
 
   // Flag for combined loading: data fetched but details not enriched yet
-  const isGroupDataLoading = loading || (groups.length > 0 && groupsWithDetails.length === 0);
+  const isGroupDataLoading =
+    loading || (groups.length > 0 && groupsWithDetails.length === 0);
 
   // --- Refactored State for Errors and Success ---
   const [error, setError] = useState<string | null>(null);
@@ -613,15 +614,18 @@ const GroupsManagement: React.FC = () => {
       setSentInvitations(Array.isArray(sentData) ? sentData : []);
       const details = await Promise.all(
         base.map((g) =>
-          loadGroupDetails(g.groupId).catch(() => ({
-            groupId: g.groupId,
-            groupName: g.groupName,
-            creatorId: g.creatorId,
-            creator: { userId: g.creatorId, username: "Unknown" } as User,
-            members: [],
-            movies: [],
-            phase: g.phase,
-          } as GroupWithDetails))
+          loadGroupDetails(g.groupId).catch(
+            () =>
+              ({
+                groupId: g.groupId,
+                groupName: g.groupName,
+                creatorId: g.creatorId,
+                creator: { userId: g.creatorId, username: "Unknown" } as User,
+                members: [],
+                movies: [],
+                phase: g.phase,
+              }) as GroupWithDetails
+          )
         )
       );
       if (!isMountedRef.current) return;
@@ -1788,7 +1792,7 @@ const GroupsManagement: React.FC = () => {
                 className={`px-4 py-2 font-medium text-sm ${
                   inviteMethod === "search"
                     ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
-                      : "text-[#3b3e88]/80 hover:text-[#3b3e88]/80"
+                    : "text-[#3b3e88]/80 hover:text-[#3b3e88]/80"
                 }`}
                 onClick={() => setInviteMethod("search")}
               >
@@ -1993,15 +1997,15 @@ const GroupsManagement: React.FC = () => {
 
                 <div className="flex justify-end mt-6">
                   <Button
-                      type="submit"
-                      className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 min-w-[220px]"
-                      disabled={isSubmittingInvite || !isValidUser}
+                    type="submit"
+                    className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 min-w-[220px]"
+                    disabled={isSubmittingInvite || !isValidUser}
                   >
                     {isSubmittingInvite
-                        ? "Sending..."
-                        : !isValidUser && usersLoaded
-                            ? "Please search for and select an existing user"
-                            : "Send Invitation"}
+                      ? "Sending..."
+                      : !isValidUser && usersLoaded
+                        ? "Please search for and select an existing user"
+                        : "Send Invitation"}
                   </Button>
                 </div>
               </form>
@@ -2033,70 +2037,81 @@ const GroupsManagement: React.FC = () => {
             }
           }}
         >
-          <DialogContent className="max-w-3xl rounded-2xl">
+          <DialogContent className="max-w-3xl rounded-2xl max-h-[90vh] overflow-y-auto">
             {selectedGroup ? (
               <>
                 <DialogHeader>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex flex-col gap-4">
                     {/* Group Title and Phase */}
-                    <div>
-                      <DialogTitle className="text-[#3b3e88] text-xl">
-                        {selectedGroup.groupName}
+                    <div className="flex flex-col gap-2">
+                      <DialogTitle className="text-[#3b3e88] text-xl break-words">
+                        <span className="line-clamp-2">
+                          {selectedGroup.groupName}
+                        </span>
                       </DialogTitle>
-                      <p className="text-sm text-[#838bad] mt-1">
-                        Current Phase:{" "}
-                        {selectedGroup.phase?.toUpperCase() ?? "UNKNOWN"}
-                      </p>
-                      <div className="text-sm text-[#838bad] mt-1">
-                        <Timer groupId={selectedGroup.groupId.toString()} />
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <p className="text-sm text-[#838bad]">
+                          Current Phase:{" "}
+                          {selectedGroup.phase?.toUpperCase() ?? "UNKNOWN"}
+                        </p>
+                        <div className="text-sm text-[#838bad]">
+                          <Timer groupId={selectedGroup.groupId.toString()} />
+                        </div>
                       </div>
                     </div>
+
                     {/* Admin Actions (Rename/Delete) or Leave Button */}
-                    {selectedGroup.creatorId === parseInt(userId || "-1") ? (
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 flex-grow">
-                          <Input
-                            id={`editGroupName-${selectedGroup.groupId}`}
-                            defaultValue={selectedGroup.groupName}
-                            className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200 flex-grow"
-                            aria-label="Edit Group Name"
-                          />
+                    <div className="flex flex-col gap-3">
+                      {selectedGroup.creatorId === parseInt(userId || "-1") ? (
+                        <>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Input
+                              id={`editGroupName-${selectedGroup.groupId}`}
+                              defaultValue={selectedGroup.groupName}
+                              className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200"
+                              aria-label="Edit Group Name"
+                            />
+                            <Button
+                              onClick={() =>
+                                handleRenameGroup(
+                                  selectedGroup.groupId,
+                                  `editGroupName-${selectedGroup.groupId}`
+                                )
+                              }
+                              className="whitespace-nowrap"
+                            >
+                              Rename
+                            </Button>
+                          </div>
                           <Button
+                            className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
                             onClick={() =>
-                              handleRenameGroup(
-                                selectedGroup.groupId,
-                                `editGroupName-${selectedGroup.groupId}`
-                              )
+                              handleDeleteGroup(selectedGroup.groupId)
                             }
                           >
-                            Rename
+                            Delete Group
                           </Button>
-                        </div>
+                        </>
+                      ) : (
                         <Button
                           className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
                           onClick={() =>
-                            handleDeleteGroup(selectedGroup.groupId)
+                            handleLeaveGroup(selectedGroup.groupId)
                           }
                         >
-                          Delete Group
+                          Leave Group
                         </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
-                        onClick={() => handleLeaveGroup(selectedGroup.groupId)}
-                      >
-                        Leave Group
-                      </Button>
-                    )}
-                    {selectedGroup.creatorId === parseInt(userId || "-1") && ['voting', 'pool'].includes(
-                      selectedGroup.phase.toLowerCase()
-                    ) && (
-                      <SetTimer
-                        groupId={selectedGroup.groupId}
-                        isCreator={true}
-                      />
-                    )}
+                      )}
+                      {selectedGroup.creatorId === parseInt(userId || "-1") &&
+                        ["voting", "pool"].includes(
+                          selectedGroup.phase.toLowerCase()
+                        ) && (
+                          <SetTimer
+                            groupId={selectedGroup.groupId}
+                            isCreator={true}
+                          />
+                        )}
+                    </div>
                   </div>
                 </DialogHeader>
                 <div className="py-4">
@@ -2173,15 +2188,15 @@ const GroupsManagement: React.FC = () => {
                           {/* Update the Add Member button with enhanced styling */}
                           <Button
                             className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-white"
-                              onClick={() => {
-                                setSelectedGroupId(selectedGroup.groupId);
-                                setInviteMethod("friends"); // Default to friends tab
-                                setFriendSearchQuery(""); // Clear any previous search
-                                setSelectedFriends([]); // Clear any previous selections
-                                setInviteUsername(""); // Clear any previous search username
-                                setIsInviteDialogOpen(true);
-                              }}
-                           >
+                            onClick={() => {
+                              setSelectedGroupId(selectedGroup.groupId);
+                              setInviteMethod("friends"); // Default to friends tab
+                              setFriendSearchQuery(""); // Clear any previous search
+                              setSelectedFriends([]); // Clear any previous selections
+                              setInviteUsername(""); // Clear any previous search username
+                              setIsInviteDialogOpen(true);
+                            }}
+                          >
                             Invite Members
                           </Button>
                         </div>
