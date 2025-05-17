@@ -1280,7 +1280,6 @@ const GroupsManagement: React.FC = () => {
 
   // --- JSX Rendering ---
 
-
   // Display Page Level Error centrally if critical load failed
   if (
     error &&
