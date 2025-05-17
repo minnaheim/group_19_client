@@ -363,7 +363,7 @@ const MovieFavorites: React.FC = () => {
         )
         : (
           <p className="text-center text-[#3b3e88] italic text-sm">
-            Select your favorite movie to continue
+            Select your one favorite movie to continue
           </p>
         )}
 
