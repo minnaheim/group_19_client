@@ -1280,16 +1280,6 @@ const GroupsManagement: React.FC = () => {
 
   // --- JSX Rendering ---
 
-  if (loading) {
-    return (
-      <div className="bg-[#ebefff] flex min-h-screen w-full">
-        <Navigation userId={userId} activeItem="Movie Groups" />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]" />
-        </div>
-      </div>
-    );
-  }
 
   // Display Page Level Error centrally if critical load failed
   if (
