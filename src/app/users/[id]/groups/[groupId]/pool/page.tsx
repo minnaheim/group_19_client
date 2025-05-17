@@ -5,6 +5,7 @@ import Navigation from "@/components/ui/navigation";
 import { User } from "@/app/types/user";
 import { Movie } from "@/app/types/movie";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import ActionMessage from "@/components/ui/action_message";
 import { PoolEntry } from "@/app/types/poolEntry";
 import type { ApplicationError } from "@/app/types/error"; // Re-added to handle typed errors
 
@@ -354,10 +355,14 @@ const MoviePool = () => {
         />
       )}
       {/* Centered overlay for success messages */}
-      {!isOverallLoading && showSuccessMessage && (
-        <div className="bg-green-500">
-          {successMessage}
-        </div>
+      {/* Consistent Success Message Display using ActionMessage */}
+      {!isOverallLoading && showSuccessMessage && successMessage && (
+        <ActionMessage
+          message={successMessage}
+          isVisible={showSuccessMessage}
+          onHide={() => setShowSuccessMessage(false)}
+          className="bg-green-500"
+        />
       )}
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
         {/* Sidebar navigation - always visible even during loading */}
