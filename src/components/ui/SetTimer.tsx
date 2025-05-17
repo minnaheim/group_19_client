@@ -90,7 +90,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Set Timers</Button>
+        <Button variant="secondary">Set Time Limit</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
