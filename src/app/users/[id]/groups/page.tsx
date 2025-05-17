@@ -2046,15 +2046,18 @@ const GroupsManagement: React.FC = () => {
                     </div>
                     {/* Admin Actions (Rename/Delete) or Leave Button */}
                     {selectedGroup.creatorId === parseInt(userId || "-1") ? (
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 flex-grow">
-                          <Input
-                            id={`editGroupName-${selectedGroup.groupId}`}
-                            defaultValue={selectedGroup.groupName}
-                            className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200 flex-grow"
-                            aria-label="Edit Group Name"
-                          />
+                      <div className="space-y-3 w-full mt-6">
+                        <div className="flex justify-end gap-2 items-center">
+                          <div className="w-64">
+                            <Input
+                              id={`editGroupName-${selectedGroup.groupId}`}
+                              defaultValue={selectedGroup.groupName}
+                              className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200 w-full"
+                              aria-label="Edit Group Name"
+                            />
+                          </div>
                           <Button
+                            variant="secondary"
                             onClick={() =>
                               handleRenameGroup(
                                 selectedGroup.groupId,
@@ -2065,36 +2068,21 @@ const GroupsManagement: React.FC = () => {
                             Rename
                           </Button>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button
-                            className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
-                            onClick={() =>
-                              handleDeleteGroup(selectedGroup.groupId)
-                            }
-                          >
-                            Delete Group
-                          </Button>
-                          {selectedGroup && 
-                            selectedGroup.creatorId !== undefined && 
-                            selectedGroup.phase && 
-                            userId && userId.length > 0 &&
-                            selectedGroup.creatorId === parseInt(userId) &&
-                            ["VOTING", "POOLING"].includes(selectedGroup.phase) && (
+                        {selectedGroup && 
+                          selectedGroup.creatorId !== undefined && 
+                          selectedGroup.phase && 
+                          userId && userId.length > 0 &&
+                          selectedGroup.creatorId === parseInt(userId) &&
+                          ["VOTING", "POOLING"].includes(selectedGroup.phase) && (
+                            <div className="flex justify-end">
                               <SetTimer
                                 groupId={selectedGroup.groupId}
                                 isCreator={true}
                               />
-                            )}
-                        </div>
+                            </div>
+                          )}
                       </div>
-                    ) : (
-                      <Button
-                        className="bg-white text-red-600 border border-red-600 hover:bg-red-50"
-                        onClick={() => handleLeaveGroup(selectedGroup.groupId)}
-                      >
-                        Leave Group
-                      </Button>
-                    )}
+                    ) : null }
                   </div>
                 </DialogHeader>
                 <div className="py-4">
@@ -2278,6 +2266,26 @@ const GroupsManagement: React.FC = () => {
                           )}
                       </div>
                     </div>
+                    {/* Moved Delete/Leave Group button to bottom of dialog */}
+                    <div>
+                      {selectedGroup.creatorId === parseInt(userId || "-1") ? (
+                        <Button
+                          variant="destructive"
+                          className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
+                          onClick={() => handleDeleteGroup(selectedGroup.groupId)}
+                        >
+                          Delete Group
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="destructive"
+                          className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
+                          onClick={() => handleLeaveGroup(selectedGroup.groupId)}
+                        >
+                          Leave Group
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {/* Error and Success Message Area at the bottom */}
@@ -2297,6 +2305,8 @@ const GroupsManagement: React.FC = () => {
                     />
                   )}
                 </div>
+                
+
               </>
             ) : (
               // Fallback if selectedGroup is null (should ideally not happen if dialog open state is managed correctly)
