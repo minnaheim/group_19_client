@@ -547,22 +547,14 @@ const Vote: React.FC = () => {
     <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
       {/* Sidebar navigation */}
       <Navigation userId={userId} activeItem="Movie Groups" />
-      {/* Error display is handled below, after initial loading is complete */}
-      {successMessage !== "Saved your Ranking" && (
+      {/* Unified Success Message Display */}
+      {showSuccessMessage && successMessage && (
         <ActionMessage
           message={successMessage}
           isVisible={showSuccessMessage}
           onHide={() => setShowSuccessMessage(false)}
           className="bg-green-500"
         />
-      )}
-      {/* Overlay success for saved ranking only */}
-      {successMessage === "Saved your Ranking" && showSuccessMessage && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
-            {successMessage}
-          </div>
-        </div>
       )}
       {/* Main content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
