@@ -2074,11 +2074,12 @@ const GroupsManagement: React.FC = () => {
                           >
                             Delete Group
                           </Button>
-                          {selectedGroup.creatorId ===
-                            parseInt(userId || "-1") &&
-                            ["voting", "pool"].includes(
-                              selectedGroup.phase.toLowerCase()
-                            ) && (
+                          {selectedGroup && 
+                            selectedGroup.creatorId !== undefined && 
+                            selectedGroup.phase && 
+                            userId && userId.length > 0 &&
+                            selectedGroup.creatorId === parseInt(userId) &&
+                            ["VOTING", "POOLING"].includes(selectedGroup.phase) && (
                               <SetTimer
                                 groupId={selectedGroup.groupId}
                                 isCreator={true}
