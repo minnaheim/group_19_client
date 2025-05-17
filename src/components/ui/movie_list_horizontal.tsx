@@ -65,12 +65,12 @@ const MovieListHorizontal: React.FC<MovieListHorizontalProps> = ({
         {/* Add Movie Button */}
         {!isEditing && onAddMovieClick && !isEmpty && (
           <div
-            className="w-[71px] h-[107px] sm:w-[90px] sm:h-[135px] md:w-[120px] md:h-[180px] bg-[#ccd1ff] rounded-[10px] flex items-center justify-center cursor-pointer"
+            className="aspect-[2/3] w-[71px] sm:w-[90px] md:w-[120px] bg-[#ccd1ff] rounded-[10px] flex items-center justify-center cursor-pointer flex-shrink-0"
             onClick={onAddMovieClick}
           >
-            <div className="relative w-[52px] h-[52px]">
+            <div className="relative w-1/2 aspect-square">
               <img
-                className="w-[50px] h-[50px] sm:w-[55px] sm:h-[55px] md:w-[60px] md:h-[60px] object-cover"
+                className="w-full h-full object-contain"
                 alt="Plus"
                 src="/plus.png"
               />
