@@ -806,7 +806,7 @@ const FriendsManagement: React.FC = () => {
           <button
             className={`px-6 py-3 font-medium text-base ${
               activeTab === "friends"
-                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]" 
+                ? "text-[#3b3e88] border-b-2 border-[#3b3e88]"
                 : "text-[#3b3e88]/60 hover:text-[#3b3e88]/80"
             }`}
             onClick={() => setActiveTab("friends")}
