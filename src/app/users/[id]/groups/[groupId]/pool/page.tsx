@@ -355,10 +355,8 @@ const MoviePool = () => {
       )}
       {/* Centered overlay for success messages */}
       {!isOverallLoading && showSuccessMessage && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-green-500">
-            {successMessage}
-          </div>
+        <div className="bg-green-500">
+          {successMessage}
         </div>
       )}
       <div className="bg-[#ebefff] flex flex-col md:flex-row min-h-screen w-full">
