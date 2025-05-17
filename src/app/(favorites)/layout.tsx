@@ -8,7 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
       <FavoritesProvider>
         <div className="bg-[#ebefff] min-h-screen flex flex-col">
-          {/* Header with Logo  */}
+          {/* Header with Logo - Optimized padding */}
           <header className="p-3 sm:p-4">
             <div className="flex items-center space-x-2 cursor-pointer">
               <Image
@@ -24,16 +24,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          {/* Main Content  */}
+          {/* Main Content - Optimized padding */}
           <main className="flex-1 flex items-center justify-center px-4 py-3 sm:py-5">
             <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl mx-auto">
-              <div className="relative mb-3 hidden sm:block">
-
-                <div className="absolute -top-16 -right-16 w-28 h-28 bg-rose-500 rounded-full transform rotate-12 opacity-20 blur-xl">
-                </div>
-                <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-orange-500 rounded-full opacity-20 blur-xl">
-                </div>
-              </div>
+              {/* Removed problematic decorative blobs */}
 
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-0 relative z-10">
                 {/* Decorative top bar */}
@@ -52,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                   {children}
 
-                  {/* Movie poster decoration  */}
+                  {/* Movie poster decoration - More compact */}
                   <div className="mt-4 flex justify-center space-x-2 hidden sm:flex">
                     <div className="w-7 h-10 sm:w-8 sm:h-12 bg-[#3b3e88]/20 rounded-lg shadow-sm transform -rotate-6">
                     </div>
