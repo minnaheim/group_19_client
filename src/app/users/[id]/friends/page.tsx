@@ -32,7 +32,12 @@ const FriendsManagement: React.FC = () => {
   const { id } = useParams();
   const apiService = useApi();
   const router = useRouter();
-
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   // --- State Variables ---
   const [friends, setFriends] = useState<User[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);

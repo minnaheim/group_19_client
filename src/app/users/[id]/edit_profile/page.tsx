@@ -89,7 +89,12 @@ const EditProfile: React.FC = () => {
   const {
     value: userId,
   } = useLocalStorage<string>("userId", "");
-
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   const handleSelectFavoriteMovie = () => {
     // Store the current state in localStorage or session before navigating
     sessionStorage.setItem(

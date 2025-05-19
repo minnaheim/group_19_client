@@ -53,6 +53,12 @@ const Results: React.FC = () => {
   } = useGroupPhase(groupId as string);
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   const [rankingResult, setRankingResult] = useState<RankingResultsDTO | null>(
     null,
   );
