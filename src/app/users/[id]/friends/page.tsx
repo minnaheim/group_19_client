@@ -198,8 +198,13 @@ const FriendsManagement: React.FC = () => {
                 setError("Could not find your user account.");
               } else {
                 setError(
-                  "Failed to load friends list. Please try again later.",
+                  "Failed to load friends list. Please try again later. Redirecting to login page...",
                 );
+                localStorage.removeItem("userId");
+                localStorage.removeItem("token");
+                setTimeout(() => {
+                router.push("/login");
+                }, 1500);
               }
             } else {
               setError("Failed to load friends list. Please try again later.");
@@ -230,9 +235,19 @@ const FriendsManagement: React.FC = () => {
               "status" in receivedRequestsError &&
               (receivedRequestsError as ApplicationError).status === 401
             ) {
-              setError("Session expired. Cannot load received requests.");
+              setError("Session expired. Cannot load received requests. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             } else {
-              setError("Failed to load received friend requests.");
+              setError("Failed to load received friend requests. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             }
           }
         }
@@ -258,16 +273,32 @@ const FriendsManagement: React.FC = () => {
               "status" in sentRequestsError &&
               (sentRequestsError as ApplicationError).status === 401
             ) {
-              setError("Session expired. Cannot load sent requests.");
+              setError("Session expired. Cannot load sent requests. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             } else {
-              setError("Failed to load sent friend requests.");
+              setError("Failed to load sent friend requests. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             }
           }
         }
       } catch (error) {
         console.error("Critical error loading friends data:", error);
+        
         if (mounted) {
-          setError("Failed to load friends data. Server may be unavailable.");
+          setError("Failed to load friends data. Server may be unavailable. Redirecting to login page...");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+          router.push("/login");
+        }, 1500);
         }
       } finally {
         if (mounted) {
@@ -405,14 +436,24 @@ const FriendsManagement: React.FC = () => {
           searchError instanceof Error && "status" in searchError &&
           (searchError as ApplicationError).status === 401
         ) {
-          setError("Session expired. Please log in again.");
+          setError("Session expired. Please log in again. Redirecting to login page...");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+          router.push("/login");
+        }, 1500);
         } else {
           setError(`Error searching for user "${friendUsername}".`);
         }
       }
     } catch (error) {
       console.error("Critical error in friend request process:", error);
-      setError("Friend request failed unexpectedly.");
+      setError("Friend request failed unexpectedly. Redirecting to login page...");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("token");
+      setTimeout(() => {
+      router.push("/login");
+    }, 1500);
     } finally {
       setIsSubmitting(false);
     }
@@ -479,7 +520,12 @@ const FriendsManagement: React.FC = () => {
               setError("Invalid friend request.");
               break;
             case 401:
-              setError("Session expired. Please log in again.");
+              setError("Session expired. Please log in again. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
               break;
             case 404:
               setError("Request not found (may be cancelled).");
@@ -494,6 +540,7 @@ const FriendsManagement: React.FC = () => {
     } catch (error) {
       console.error("Critical error in accept friend request process:", error);
       setError("Server error accepting request.");
+      
     }
   };
 
@@ -532,7 +579,12 @@ const FriendsManagement: React.FC = () => {
               setError("Invalid friend request.");
               break;
             case 401:
-              setError("Session expired. Please log in again.");
+              setError("Session expired. Please log in again. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
               break;
             case 404:
               setError("Request not found (may be cancelled).");
@@ -591,7 +643,12 @@ const FriendsManagement: React.FC = () => {
               setError("Invalid friend request.");
               break;
             case 401:
-              setError("Session expired. Please log in again.");
+              setError("Session expired. Please log in again. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
               break;
             case 403:
               setError("Cannot cancel request you didn't send.");
@@ -651,7 +708,12 @@ const FriendsManagement: React.FC = () => {
               setError("Could not remove friend (Invalid request).");
               break;
             case 401:
-              setError("Session expired. Please log in again.");
+              setError("Session expired. Please log in again. Redirecting to login page...");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
               break;
             case 404:
               setError("Could not find friend/user account.");

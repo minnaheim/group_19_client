@@ -178,8 +178,13 @@ const Vote: React.FC = () => {
           switch (appErr.status) {
             case 401:
               setError(
-                "Your session has expired. Please log in again to view the vote state.",
+                "Your session has expired. Please log in again to view the vote state. Redirecting to login page...",
               );
+              localStorage.removeItem("userId");
+              localStorage.removeItem("token");
+              setTimeout(() => {
+              router.push("/login");
+            }, 1500);
               setShowSuccessMessage(false); // Clear success on new error
               setSuccessMessage("");
               break;

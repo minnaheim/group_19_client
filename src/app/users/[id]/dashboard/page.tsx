@@ -88,13 +88,28 @@ const Dashboard: React.FC = () => {
           console.error("Error fetching user profile:", err);
           if (
             err instanceof Error && "status" in err &&
-            (err as ApplicationError).status === 404
+            (err as ApplicationError).status === 403
           ) {
-            setError(
-              "Welcome! We couldn't fetch your profile details right now.",
-            );
-          } else {
-            setError("Failed to load profile data. Please try again later.");
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token"); 
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+
           }
           return;
         }
@@ -108,6 +123,7 @@ const Dashboard: React.FC = () => {
           const friendRequests = await apiService.get<FriendRequest[]>(
             "/friends/friendrequests/received",
           );
+          
 
           // Process friend requests into notifications with unique IDs
           if (friendRequests && Array.isArray(friendRequests)) {
@@ -126,7 +142,34 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error loading friend requests:", err);
           setActionError("Error loading friend requests");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+ 
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+
+          }
+          
         }
+        
 
         // Get group invitations
         try {
@@ -152,8 +195,32 @@ const Dashboard: React.FC = () => {
           }
           showMessage("Group invitations checked");
         } catch (err: unknown) {
+          
           console.error("Error loading group invitations:", err);
           setActionError("Error loading group invitations");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token"); 
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
         }
 
         // Set all notifications at once
@@ -196,6 +263,29 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error accepting friend request:", err);
           setActionError("Error accepting friend request");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token"); 
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -212,6 +302,29 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error accepting group invite:", err);
           setActionError("Error accepting group invite");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token"); 
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -239,6 +352,30 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error declining friend request:", err);
           setActionError("Error declining friend request");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+ 
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
@@ -255,6 +392,29 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error declining group invite:", err);
           setActionError("Error declining group invite");
+          if (
+            err instanceof Error && "status" in err &&
+            (err as ApplicationError).status === 403
+          ) {
+            setError("You don't have access to this page. Redirecting to your dashboard page...");
+            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
+          } 
+          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+            setError("Authorize to have access to the page. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500); 
+          }
+          else {
+            setError("Failed to load data. Please try again later. Redirecting to login...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
+          }
         }
         setNotifications((prev) =>
           prev.filter((n) => n.id !== notification.id)
