@@ -92,14 +92,8 @@ const Dashboard: React.FC = () => {
           showMessage("User profile loaded");
         } catch (err: unknown) {
           console.error("Error fetching user profile:", err);
-          if (
-            err instanceof Error && "status" in err &&
-            (err as ApplicationError).status === 403
-          ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
+
+          if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
             setError("Authorize to have access to the page. Redirecting to login...");
             localStorage.removeItem("userId");
             localStorage.removeItem("token"); 
