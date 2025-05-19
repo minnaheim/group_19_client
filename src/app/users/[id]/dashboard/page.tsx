@@ -71,11 +71,11 @@ const Dashboard: React.FC = () => {
   const { value: userId } = useLocalStorage<string>("userId", "");
 
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, [router]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
   // fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
@@ -93,23 +93,28 @@ const Dashboard: React.FC = () => {
         } catch (err: unknown) {
           console.error("Error fetching user profile:", err);
 
-          if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
-            localStorage.removeItem("userId");
-            localStorage.removeItem("token"); 
-            setTimeout(() => {
-              router.push("/login");
-            }, 1500);
-
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
-
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
           }
           return;
         }
@@ -121,9 +126,8 @@ const Dashboard: React.FC = () => {
         // Get friend requests
         try {
           const friendRequests = await apiService.get<FriendRequest[]>(
-            "/friends/friendrequests/received",
+            "/friends/friendrequests/received"
           );
-          
 
           // Process friend requests into notifications with unique IDs
           if (friendRequests && Array.isArray(friendRequests)) {
@@ -143,38 +147,45 @@ const Dashboard: React.FC = () => {
           console.error("Error loading friend requests:", err);
           setActionError("Error loading friend requests");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
- 
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
-
           }
-          
         }
-        
 
         // Get group invitations
         try {
           const groupInvites = await apiService.get<GroupInvitation[]>(
-            "/groups/invitations/received",
+            "/groups/invitations/received"
           );
 
           // Process group invitations into notifications with unique IDs
@@ -184,8 +195,7 @@ const Dashboard: React.FC = () => {
               allNotifications.push({
                 id: startId + index,
                 type: "group_invite",
-                message:
-                  `${invite.sender.username} invited you to ${invite.group.groupName}!`,
+                message: `${invite.sender.username} invited you to ${invite.group.groupName}!`,
                 actionType: "accept_decline",
                 sender: invite.sender.username,
                 invitationId: invite.invitationId,
@@ -195,26 +205,36 @@ const Dashboard: React.FC = () => {
           }
           showMessage("Group invitations checked");
         } catch (err: unknown) {
-          
           console.error("Error loading group invitations:", err);
           setActionError("Error loading group invitations");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
-            localStorage.removeItem("token"); 
+            localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
@@ -227,7 +247,7 @@ const Dashboard: React.FC = () => {
         setNotifications(allNotifications);
       } catch (error) {
         setError("Failed to load user data. Server may be unavailable.");
-        console.error("Critical error loading dashboard:", error);
+        console.error("Critical error loading dashboard, please retry.");
       } finally {
         setLoading(false);
       }
@@ -249,7 +269,7 @@ const Dashboard: React.FC = () => {
   // Handle notification actions
   const handleAccept = async (
     notification: Notification,
-    e: React.MouseEvent,
+    e: React.MouseEvent
   ) => {
     e.stopPropagation();
     try {
@@ -257,29 +277,40 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/friends/friendrequest/${notification.requestId}/accept`,
-            {}, // empty data object
+            {} // empty data object
           );
           showMessage("Friend request accepted");
         } catch (err: unknown) {
-          console.error("Error accepting friend request:", err);
+          // console.error("Error accepting friend request:", err);
           setActionError("Error accepting friend request");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
-            localStorage.removeItem("token"); 
+            localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
@@ -291,34 +322,46 @@ const Dashboard: React.FC = () => {
           prev.filter((n) => n.id !== notification.id)
         );
       } else if (
-        notification.type === "group_invite" && notification.invitationId
+        notification.type === "group_invite" &&
+        notification.invitationId
       ) {
         try {
           await apiService.post(
             `/groups/invitations/${notification.invitationId}/accept`,
-            {}, // empty data object
+            {} // empty data object
           );
           showMessage("Group invite accepted");
         } catch (err: unknown) {
           console.error("Error accepting group invite:", err);
           setActionError("Error accepting group invite");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
-            localStorage.removeItem("token"); 
+            localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
@@ -338,7 +381,7 @@ const Dashboard: React.FC = () => {
 
   const handleDecline = async (
     notification: Notification,
-    e: React.MouseEvent,
+    e: React.MouseEvent
   ) => {
     e.stopPropagation();
     try {
@@ -346,30 +389,40 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/friends/friendrequest/${notification.requestId}/reject`,
-            {},
+            {}
           );
           showMessage("Friend request declined");
         } catch (err: unknown) {
           console.error("Error declining friend request:", err);
           setActionError("Error declining friend request");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
             }, 1500);
- 
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
@@ -381,34 +434,46 @@ const Dashboard: React.FC = () => {
           prev.filter((n) => n.id !== notification.id)
         );
       } else if (
-        notification.type === "group_invite" && notification.invitationId
+        notification.type === "group_invite" &&
+        notification.invitationId
       ) {
         try {
           await apiService.post(
             `/groups/invitations/${notification.invitationId}/reject`,
-            {},
+            {}
           );
           showMessage("Group invite declined");
         } catch (err: unknown) {
           console.error("Error declining group invite:", err);
           setActionError("Error declining group invite");
           if (
-            err instanceof Error && "status" in err &&
+            err instanceof Error &&
+            "status" in err &&
             (err as ApplicationError).status === 403
           ) {
-            setError("You don't have access to this page. Redirecting to your dashboard page...");
-            setTimeout(() => {router.push(`/users/${userId}/dashboard`)}, 1500)
-          } 
-          else if (err instanceof Error && "status" in err && (err as ApplicationError).status === 401 ) {
-            setError("Authorize to have access to the page. Redirecting to login...");
+            setError(
+              "You don't have access to this page. Redirecting to your dashboard page..."
+            );
+            setTimeout(() => {
+              router.push(`/users/${userId}/dashboard`);
+            }, 1500);
+          } else if (
+            err instanceof Error &&
+            "status" in err &&
+            (err as ApplicationError).status === 401
+          ) {
+            setError(
+              "Authorize to have access to the page. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
               router.push("/login");
-            }, 1500); 
-          }
-          else {
-            setError("Failed to load data. Please try again later. Redirecting to login...");
+            }, 1500);
+          } else {
+            setError(
+              "Failed to load data. Please try again later. Redirecting to login..."
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
@@ -445,8 +510,7 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
       </div>
     );
   }
@@ -456,230 +520,218 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-      <div className="bg-indigo-50 flex flex-col md:flex-row min-h-screen w-full">
-        {/* Use your existing Navigation component */}
-        <Navigation userId={userId} activeItem="Dashboard" />
+    <div className="bg-indigo-50 flex flex-col md:flex-row min-h-screen w-full">
+      {/* Use your existing Navigation component */}
+      <Navigation userId={userId} activeItem="Dashboard" />
 
-        {/* Main content - Two column layout with reduced padding */}
-        <div className="flex-1 p-3 md:p-4 lg:p-5 overflow-auto">
-          <h1 className="text-indigo-900 text-xl font-semibold mb-3">
-            Dashboard
-          </h1>
+      {/* Main content - Two column layout with reduced padding */}
+      <div className="flex-1 p-3 md:p-4 lg:p-5 overflow-auto">
+        <h1 className="text-indigo-900 text-xl font-semibold mb-3">
+          Dashboard
+        </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto">
-            {/* Left Column - Navigation Cards */}
-            <div className="space-y-3 mb-4 md:mb-0">
-              {/* Watch List Card - reduced height */}
-              <div
-                  onClick={navigateToWatchlist}
-                  className="bg-rose-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
-              >
-                {/* Decorative circles */}
-                <div className="absolute right-0 bottom-0 w-32 h-32 bg-rose-400/30 rounded-full -mr-8 -mb-8">
-                </div>
-                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto">
+          {/* Left Column - Navigation Cards */}
+          <div className="space-y-3 mb-4 md:mb-0">
+            {/* Watch List Card - reduced height */}
+            <div
+              onClick={navigateToWatchlist}
+              className="bg-rose-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+            >
+              {/* Decorative circles */}
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-rose-400/30 rounded-full -mr-8 -mb-8"></div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
 
-                <h2 className="text-white text-lg font-medium relative z-10">
-                  Watch List
-                </h2>
-              </div>
-
-              {/* Movie Groups Card */}
-              <div
-                  onClick={navigateToGroups}
-                  className="bg-orange-400 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
-              >
-                {/* Decorative circles */}
-                <div className="absolute right-0 bottom-0 w-32 h-32 bg-orange-300/30 rounded-full -mr-8 -mb-8">
-                </div>
-                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
-                </div>
-
-                <h2 className="text-white text-lg font-medium relative z-10">
-                  Movie Groups
-                </h2>
-              </div>
-
-              {/* Friends Card */}
-              <div
-                  onClick={navigateToFriends}
-                  className="bg-indigo-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
-              >
-                {/* Decorative circles */}
-                <div className="absolute right-0 bottom-0 w-32 h-32 bg-indigo-400/30 rounded-full -mr-8 -mb-8">
-                </div>
-                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
-                </div>
-
-                <h2 className="text-white text-lg font-medium relative z-10">
-                  Friends
-                </h2>
-              </div>
-
-              {/* Search Movies Card */}
-              <div
-                  onClick={navigateToSearchMovies}
-                  className="bg-indigo-900 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
-              >
-                {/* Decorative circles */}
-                <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-400/20 rounded-full -mr-8 -mb-8">
-                </div>
-                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
-                </div>
-
-                <h2 className="text-white text-lg font-medium relative z-10">
-                  Search Movies
-                </h2>
-              </div>
-
-              {/* Profile Card */}
-              <div
-                  onClick={navigateToProfile}
-                  className="bg-violet-600 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
-              >
-                {/* Decorative circles */}
-                <div className="absolute right-0 bottom-0 w-32 h-32 bg-violet-500/30 rounded-full -mr-8 -mb-8">
-                </div>
-                <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
-                </div>
-
-                <div className="relative z-10">
-                  <h2 className="text-white text-lg font-medium">Your Profile</h2>
-                  <p className="text-white/80 text-xs mt-0.5">
-                    {user?.username}
-                  </p>
-                </div>
-              </div>
+              <h2 className="text-white text-lg font-medium relative z-10">
+                Watch List
+              </h2>
             </div>
 
-            {/* Right Column - Notifications with reduced size */}
-            <div className="mt-0">
-              <div
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 flex flex-col shadow-sm"
-                  style={{
-                    height: "auto",
-                    minHeight: "16rem",
-                    maxHeight: "calc(100vh - 160px)",
-                  }}
-              >
-                <h2 className="text-indigo-900 text-lg font-medium mb-3">
-                  Notifications
-                </h2>
+            {/* Movie Groups Card */}
+            <div
+              onClick={navigateToGroups}
+              className="bg-orange-400 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+            >
+              {/* Decorative circles */}
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-orange-300/30 rounded-full -mr-8 -mb-8"></div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
 
-                {/* Scrollable container with optimized size */}
-                <div className="overflow-y-auto pr-2 flex-grow">
-                  <div className="space-y-3">
-                    {notifications.length > 0
-                        ? notifications.map((notification) => (
-                            <div
-                                key={notification.id}
-                                className={`rounded-xl p-3 shadow-sm ${
-                                    notification.type === "friend_request"
-                                        ? "bg-rose-50 border border-rose-100"
-                                        : notification.type === "group_invite"
-                                            ? "bg-orange-50 border border-orange-100"
-                                            : notification.type === "group_update"
-                                                ? "bg-indigo-50 border border-indigo-100"
-                                                : "bg-violet-50 border border-violet-100"
-                                }`}
-                            >
-                              <p
-                                  className={`mb-2 text-sm ${
-                                      notification.type === "friend_request"
-                                          ? "text-rose-800"
-                                          : notification.type === "group_invite"
-                                              ? "text-orange-800"
-                                              : notification.type === "group_update"
-                                                  ? "text-indigo-800"
-                                                  : "text-violet-800"
-                                  }`}
-                              >
-                                {notification.message}
-                              </p>
+              <h2 className="text-white text-lg font-medium relative z-10">
+                Movie Groups
+              </h2>
+            </div>
 
-                              {notification.actionType === "accept_decline" && (
-                                  <div className="flex justify-end items-center">
-                                    <Button
-                                        className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
-                                            notification.type === "friend_request"
-                                                ? "bg-rose-500 hover:bg-rose-600"
-                                                : notification.type === "group_invite"
-                                                    ? "bg-orange-400 hover:bg-orange-500"
-                                                    : notification.type === "group_update"
-                                                        ? "bg-indigo-500 hover:bg-indigo-600"
-                                                        : "bg-violet-500 hover:bg-violet-600"
-                                        }`}
-                                        onClick={(e) => handleAccept(notification, e)}
-                                    >
-                                      Accept
-                                    </Button>
-                                    <button
-                                        className={`ml-3 underline text-xs ${
-                                            notification.type === "friend_request"
-                                                ? "text-rose-700"
-                                                : notification.type === "group_invite"
-                                                    ? "text-orange-700"
-                                                    : notification.type === "group_update"
-                                                        ? "text-indigo-700"
-                                                        : "text-violet-700"
-                                        }`}
-                                        onClick={(e) => handleDecline(notification, e)}
-                                    >
-                                      Decline
-                                    </button>
-                                  </div>
-                              )}
+            {/* Friends Card */}
+            <div
+              onClick={navigateToFriends}
+              className="bg-indigo-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+            >
+              {/* Decorative circles */}
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-indigo-400/30 rounded-full -mr-8 -mb-8"></div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
 
-                              {(notification.actionType === "go_to" ||
-                                  notification.actionType === "view") && (
-                                  <div className="flex justify-end">
-                                    <Button
-                                        className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
-                                            notification.type === "friend_request"
-                                                ? "bg-rose-500 hover:bg-rose-600"
-                                                : notification.type === "group_invite"
-                                                    ? "bg-orange-400 hover:bg-orange-500"
-                                                    : notification.type === "group_update"
-                                                        ? "bg-indigo-500 hover:bg-indigo-600"
-                                                        : "bg-violet-500 hover:bg-violet-600"
-                                        }`}
-                                        onClick={(e) => handleAction(notification, e)}
-                                    >
-                                      {notification.actionLabel || "View"}
-                                    </Button>
-                                  </div>
-                              )}
-                            </div>
-                        ))
-                        : (
-                            <p className="text-gray-500 text-center py-2 text-sm">
-                              No notifications
-                            </p>
-                        )}
-                  </div>
-                </div>
+              <h2 className="text-white text-lg font-medium relative z-10">
+                Friends
+              </h2>
+            </div>
+
+            {/* Search Movies Card */}
+            <div
+              onClick={navigateToSearchMovies}
+              className="bg-indigo-900 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+            >
+              {/* Decorative circles */}
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-400/20 rounded-full -mr-8 -mb-8"></div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+
+              <h2 className="text-white text-lg font-medium relative z-10">
+                Search Movies
+              </h2>
+            </div>
+
+            {/* Profile Card */}
+            <div
+              onClick={navigateToProfile}
+              className="bg-violet-600 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
+            >
+              {/* Decorative circles */}
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-violet-500/30 rounded-full -mr-8 -mb-8"></div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+
+              <div className="relative z-10">
+                <h2 className="text-white text-lg font-medium">Your Profile</h2>
+                <p className="text-white/80 text-xs mt-0.5">{user?.username}</p>
               </div>
             </div>
           </div>
 
-          {/* Action Message Component */}
-          <ActionMessage
-              message={actionMessage}
-              isVisible={showActionMessage}
-              onHide={() => setShowActionMessage(false)}
-              className="bg-green-500"
-          />
+          {/* Right Column - Notifications with reduced size */}
+          <div className="mt-0">
+            <div
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 flex flex-col shadow-sm"
+              style={{
+                height: "auto",
+                minHeight: "16rem",
+                maxHeight: "calc(100vh - 160px)",
+              }}
+            >
+              <h2 className="text-indigo-900 text-lg font-medium mb-3">
+                Notifications
+              </h2>
 
-          {/* Display Action Error Message */}
-          {actionError && (
-              <ErrorMessage
-                  message={actionError}
-                  onClose={() => setActionError(null)}
-              />
-          )}
+              {/* Scrollable container with optimized size */}
+              <div className="overflow-y-auto pr-2 flex-grow">
+                <div className="space-y-3">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`rounded-xl p-3 shadow-sm ${
+                          notification.type === "friend_request"
+                            ? "bg-rose-50 border border-rose-100"
+                            : notification.type === "group_invite"
+                              ? "bg-orange-50 border border-orange-100"
+                              : notification.type === "group_update"
+                                ? "bg-indigo-50 border border-indigo-100"
+                                : "bg-violet-50 border border-violet-100"
+                        }`}
+                      >
+                        <p
+                          className={`mb-2 text-sm ${
+                            notification.type === "friend_request"
+                              ? "text-rose-800"
+                              : notification.type === "group_invite"
+                                ? "text-orange-800"
+                                : notification.type === "group_update"
+                                  ? "text-indigo-800"
+                                  : "text-violet-800"
+                          }`}
+                        >
+                          {notification.message}
+                        </p>
+
+                        {notification.actionType === "accept_decline" && (
+                          <div className="flex justify-end items-center">
+                            <Button
+                              className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                notification.type === "friend_request"
+                                  ? "bg-rose-500 hover:bg-rose-600"
+                                  : notification.type === "group_invite"
+                                    ? "bg-orange-400 hover:bg-orange-500"
+                                    : notification.type === "group_update"
+                                      ? "bg-indigo-500 hover:bg-indigo-600"
+                                      : "bg-violet-500 hover:bg-violet-600"
+                              }`}
+                              onClick={(e) => handleAccept(notification, e)}
+                            >
+                              Accept
+                            </Button>
+                            <button
+                              className={`ml-3 underline text-xs ${
+                                notification.type === "friend_request"
+                                  ? "text-rose-700"
+                                  : notification.type === "group_invite"
+                                    ? "text-orange-700"
+                                    : notification.type === "group_update"
+                                      ? "text-indigo-700"
+                                      : "text-violet-700"
+                              }`}
+                              onClick={(e) => handleDecline(notification, e)}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        )}
+
+                        {(notification.actionType === "go_to" ||
+                          notification.actionType === "view") && (
+                          <div className="flex justify-end">
+                            <Button
+                              className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                notification.type === "friend_request"
+                                  ? "bg-rose-500 hover:bg-rose-600"
+                                  : notification.type === "group_invite"
+                                    ? "bg-orange-400 hover:bg-orange-500"
+                                    : notification.type === "group_update"
+                                      ? "bg-indigo-500 hover:bg-indigo-600"
+                                      : "bg-violet-500 hover:bg-violet-600"
+                              }`}
+                              onClick={(e) => handleAction(notification, e)}
+                            >
+                              {notification.actionLabel || "View"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-2 text-sm">
+                      No notifications
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Action Message Component */}
+        <ActionMessage
+          message={actionMessage}
+          isVisible={showActionMessage}
+          onHide={() => setShowActionMessage(false)}
+          className="bg-green-500"
+        />
+
+        {/* Display Action Error Message */}
+        {actionError && (
+          <ErrorMessage
+            message={actionError}
+            onClose={() => setActionError(null)}
+          />
+        )}
       </div>
+    </div>
   );
 };
 

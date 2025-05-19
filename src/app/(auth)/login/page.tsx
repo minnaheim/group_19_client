@@ -93,7 +93,7 @@ const Login: React.FC = () => {
         setLoginError("Invalid response received from server");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("A Login error occurred, please try again");
       let userMessage = "An unknown error occurred during login.";
       // Type guard for Axios-like error
       type ErrorWithResponse = {
@@ -140,7 +140,7 @@ const Login: React.FC = () => {
           userMessage =
             "Network error. Please check your connection and try again.";
         } else {
-          userMessage = `Login failed: ${error.message}`;
+          userMessage = `Login failed, please try again.`;
         }
       }
       setLoginError(userMessage);
@@ -175,16 +175,13 @@ const Login: React.FC = () => {
         <div className="w-full max-w-md mx-auto">
           {/* Decorative elements */}
           <div className="relative mb-3 hidden sm:block">
-            <div className="absolute -top-8 -right-8 w-24 h-24 bg-rose-500 rounded-full transform rotate-12 opacity-20 blur-xl">
-            </div>
-            <div className="absolute bottom-8 -left-8 w-28 h-28 bg-orange-500 rounded-full opacity-20 blur-xl">
-            </div>
+            <div className="absolute -top-8 -right-8 w-24 h-24 bg-rose-500 rounded-full transform rotate-12 opacity-20 blur-xl"></div>
+            <div className="absolute bottom-8 -left-8 w-28 h-28 bg-orange-500 rounded-full opacity-20 blur-xl"></div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-0 relative z-10">
             {/* Decorative top bar */}
-            <div className="h-1.5 bg-gradient-to-r from-orange-400 to-rose-500">
-            </div>
+            <div className="h-1.5 bg-gradient-to-r from-orange-400 to-rose-500"></div>
 
             <div className="p-5 sm:p-6">
               <div className="text-center mb-4 sm:mb-5">
@@ -232,8 +229,7 @@ const Login: React.FC = () => {
                             strokeLinejoin="round"
                             strokeWidth="2"
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          >
-                          </path>
+                          ></path>
                         </svg>
                       </div>
                       <Input
@@ -250,7 +246,8 @@ const Login: React.FC = () => {
                       <ErrorMessage
                         message={errors.username}
                         onClose={() =>
-                          setErrors((prev) => ({ ...prev, username: "" }))}
+                          setErrors((prev) => ({ ...prev, username: "" }))
+                        }
                       />
                     )}
                   </div>
@@ -278,8 +275,7 @@ const Login: React.FC = () => {
                             strokeLinejoin="round"
                             strokeWidth="2"
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          >
-                          </path>
+                          ></path>
                         </svg>
                       </div>
                       <Input
@@ -297,7 +293,8 @@ const Login: React.FC = () => {
                       <ErrorMessage
                         message={errors.password}
                         onClose={() =>
-                          setErrors((prev) => ({ ...prev, password: "" }))}
+                          setErrors((prev) => ({ ...prev, password: "" }))
+                        }
                       />
                     )}
                   </div>
@@ -309,35 +306,33 @@ const Login: React.FC = () => {
                     disabled={isLoading}
                     className="w-full bg-gradient-to-r from-orange-400 to-rose-500 hover:from-orange-500 hover:to-rose-600 text-white py-2 text-sm sm:text-base rounded-lg font-medium transition duration-200 h-10 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
-                    {isLoading
-                      ? (
-                        <div className="flex items-center justify-center">
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            >
-                            </circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            >
-                            </path>
-                          </svg>
-                          Signing in...
-                        </div>
-                      )
-                      : "Sign In"}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Signing in...
+                      </div>
+                    ) : (
+                      "Sign In"
+                    )}
                   </Button>
 
                   <Button
@@ -370,12 +365,9 @@ const Login: React.FC = () => {
 
               {/* Movie poster decoration */}
               <div className="mt-4 flex justify-center space-x-2 hidden sm:flex">
-                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-[#3b3e88]/20 rounded-lg shadow-sm transform -rotate-6">
-                </div>
-                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-rose-500/20 rounded-lg shadow-sm">
-                </div>
-                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-orange-500/20 rounded-lg shadow-sm transform rotate-6">
-                </div>
+                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-[#3b3e88]/20 rounded-lg shadow-sm transform -rotate-6"></div>
+                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-rose-500/20 rounded-lg shadow-sm"></div>
+                <div className="w-7 h-10 sm:w-8 sm:h-12 bg-orange-500/20 rounded-lg shadow-sm transform rotate-6"></div>
               </div>
             </div>
           </div>
