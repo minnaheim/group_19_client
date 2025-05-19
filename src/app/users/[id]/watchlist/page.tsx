@@ -81,7 +81,12 @@ const WatchList: React.FC = () => {
         ) {
           setError("Oops! We couldn't find your profile details.");
         } else {
-          setError("Failed to load user data. Please try again.");
+          setError("Failed to load user data. Please try again. Redirecting to login page...");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+          router.push("/login");
+        }, 1500);
         }
       } finally {
         setLoading(false);

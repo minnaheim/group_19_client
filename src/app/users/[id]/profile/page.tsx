@@ -93,8 +93,13 @@ const Profile: React.FC = () => {
         showMessage("Oops! We couldn't find the profile you were looking for.");
       } else {
         setError(
-          "An error occurred fetching the profile. Please try again later.",
+          "An error occurred fetching the profile. Please try again later. Redirecting to login page...",
         );
+        localStorage.removeItem("userId");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+        router.push("/login");
+      }, 1500);
       }
       setLoading(false);
       return;
@@ -140,8 +145,13 @@ const Profile: React.FC = () => {
         showMessage("Could not find favorites for this user.");
       } else {
         setError(
-          "An error occurred fetching favorites. Please try again later.",
+          "An error occurred fetching favorites. Please try again later. Redirecting to login page...",
         );
+        localStorage.removeItem("userId");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+        router.push("/login");
+      }, 1500);
       }
     } finally {
       setLoading(false);
