@@ -126,8 +126,13 @@ const Profile: React.FC = () => {
         (err as ApplicationError).status === 401
       ) {
         showMessage(
-          "Your session seems to have expired. Could not load favorites.",
+          "Your session seems to have expired. Could not load favorites. Redirecting to login page...",
         );
+        localStorage.removeItem("userId");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+        router.push("/login");
+      }, 1500);
       } else if (
         err instanceof Error && "status" in err &&
         (err as ApplicationError).status === 404

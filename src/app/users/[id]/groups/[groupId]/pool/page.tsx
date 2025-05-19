@@ -128,8 +128,13 @@ const MoviePool = () => {
             setSubmitError("User profile not found. Could not load watchlist.");
           } else if (appErr.status === 401) {
             setSubmitError(
-              "Session expired. Please log in again to load watchlist.",
+              "Session expired. Please log in again to load watchlist. Redirecting to login page...",
             );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
           } else {
             setSubmitError(
               "Failed to load your watchlist. Please try refreshing.",
@@ -177,7 +182,12 @@ const MoviePool = () => {
         if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (appErr.status === 401) {
-            setSubmitError("Your session has expired. Please log in again.");
+            setSubmitError("Your session has expired. Please log in again. Redirecting to login page...");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
           } else if (appErr.status === 404) {
             setSubmitError("Could not find the group or you are not a member.");
           } else {

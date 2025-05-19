@@ -275,6 +275,11 @@ const EditProfile: React.FC = () => {
             setSubmitError(
               "Your session has expired. Please log in again to update your profile.",
             );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             setSubmitError("You don't have permission to update this profile.");
@@ -289,13 +294,23 @@ const EditProfile: React.FC = () => {
             break;
           default:
             setSubmitError(
-              "An unexpected error occurred while updating your profile.",
+              "An unexpected error occurred while updating your profile. Redirecting to login page...",
             );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
         }
       } else {
-        setSubmitError(
-          "An unexpected error occurred while updating your profile.",
-        );
+            setSubmitError(
+              "An unexpected error occurred while updating your profile. Redirecting to login page...",
+            );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
       }
     }
   };
@@ -400,7 +415,14 @@ const EditProfile: React.FC = () => {
                 "Oops! We couldn't find the user profile you were looking for.",
               );
             } else {
-              setError(`Failed to load user data: ${appErr.message}`);
+              setError(
+              "An unexpected error occurred while updating your profile. Redirecting to login page...",
+            );
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+              router.push("/login");
+            }, 1500);
             }
           } else {
             setError("Failed to load user data");

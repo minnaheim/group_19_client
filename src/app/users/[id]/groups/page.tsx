@@ -694,7 +694,12 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 409:
             specificErrorMessage = `A group named "${newGroupName}" already exists.`;
@@ -769,7 +774,12 @@ const GroupsManagement: React.FC = () => {
             break;
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -827,7 +837,12 @@ const GroupsManagement: React.FC = () => {
             break;
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -880,7 +895,12 @@ const GroupsManagement: React.FC = () => {
             break;
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage = "You cannot reject this invitation.";
@@ -932,7 +952,12 @@ const GroupsManagement: React.FC = () => {
             break;
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -982,7 +1007,12 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1037,7 +1067,12 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1094,7 +1129,12 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage = "Only the group creator can remove members.";
@@ -1153,7 +1193,12 @@ const GroupsManagement: React.FC = () => {
             break;
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1205,7 +1250,12 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 401:
             specificErrorMessage =
-              "Your session has expired. Please log in again.";
+              "Your session has expired. Please log in again. Redirecting to login page...";
+            localStorage.removeItem("userId");
+            localStorage.removeItem("token");
+            setTimeout(() => {
+            router.push("/login");
+          }, 1500);
             break;
           case 403:
             specificErrorMessage =
