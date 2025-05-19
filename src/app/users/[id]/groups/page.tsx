@@ -66,7 +66,12 @@ type Friend = User;
 const GroupsManagement: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
-
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   // Component State
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupsWithDetails, setGroupsWithDetails] = useState<

@@ -165,7 +165,12 @@ const SearchMovies: React.FC = () => {
   const { id } = useParams();
   const apiService = useApi();
   const router = useRouter();
-
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

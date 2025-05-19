@@ -110,6 +110,12 @@ const Vote: React.FC = () => {
     error: phaseError,
   } = useGroupPhase(groupId as string);
   const router = useRouter();
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/login");
+  }
+}, [router]);
   const apiService = useApi();
   const [isOverallLoading, setIsOverallLoading] = useState<boolean>(true);
   const [voteStateDataLoading, setVoteStateDataLoading] = useState<boolean>(
