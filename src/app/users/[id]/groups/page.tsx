@@ -953,7 +953,7 @@ const GroupsManagement: React.FC = () => {
         switch (appErr.status) {
           case 400:
             specificErrorMessage =
-              "This invitation seems to be invalid or already processed.";
+              "This invitation cannot be processed ";
             break;
           case 401:
             specificErrorMessage =
