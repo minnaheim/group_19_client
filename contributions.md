@@ -172,7 +172,7 @@ reason).
 | ellaruby0    | Joker    | Joker                             | Joker                           | Joker                               |
 | AnabelNigsch | Joker    | Joker                             | Joker                           | Joker                               |
 | minnaheim    | [date]   | See Last Week - worked in advance | [Brief description of the task] | [Why this contribution is relevant] |
-| ivis-ii      | [date]   | [Link to Commit 1]                | [Brief description of the task] | [Why this contribution is relevant] |
-| ivis-ii      | [date]   | [Link to Commit 2]                | [Brief description of the task] | [Why this contribution is relevant] |
+| ivis-ii      | Joker   | Joker                | Joker | Joker |
+| ivis-ii      | Joker  | Joker                | Joker | Joker |
 
 ---
