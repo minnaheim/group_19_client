@@ -795,7 +795,7 @@ const EditProfile: React.FC = () => {
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <p className="text-sm text-gray-600 mb-3">
                     Please select amongst the directors in your favorite movie
-                    and in the movies in your Watch List. Directors added to Favorite Directors via Search will also be displayed in the table below
+                    and in the movies in your Watch List. Directors added to Favorite Directors via Search will also be displayed in the table below:
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {[...directorOptions]
