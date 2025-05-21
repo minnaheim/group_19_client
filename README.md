@@ -25,13 +25,6 @@ The necessary data on movies, actors and directors is provided by the external T
 - [Tailwind](https://tailwindcss.com) - CSS framework for styling
 - [Deno](https://deno.com) - The JavaScript Runtime
 
-**Back-End:**
-
-- [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) - The language used
-- [Spring Boot](https://spring.io/projects/spring-boot) - The tool used to build Web Application with Java
-- [Gradle](https://gradle.org) - Java Build System
-- [JPA and Hibernate](https://hibernate.org/orm/) - Used for persistence in the back-end
-
 <!-- - [smth](https://maven.apache.org/) - Dependency Management
 - [smth](https://rometools.github.io/rome/) - Used to generate RSS Feeds -->
 
