@@ -662,7 +662,7 @@ const EditProfile: React.FC = () => {
               {isSelectingActors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <p className="text-sm text-gray-600 mb-3">
-                    Please select amongst the actors în your favorite movie and
+                    Please select amongst the actors in your favorite movie and
                     in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -794,7 +794,7 @@ const EditProfile: React.FC = () => {
               {isSelectingDirectors && (
                 <div className="mt-2 p-4 bg-[#f7f9ff] rounded-lg border border-[#b9c0de]">
                   <p className="text-sm text-gray-600 mb-3">
-                    Please select amongst the directors în your favorite movie
+                    Please select amongst the directors in your favorite movie
                     and in the movies in your Watch List
                   </p>
                   <div className="flex flex-wrap gap-2">
