@@ -67,11 +67,11 @@ const GroupsManagement: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, [router]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
   // Component State
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupsWithDetails, setGroupsWithDetails] = useState<
@@ -83,12 +83,12 @@ const GroupsManagement: React.FC = () => {
   const [sentInvitations, setSentInvitations] = useState<GroupInvitation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"groups" | "invitations">(
-    "groups"
+    "groups",
   );
 
   // Flag for combined loading: data fetched but details not enriched yet
-  const isGroupDataLoading =
-    loading || (groups.length > 0 && groupsWithDetails.length === 0);
+  const isGroupDataLoading = loading ||
+    (groups.length > 0 && groupsWithDetails.length === 0);
 
   // --- Refactored State for Errors and Success ---
   const [error, setError] = useState<string | null>(null);
@@ -100,32 +100,38 @@ const GroupsManagement: React.FC = () => {
   const [showActionMessage, setShowActionMessage] = useState<boolean>(false);
 
   // Confirmation dialog states
-  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] =
-    useState<boolean>(false);
-  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] =
-    useState<boolean>(false);
+  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState<boolean>(
+    false,
+  );
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState<
+    boolean
+  >(false);
   const [showRemoveMemberConfirmDialog, setShowRemoveMemberConfirmDialog] =
     useState<boolean>(false);
   const [groupToLeave, setGroupToLeave] = useState<number | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
-  const [memberToRemove, setMemberToRemove] = useState<{
-    groupId: number;
-    memberId: number;
-  } | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<
+    {
+      groupId: number;
+      memberId: number;
+    } | null
+  >(null);
 
   // Dialog visibility states
-  const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] =
-    useState<boolean>(false);
+  const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState<
+    boolean
+  >(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState<boolean>(false);
-  const [isGroupDetailDialogOpen, setIsGroupDetailDialogOpen] =
-    useState<boolean>(false);
+  const [isGroupDetailDialogOpen, setIsGroupDetailDialogOpen] = useState<
+    boolean
+  >(false);
 
   // Input/Selection states
   const [newGroupName, setNewGroupName] = useState<string>("");
   const [inviteUsername, setInviteUsername] = useState<string>("");
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupWithDetails | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -140,13 +146,14 @@ const GroupsManagement: React.FC = () => {
   const [allUsers, setAllUsers] = useState<UserSearchResponse[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserSearchResponse[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false);
-  const [showUserSearchResults, setShowUserSearchResults] =
-    useState<boolean>(false);
+  const [showUserSearchResults, setShowUserSearchResults] = useState<boolean>(
+    false,
+  );
   const [usersLoaded, setUsersLoaded] = useState<boolean>(false);
   const [isValidUser, setIsValidUser] = useState<boolean>(false);
 
   const [inviteMethod, setInviteMethod] = useState<"friends" | "search">(
-    "friends"
+    "friends",
   );
   const [availableFriends, setAvailableFriends] = useState<Friend[]>([]);
   const [loadingFriends, setLoadingFriends] = useState<boolean>(false);
@@ -191,7 +198,7 @@ const GroupsManagement: React.FC = () => {
     } catch (err) {
       console.error("Error fetching all users:", err);
       setInviteError(
-        "Could not load user search. Using regular search instead."
+        "Could not load user search. Using regular search instead.",
       );
       setUsersLoaded(false);
     } finally {
@@ -245,7 +252,7 @@ const GroupsManagement: React.FC = () => {
           sentInvitations.some(
             (inv) =>
               inv.group.groupId === selectedGroupId &&
-              inv.receiver.userId === user.userId
+              inv.receiver.userId === user.userId,
           )
         ) {
           return false;
@@ -266,7 +273,7 @@ const GroupsManagement: React.FC = () => {
       selectedGroupId,
       groupsWithDetails,
       sentInvitations,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -289,14 +296,14 @@ const GroupsManagement: React.FC = () => {
         // If we have a selected group, filter out friends who are already members
         if (selectedGroupId) {
           const groupDetails = groupsWithDetails.find(
-            (g) => g.groupId === selectedGroupId
+            (g) => g.groupId === selectedGroupId,
           );
 
           if (groupDetails) {
             // Filter out friends who are already in the group
             const existingMemberIds = groupDetails.members.map((m) => m.userId);
             const filteredFriends = friendsData.filter(
-              (friend) => !existingMemberIds.includes(friend.userId)
+              (friend) => !existingMemberIds.includes(friend.userId),
             );
 
             // Also filter out friends who have pending invitations
@@ -305,7 +312,7 @@ const GroupsManagement: React.FC = () => {
               .map((inv) => inv.receiver.userId);
 
             const availableFriendsToInvite = filteredFriends.filter(
-              (friend) => !pendingInviteeIds.includes(friend.userId)
+              (friend) => !pendingInviteeIds.includes(friend.userId),
             );
 
             setAvailableFriends(availableFriendsToInvite);
@@ -372,7 +379,7 @@ const GroupsManagement: React.FC = () => {
       const invitationPromises = selectedFriends.map((friend) =>
         apiService.post(
           `/groups/invitations/send/${selectedGroupId}/${friend.userId}`,
-          {}
+          {},
         )
       );
 
@@ -381,7 +388,7 @@ const GroupsManagement: React.FC = () => {
 
       // Refresh the sent invitations list
       const updatedSentInvites = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/sent"
+        "/groups/invitations/sent",
       );
       if (Array.isArray(updatedSentInvites)) {
         setSentInvitations(updatedSentInvites);
@@ -392,7 +399,7 @@ const GroupsManagement: React.FC = () => {
       showSuccessMessage(
         `Invitation${
           friendCount !== 1 ? "s" : ""
-        } sent to ${friendCount} friend${friendCount !== 1 ? "s" : ""}`
+        } sent to ${friendCount} friend${friendCount !== 1 ? "s" : ""}`,
       );
 
       // Reset state
@@ -402,7 +409,7 @@ const GroupsManagement: React.FC = () => {
     } catch (err) {
       console.error("Error inviting friends:", err);
       setInviteError(
-        "Failed to send one or more invitations. Maybe another member in the Group already invited this User"
+        "Failed to send one or more invitations. Maybe another member in the Group already invited this User",
       );
     } finally {
       setIsSubmittingInvite(false);
@@ -507,19 +514,20 @@ const GroupsManagement: React.FC = () => {
       } catch (err: unknown) {
         console.error(
           `Error fetching user profile for ID ${userIdToFetch}:`,
-          err
+          err,
         );
         const message = getErrorMessage(
           err,
-          `Could not load profile for user ID ${userIdToFetch}.`
+          `Could not load profile for user ID ${userIdToFetch}.`,
         );
         // Use page-level error as this is a background detail fetch
         setError(message);
         // Return a placeholder matching the User interface structure
         return {
           userId: userIdToFetch,
-          username:
-            userIdToFetch.toString() === userId ? "You" : "Unknown User",
+          username: userIdToFetch.toString() === userId
+            ? "You"
+            : "Unknown User",
           // Add other mandatory User fields with default/empty values if necessary
           email: "",
           password: "", // Should not be included in profile response
@@ -529,7 +537,7 @@ const GroupsManagement: React.FC = () => {
         };
       }
     },
-    [apiService, userId]
+    [apiService, userId],
   ); // Dependencies: apiService, current userId for "You" check
 
   const loadGroupDetails = useCallback(
@@ -542,12 +550,12 @@ const GroupsManagement: React.FC = () => {
         // Fetch individual pieces of data for the detailed view
         const group: Group = await apiService.get<Group>(`/groups/${groupId}`);
         const members: User[] = await apiService.get<User[]>(
-          `/groups/${groupId}/members`
+          `/groups/${groupId}/members`,
         );
 
         // Get pool entries (with movie and addedBy properties)
         const poolEntries: PoolEntry[] = await apiService.get<PoolEntry[]>(
-          `/groups/${groupId}/pool`
+          `/groups/${groupId}/pool`,
         );
 
         // Extract just the movies from pool entries
@@ -570,11 +578,11 @@ const GroupsManagement: React.FC = () => {
       } catch (err: unknown) {
         console.error(
           `Error loading group details for group ID ${groupId}:`,
-          err
+          err,
         );
         const message = getErrorMessage(
           err,
-          `Failed to load details for the group.`
+          `Failed to load details for the group.`,
         );
         // Display error within the dialog if it's open, otherwise page level
         if (isGroupDetailDialogOpen) {
@@ -586,7 +594,7 @@ const GroupsManagement: React.FC = () => {
         throw new Error(message);
       }
     },
-    [apiService, fetchUserById, isGroupDetailDialogOpen]
+    [apiService, fetchUserById, isGroupDetailDialogOpen],
   ); // Dependencies
 
   useEffect(() => {
@@ -629,9 +637,9 @@ const GroupsManagement: React.FC = () => {
                 members: [],
                 movies: [],
                 phase: g.phase,
-              }) as GroupWithDetails
+              }) as GroupWithDetails,
           )
-        )
+        ),
       );
       if (!isMountedRef.current) return;
       setGroupsWithDetails(details);
@@ -666,7 +674,7 @@ const GroupsManagement: React.FC = () => {
       setFilteredGroups(
         groupsWithDetails.filter((group) =>
           group.groupName.toLowerCase().includes(query)
-        )
+        ),
       );
     }
   }, [searchQuery, groupsWithDetails]);
@@ -703,11 +711,12 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 409:
-            specificErrorMessage = `A group named "${newGroupName}" already exists.`;
+            specificErrorMessage =
+              `A group named "${newGroupName}" already exists.`;
             break;
           default:
             specificErrorMessage = getErrorMessage(err, specificErrorMessage);
@@ -740,7 +749,7 @@ const GroupsManagement: React.FC = () => {
     try {
       // Step 1: Search for user
       const results = await apiService.get<UserSearchResponse[]>(
-        `/users/search?username=${encodeURIComponent(inviteUsername)}`
+        `/users/search?username=${encodeURIComponent(inviteUsername)}`,
       );
       if (!Array.isArray(results) || results.length === 0) {
         throw new Error(`User '${inviteUsername}' not found.`); // Throw error to be caught below
@@ -755,10 +764,10 @@ const GroupsManagement: React.FC = () => {
       // Step 2: Send invitation
       await apiService.post(
         `/groups/invitations/send/${selectedGroupId}/${receiverId}`,
-        {}
+        {},
       );
       const updatedSentInvites = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/sent"
+        "/groups/invitations/sent",
       );
       if (Array.isArray(updatedSentInvites)) {
         setSentInvitations(updatedSentInvites);
@@ -783,8 +792,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -797,7 +806,7 @@ const GroupsManagement: React.FC = () => {
           case 409:
             specificErrorMessage = getErrorMessage(
               err,
-              "User is already a member or has a pending invitation."
+              "User is already a member or has a pending invitation.",
             );
             break;
           default:
@@ -846,8 +855,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -882,7 +891,7 @@ const GroupsManagement: React.FC = () => {
     try {
       await apiService.post(`/groups/invitations/${invitationId}/reject`, {});
       const invites = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/received"
+        "/groups/invitations/received",
       );
       if (Array.isArray(invites)) setReceivedInvitations(invites); // Refresh just received list
       showSuccessMessage("Group invitation rejected");
@@ -904,8 +913,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage = "You cannot reject this invitation.";
@@ -939,7 +948,7 @@ const GroupsManagement: React.FC = () => {
     try {
       await apiService.delete(`/groups/invitations/${invitationId}`);
       const invites = await apiService.get<GroupInvitation[]>(
-        "/groups/invitations/sent"
+        "/groups/invitations/sent",
       );
       if (Array.isArray(invites)) setSentInvitations(invites); // Refresh sent list
       showSuccessMessage("Invitation cancelled");
@@ -952,8 +961,7 @@ const GroupsManagement: React.FC = () => {
         const appErr = err as ApplicationError;
         switch (appErr.status) {
           case 400:
-            specificErrorMessage =
-              "This invitation cannot be processed ";
+            specificErrorMessage = "This invitation cannot be processed ";
             break;
           case 401:
             specificErrorMessage =
@@ -961,8 +969,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1016,8 +1024,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1076,8 +1084,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1119,7 +1127,7 @@ const GroupsManagement: React.FC = () => {
 
     try {
       await apiService.delete(
-        `/groups/${memberToRemove.groupId}/members/${memberToRemove.memberId}`
+        `/groups/${memberToRemove.groupId}/members/${memberToRemove.memberId}`,
       );
       showSuccessMessage("Member removed successfully");
       // Refresh details in the dialog
@@ -1138,8 +1146,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage = "Only the group creator can remove members.";
@@ -1194,7 +1202,8 @@ const GroupsManagement: React.FC = () => {
         const appErr = err as ApplicationError;
         switch (appErr.status) {
           case 409:
-            specificErrorMessage = `The group name "${newName}" is already taken.`;
+            specificErrorMessage =
+              `The group name "${newName}" is already taken.`;
             break;
           case 401:
             specificErrorMessage =
@@ -1202,8 +1211,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1232,14 +1241,15 @@ const GroupsManagement: React.FC = () => {
   const handleAdvancePhase = async (groupId: number, currentPhase: string) => {
     setDialogError(null);
     setError(null);
-    const nextPhaseAction =
-      currentPhase === "POOLING" ? "start-voting" : "show-results";
-    const successMessage =
-      currentPhase === "POOLING" ? "Voting started" : "Results shown";
-    const nextRoute =
-      currentPhase === "POOLING"
-        ? `/users/${userId}/groups/${groupId}/vote`
-        : `/users/${userId}/groups/${groupId}/results`;
+    const nextPhaseAction = currentPhase === "POOLING"
+      ? "start-voting"
+      : "show-results";
+    const successMessage = currentPhase === "POOLING"
+      ? "Voting started"
+      : "Results shown";
+    const nextRoute = currentPhase === "POOLING"
+      ? `/users/${userId}/groups/${groupId}/vote`
+      : `/users/${userId}/groups/${groupId}/results`;
 
     try {
       await apiService.post(`/groups/${groupId}/${nextPhaseAction}`, {});
@@ -1259,8 +1269,8 @@ const GroupsManagement: React.FC = () => {
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             specificErrorMessage =
@@ -1272,7 +1282,7 @@ const GroupsManagement: React.FC = () => {
           case 409: // Conflict - Phase mismatch or condition not met
             specificErrorMessage = getErrorMessage(
               err,
-              "Cannot change phase. Ensure conditions are met (e.g., movies in pool)."
+              "Cannot change phase. Ensure conditions are met (e.g., movies in pool).",
             );
             break;
           default:
@@ -1366,7 +1376,10 @@ const GroupsManagement: React.FC = () => {
         {/* Display Non-critical Page Level Errors (e.g., accept/reject fails) */}
         {error && (
           <div className="mb-4">
-            <ErrorMessage message={error} onClose={() => setError(null)} />
+            <ErrorMessage
+              message={error}
+              onClose={() => setError(null)}
+            />
           </div>
         )}
 
@@ -1434,7 +1447,8 @@ const GroupsManagement: React.FC = () => {
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
+                  >
+                  </path>
                 </svg>
               </div>
               <input
@@ -1462,151 +1476,158 @@ const GroupsManagement: React.FC = () => {
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M6 18L18 6M6 6l12 12"
-                    ></path>
+                    >
+                    </path>
                   </svg>
                 </button>
               )}
             </div>
 
             {/* Groups grid */}
-            {isGroupDataLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]" />
-              </div>
-            ) : filteredGroups.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredGroups.map((group) => (
-                  <div
-                    key={group.groupId}
-                    className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => openGroupDetails(group)}
-                  >
-                    {/* Group Card Content */}
-                    <div className="flex items-center justify-between mb-2">
-                      <h3
-                        className="font-semibold text-[#3b3e88] text-lg truncate"
-                        title={group.groupName}
-                      >
-                        {group.groupName}
-                      </h3>
-                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full flex-shrink-0">
-                        {group.members?.length ?? 0}
-                        {"  "}
-                        {group.members?.length === 1 ? "member" : "members"}
-                      </span>
-                    </div>
-                    {/* Movie pool preview */}
-                    <div className="mb-4 min-h-[80px] flex flex-col justify-end">
-                      {group.movies && group.movies.length > 0 ? (
-                        <>
-                          <p className="text-xs text-[#3b3e88]/80 mb-2">
-                            Movie Pool ({group.movies.length})
-                          </p>
-                          <div className="flex gap-2 overflow-x-auto pb-2">
-                            {/* Movie posters */}
-                            {group.movies.slice(0, 4).map((movie) => (
-                              <div
-                                key={movie.movieId}
-                                className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
-                              >
-                                <img
-                                  src={
-                                    movie.posterURL &&
-                                    movie.posterURL.startsWith("http")
-                                      ? movie.posterURL
-                                      : movie.posterURL
-                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
-                                        : "/placeholder.png"
-                                  }
-                                  alt={movie.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ))}
-                            {/* More indicator */}
-                            {group.movies.length > 4 && (
-                              <div className="w-10 h-14 bg-indigo-100 flex-shrink-0 flex items-center justify-center rounded">
-                                <span className="text-xs font-medium text-indigo-700">
-                                  +{group.movies.length - 4}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-[#3b3e88]/80 text-xs">
-                          No movies in pool yet
-                        </p>
-                      )}
-                    </div>
-                    {/* Creator and Phase */}
-                    <div className="flex justify-between items-center text-xs text-[#3b3e88]/80">
-                      <span>
-                        {group.creator
-                          ? group.creator.userId.toString() === userId
-                            ? "Created by you"
-                            : `Created by ${group.creator.username}`
-                          : "Loading creator..."}
-                      </span>
-                      <span>
-                        {`Phase: ${group.phase?.toUpperCase() ?? "UNKNOWN"}`}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // No groups / No search results message
-              <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
-                {searchQuery ? (
-                  /* No search results */ <div>
-                    <p className="text-[#838bad] mb-4">
-                      No groups match your search &#34;{searchQuery}&#34;
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="rounded-xl border-violet-600 text-[#3b3e88]"
-                      onClick={() => setSearchQuery("")}
+            {isGroupDataLoading
+              ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]" />
+                </div>
+              )
+              : filteredGroups.length > 0
+              ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredGroups.map((group) => (
+                    <div
+                      key={group.groupId}
+                      className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => openGroupDetails(group)}
                     >
-                      Clear Search
-                    </Button>
-                  </div>
-                ) : (
-                  /* No groups at all */ <div>
-                    <div className="flex justify-center mb-4">
-                      <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <svg
-                          className="w-10 h-10 text-indigo-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
+                      {/* Group Card Content */}
+                      <div className="flex items-center justify-between mb-2">
+                        <h3
+                          className="font-semibold text-[#3b3e88] text-lg truncate"
+                          title={group.groupName}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                          ></path>
-                        </svg>
+                          {group.groupName}
+                        </h3>
+                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full flex-shrink-0">
+                          {group.members?.length ?? 0}{"  "}
+                          {group.members?.length === 1 ? "member" : "members"}
+                        </span>
+                      </div>
+                      {/* Movie pool preview */}
+                      <div className="mb-4 min-h-[80px] flex flex-col justify-end">
+                        {group.movies && group.movies.length > 0
+                          ? (
+                            <>
+                              <p className="text-xs text-[#3b3e88]/80 mb-2">
+                                Movie Pool ({group.movies.length})
+                              </p>
+                              <div className="flex gap-2 overflow-x-auto pb-2">
+                                {/* Movie posters */}
+                                {group.movies.slice(0, 4).map((movie) => (
+                                  <div
+                                    key={movie.movieId}
+                                    className="w-10 h-14 flex-shrink-0 rounded overflow-hidden"
+                                  >
+                                    <img
+                                      src={movie.posterURL &&
+                                          movie.posterURL.startsWith("http")
+                                        ? movie.posterURL
+                                        : movie.posterURL
+                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
+                                        : "/placeholder.png"}
+                                      alt={movie.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                ))}
+                                {/* More indicator */}
+                                {group.movies.length > 4 && (
+                                  <div className="w-10 h-14 bg-indigo-100 flex-shrink-0 flex items-center justify-center rounded">
+                                    <span className="text-xs font-medium text-indigo-700">
+                                      +{group.movies.length - 4}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )
+                          : (
+                            <p className="text-[#3b3e88]/80 text-xs">
+                              No movies in pool yet
+                            </p>
+                          )}
+                      </div>
+                      {/* Creator and Phase */}
+                      <div className="flex justify-between items-center text-xs text-[#3b3e88]/80">
+                        <span>
+                          {group.creator
+                            ? group.creator.userId.toString() === userId
+                              ? "Created by you"
+                              : `Created by ${group.creator.username}`
+                            : "Loading creator..."}
+                        </span>
+                        <span>
+                          {`Phase: ${group.phase?.toUpperCase() ?? "UNKNOWN"}`}
+                        </span>
                       </div>
                     </div>
-                    <p className="text-[#838bad] mb-2">
-                      You are not part of any groups yet
-                    </p>
-                    <p className="text-[#3b3e88]/80 mb-6">
-                      Create a group to start watching movies with friends!
-                    </p>
-                    <Button
-                      className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
-                      onClick={() => setIsCreateGroupDialogOpen(true)}
-                    >
-                      Create Your First Group
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              )
+              : (
+                // No groups / No search results message
+                <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
+                  {searchQuery
+                    ? (
+                      /* No search results */ <div>
+                        <p className="text-[#838bad] mb-4">
+                          No groups match your search &#34;{searchQuery}&#34;
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="rounded-xl border-violet-600 text-[#3b3e88]"
+                          onClick={() => setSearchQuery("")}
+                        >
+                          Clear Search
+                        </Button>
+                      </div>
+                    )
+                    : (
+                      /* No groups at all */ <div>
+                        <div className="flex justify-center mb-4">
+                          <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <svg
+                              className="w-10 h-10 text-indigo-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                              >
+                              </path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-[#838bad] mb-2">
+                          You are not part of any groups yet
+                        </p>
+                        <p className="text-[#3b3e88]/80 mb-6">
+                          Create a group to start watching movies with friends!
+                        </p>
+                        <Button
+                          className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 rounded-xl"
+                          onClick={() => setIsCreateGroupDialogOpen(true)}
+                        >
+                          Create Your First Group
+                        </Button>
+                      </div>
+                    )}
+                </div>
+              )}
           </>
         )}
 
@@ -1631,9 +1652,8 @@ const GroupsManagement: React.FC = () => {
                           {invitation.group.groupName}
                         </h4>
                         <p className="text-[#3b3e88]/80 text-xs mb-1">
-                          Invited by {invitation.sender.username} on{" "}
-                          {new Date(
-                            invitation.creationTime
+                          Invited by {invitation.sender.username} on {new Date(
+                            invitation.creationTime,
                           ).toLocaleDateString()}
                         </p>
                       </div>
@@ -1641,8 +1661,7 @@ const GroupsManagement: React.FC = () => {
                         <Button
                           className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-xs h-8 rounded-xl flex-1"
                           onClick={() =>
-                            handleAcceptInvitation(invitation.invitationId)
-                          }
+                            handleAcceptInvitation(invitation.invitationId)}
                         >
                           Accept
                         </Button>
@@ -1650,8 +1669,7 @@ const GroupsManagement: React.FC = () => {
                           variant="outline"
                           className="border-violet-600 text-[#3b3e88] hover:bg-[#3b3e88]/10 text-xs h-8 rounded-xl flex-1"
                           onClick={() =>
-                            handleRejectInvitation(invitation.invitationId)
-                          }
+                            handleRejectInvitation(invitation.invitationId)}
                         >
                           Decline
                         </Button>
@@ -1678,9 +1696,8 @@ const GroupsManagement: React.FC = () => {
                           {invitation.group.groupName}
                         </h4>
                         <p className="text-[#3b3e88]/80 text-xs mb-1">
-                          Invited {invitation.receiver.username} on{" "}
-                          {new Date(
-                            invitation.creationTime
+                          Invited {invitation.receiver.username} on {new Date(
+                            invitation.creationTime,
                           ).toLocaleDateString()}
                         </p>
                         <p className="text-[#838bad] text-xs italic mb-1">
@@ -1691,8 +1708,7 @@ const GroupsManagement: React.FC = () => {
                         variant="outline"
                         className="w-full border-rose-500 text-rose-500 hover:bg-rose-50 text-xs h-8 rounded-xl"
                         onClick={() =>
-                          handleCancelInvitation(invitation.invitationId)
-                        }
+                          handleCancelInvitation(invitation.invitationId)}
                       >
                         Cancel Invitation
                       </Button>
@@ -1704,31 +1720,32 @@ const GroupsManagement: React.FC = () => {
             {/* No invitations state */}
             {receivedInvitations.length === 0 &&
               sentInvitations.length === 0 && (
-                <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <svg
-                        className="w-10 h-10 text-indigo-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
+              <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
+                <div className="flex justify-center mb-4">
+                  <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <svg
+                      className="w-10 h-10 text-indigo-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                    </div>
+                      </path>
+                    </svg>
                   </div>
-                  <p className="text-[#838bad] mb-2">No pending invitations</p>
-                  <p className="text-[#3b3e88]/80">
-                    Invite friends to your groups or wait for invitations
-                  </p>
                 </div>
-              )}
+                <p className="text-[#838bad] mb-2">No pending invitations</p>
+                <p className="text-[#3b3e88]/80">
+                  Invite friends to your groups or wait for invitations
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1857,127 +1874,134 @@ const GroupsManagement: React.FC = () => {
             {/* Friend Selection Method */}
             {inviteMethod === "friends" && (
               <div className="space-y-4">
-                {loadingFriends ? (
-                  <div className="flex justify-center py-4">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#3b3e88] border-t-transparent rounded-full"></div>
-                  </div>
-                ) : availableFriends.length > 0 ? (
-                  <>
-                    <div className="mb-2">
-                      <Label className="text-[#3b3e88] mb-2 block">
-                        Select friends to invite ({selectedFriends.length}{" "}
-                        selected)
-                      </Label>
-                      {/* Friend search filter */}
-                      <div className="relative mb-3">
-                        <input
-                          type="text"
-                          value={friendSearchQuery}
-                          onChange={(e) => setFriendSearchQuery(e.target.value)}
-                          placeholder="Filter friends..."
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3b3e88] focus:outline-none"
-                        />
-                        {friendSearchQuery && (
-                          <button
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            onClick={() => setFriendSearchQuery("")}
-                          >
-                            ✕
-                          </button>
+                {loadingFriends
+                  ? (
+                    <div className="flex justify-center py-4">
+                      <div className="animate-spin h-6 w-6 border-2 border-[#3b3e88] border-t-transparent rounded-full">
+                      </div>
+                    </div>
+                  )
+                  : availableFriends.length > 0
+                  ? (
+                    <>
+                      <div className="mb-2">
+                        <Label className="text-[#3b3e88] mb-2 block">
+                          Select friends to invite ({selectedFriends.length}
+                          {" "}
+                          selected)
+                        </Label>
+                        {/* Friend search filter */}
+                        <div className="relative mb-3">
+                          <input
+                            type="text"
+                            value={friendSearchQuery}
+                            onChange={(e) =>
+                              setFriendSearchQuery(e.target.value)}
+                            placeholder="Filter friends..."
+                            className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3b3e88] focus:outline-none"
+                          />
+                          {friendSearchQuery && (
+                            <button
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              onClick={() => setFriendSearchQuery("")}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Friends grid with checkboxes */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
+                          {filteredAvailableFriends.map((friend) => (
+                            <div
+                              key={friend.userId}
+                              className={`flex items-center p-2 rounded-xl transition-colors ${
+                                selectedFriends.some(
+                                    (f) => f.userId === friend.userId,
+                                  )
+                                  ? "bg-indigo-50 border border-indigo-200"
+                                  : "hover:bg-gray-50 border border-transparent"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                id={`friend-${friend.userId}`}
+                                checked={selectedFriends.some(
+                                  (f) => f.userId === friend.userId,
+                                )}
+                                onChange={() => toggleFriendSelection(friend)}
+                                className="h-4 w-4 rounded border-gray-300 text-[#3b3e88] focus:ring-[#3b3e88]"
+                              />
+                              <label
+                                htmlFor={`friend-${friend.userId}`}
+                                className="ml-2 flex-grow cursor-pointer font-medium text-sm text-[#3b3e88]"
+                              >
+                                {friend.username}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+
+                        {filteredAvailableFriends.length === 0 && (
+                          <div className="text-center py-4 text-[#838bad]">
+                            No friends match your filter
+                          </div>
                         )}
                       </div>
 
-                      {/* Friends grid with checkboxes */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
-                        {filteredAvailableFriends.map((friend) => (
-                          <div
-                            key={friend.userId}
-                            className={`flex items-center p-2 rounded-xl transition-colors ${
-                              selectedFriends.some(
-                                (f) => f.userId === friend.userId
-                              )
-                                ? "bg-indigo-50 border border-indigo-200"
-                                : "hover:bg-gray-50 border border-transparent"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              id={`friend-${friend.userId}`}
-                              checked={selectedFriends.some(
-                                (f) => f.userId === friend.userId
-                              )}
-                              onChange={() => toggleFriendSelection(friend)}
-                              className="h-4 w-4 rounded border-gray-300 text-[#3b3e88] focus:ring-[#3b3e88]"
-                            />
-                            <label
-                              htmlFor={`friend-${friend.userId}`}
-                              className="ml-2 flex-grow cursor-pointer font-medium text-sm text-[#3b3e88]"
-                            >
-                              {friend.username}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-
-                      {filteredAvailableFriends.length === 0 && (
-                        <div className="text-center py-4 text-[#838bad]">
-                          No friends match your filter
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-sm"
-                        onClick={handleInviteSelectedFriends}
-                        disabled={
-                          isSubmittingInvite || selectedFriends.length === 0
-                        }
-                      >
-                        {isSubmittingInvite
-                          ? "Sending..."
-                          : `Invite ${selectedFriends.length} Friend${
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          className="bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-sm"
+                          onClick={handleInviteSelectedFriends}
+                          disabled={isSubmittingInvite ||
+                            selectedFriends.length === 0}
+                        >
+                          {isSubmittingInvite
+                            ? "Sending..."
+                            : `Invite ${selectedFriends.length} Friend${
                               selectedFriends.length !== 1 ? "s" : ""
                             }`}
+                        </Button>
+                      </div>
+                    </>
+                  )
+                  : (
+                    <div className="text-center py-8">
+                      <div className="mb-3 flex justify-center">
+                        <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <svg
+                            className="w-8 h-8 text-indigo-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                            >
+                            </path>
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-[#838bad]">
+                        You have no further friends to invite
+                      </p>
+                      <p className="text-[#3b3e88]/80 text-sm mb-4">
+                        Add friends first or use the search option
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl border-[#3b3e88] text-[#3b3e88] text-sm"
+                        onClick={() => setInviteMethod("search")}
+                      >
+                        Switch to User Search
                       </Button>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="mb-3 flex justify-center">
-                      <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-indigo-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-[#838bad]">
-                      You have no further friends to invite
-                    </p>
-                    <p className="text-[#3b3e88]/80 text-sm mb-4">
-                      Add friends first or use the search option
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="rounded-xl border-[#3b3e88] text-[#3b3e88] text-sm"
-                      onClick={() => setInviteMethod("search")}
-                    >
-                      Switch to User Search
-                    </Button>
-                  </div>
-                )}
+                  )}
               </div>
             )}
 
@@ -2002,16 +2026,20 @@ const GroupsManagement: React.FC = () => {
                     {/* Client-Side Filtered Results Dropdown */}
                     {showUserSearchResults &&
                       inviteUsername.trim().length >= 1 && (
-                        <div
-                          ref={searchResultsRef}
-                          className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-lg max-h-64 overflow-y-auto"
-                        >
-                          {isLoadingUsers && !usersLoaded ? (
+                      <div
+                        ref={searchResultsRef}
+                        className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-lg max-h-64 overflow-y-auto"
+                      >
+                        {isLoadingUsers && !usersLoaded
+                          ? (
                             <div className="p-4 text-center text-gray-600">
-                              <div className="inline-block animate-spin h-4 w-4 border-2 border-[#3b3e88] border-t-transparent rounded-full mr-2"></div>
+                              <div className="inline-block animate-spin h-4 w-4 border-2 border-[#3b3e88] border-t-transparent rounded-full mr-2">
+                              </div>
                               Loading users...
                             </div>
-                          ) : filteredUsers.length > 0 ? (
+                          )
+                          : filteredUsers.length > 0
+                          ? (
                             <ul>
                               {filteredUsers.map((user) => (
                                 <li
@@ -2023,19 +2051,22 @@ const GroupsManagement: React.FC = () => {
                                 </li>
                               ))}
                             </ul>
-                          ) : usersLoaded ? (
+                          )
+                          : usersLoaded
+                          ? (
                             <div className="p-4 text-center text-gray-600">
                               {allUsers.length > 0
                                 ? "No matching users found"
                                 : "No users available to invite"}
                             </div>
-                          ) : (
+                          )
+                          : (
                             <div className="p-4 text-center text-gray-600">
                               Failed to load users for search
                             </div>
                           )}
-                        </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -2048,8 +2079,8 @@ const GroupsManagement: React.FC = () => {
                     {isSubmittingInvite
                       ? "Sending..."
                       : !isValidUser && usersLoaded
-                        ? "Please search for and select an existing user"
-                        : "Send Invitation"}
+                      ? "Please search for and select an existing user"
+                      : "Send Invitation"}
                   </Button>
                 </div>
               </form>
@@ -2082,293 +2113,301 @@ const GroupsManagement: React.FC = () => {
           }}
         >
           <DialogContent className="max-w-3xl rounded-2xl max-h-[90vh] overflow-y-auto">
-            {selectedGroup ? (
-              <>
-                <DialogHeader>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                    {/* Group Title and Phase */}
-                    <div>
-                      <DialogTitle className="text-[#3b3e88] text-xl">
-                        {selectedGroup.groupName}
-                      </DialogTitle>
-                      <p className="text-sm text-[#838bad] mt-1">
-                        Current Phase:{" "}
-                        {selectedGroup.phase?.toUpperCase() ?? "UNKNOWN"}
-                      </p>
-                      <div className="text-sm text-[#838bad] mt-1">
-                        <Timer groupId={selectedGroup.groupId.toString()} />
-                      </div>
-                    </div>
-                    {/* Admin Actions (Rename/Delete) or Leave Button */}
-                    {selectedGroup.creatorId === parseInt(userId || "-1") ? (
-                      <div className="space-y-3 w-full mt-6">
-                        <div className="flex justify-end gap-2 items-center">
-                          <div className="w-64">
-                            <Input
-                              id={`editGroupName-${selectedGroup.groupId}`}
-                              defaultValue={selectedGroup.groupName}
-                              className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200 w-full"
-                              aria-label="Edit Group Name"
-                            />
-                          </div>
-                          <Button
-                            variant="secondary"
-                            onClick={() =>
-                              handleRenameGroup(
-                                selectedGroup.groupId,
-                                `editGroupName-${selectedGroup.groupId}`
-                              )
-                            }
-                          >
-                            Rename
-                          </Button>
-                        </div>
-                        {selectedGroup && 
-                          selectedGroup.creatorId !== undefined && 
-                          selectedGroup.phase && 
-                          userId && userId.length > 0 &&
-                          selectedGroup.creatorId === parseInt(userId) &&
-                          ["VOTING", "POOLING"].includes(selectedGroup.phase) && (
-                            <div className="flex justify-end">
-                              <SetTimer
-                                groupId={selectedGroup.groupId}
-                                isCreator={true}
-                              />
-                            </div>
-                          )}
-                      </div>
-                    ) : null }
-                  </div>
-                </DialogHeader>
-                <div className="py-4">
-                  {/* Main dialog content area */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Group Details Section */}
-                    <div>
-                      <h4 className="font-medium text-[#3b3e88] mb-2">
-                        Group Details
-                      </h4>
-                      <div className="bg-indigo-50 rounded-xl p-4 space-y-3">
-                        <div>
-                          <span className="text-[#838bad] text-sm">
-                            Created by:
-                          </span>
-                          <p className="text-[#3b3e88] font-medium">
-                            {selectedGroup.creator?.username ?? "Unknown"}{" "}
-                            {selectedGroup.creatorId ===
-                              parseInt(userId || "-1") && "(You)"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-[#838bad] text-sm">
-                            Members ({selectedGroup.members?.length ?? 0}):
-                          </span>
-                          <ul className="text-[#3b3e88] space-y-0.5 max-h-40 overflow-y-auto pr-2 mt-1">
-                            {selectedGroup.members?.map((member) => (
-                              <li
-                                key={member.userId}
-                                className="flex items-center justify-between text-sm py-1"
-                              >
-                                <span>
-                                  {member.username}
-                                  {member.userId === selectedGroup.creatorId &&
-                                    " (Creator)"}
-                                  {member.userId.toString() === userId &&
-                                    " (You)"}
-                                </span>
-                                {selectedGroup.creatorId ===
-                                  parseInt(userId || "-1") &&
-                                  member.userId !== selectedGroup.creatorId && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="border-rose-400 text-rose-500 hover:bg-rose-50 rounded-lg text-xs h-6 px-2 ml-2"
-                                      onClick={() =>
-                                        handleRemoveMember(
-                                          selectedGroup.groupId,
-                                          member.userId
-                                        )
-                                      }
-                                    >
-                                      Remove
-                                    </Button>
-                                  )}
-                              </li>
-                            ))}
-                            {sentInvitations
-                              .filter(
-                                (inv) =>
-                                  inv.group.groupId === selectedGroup.groupId &&
-                                  !inv.accepted
-                              )
-                              .map((inv) => (
-                                <li
-                                  key={inv.invitationId}
-                                  className="italic text-xs leading-none py-0.5"
-                                >
-                                  {inv.receiver.username} (invited)
-                                </li>
-                              ))}
-                          </ul>
-
-                          {/* Update the Add Member button with enhanced styling */}
-                          <Button
-                            className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-white"
-                            onClick={() => {
-                              setSelectedGroupId(selectedGroup.groupId);
-                              setInviteMethod("friends"); // Default to friends tab
-                              setFriendSearchQuery(""); // Clear any previous search
-                              setSelectedFriends([]); // Clear any previous selections
-                              setInviteUsername(""); // Clear any previous search username
-                              setIsInviteDialogOpen(true);
-                            }}
-                          >
-                            Invite Members
-                          </Button>
+            {selectedGroup
+              ? (
+                <>
+                  <DialogHeader>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      {/* Group Title and Phase */}
+                      <div>
+                        <DialogTitle className="text-[#3b3e88] text-xl">
+                          {selectedGroup.groupName}
+                        </DialogTitle>
+                        <p className="text-sm text-[#838bad] mt-1">
+                          Current Phase:{" "}
+                          {selectedGroup.phase?.toUpperCase() ?? "UNKNOWN"}
+                        </p>
+                        <div className="text-sm text-[#838bad] mt-1">
+                          <Timer groupId={selectedGroup.groupId.toString()} />
                         </div>
                       </div>
-                    </div>
-                    {/* Movie Pool & Actions Section */}
-                    <div>
-                      <h4 className="font-medium text-[#3b3e88] mb-2">
-                        Movie Pool
-                      </h4>
-                      {selectedGroup.movies &&
-                      selectedGroup.movies.length > 0 ? (
-                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2 bg-indigo-50 rounded-xl p-4">
-                          {selectedGroup.movies.map((movie) => (
-                            <div
-                              key={movie.movieId}
-                              className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm"
-                            >
-                              <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0">
-                                <img
-                                  src={
-                                    movie.posterURL &&
-                                    movie.posterURL.startsWith("http")
-                                      ? movie.posterURL
-                                      : movie.posterURL
-                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
-                                        : "/placeholder.png"
-                                  }
-                                  alt={movie.title}
-                                  className="w-full h-full object-cover"
+                      {/* Admin Actions (Rename/Delete) or Leave Button */}
+                      {selectedGroup.creatorId === parseInt(userId || "-1")
+                        ? (
+                          <div className="space-y-3 w-full mt-6">
+                            <div className="flex justify-end gap-2 items-center">
+                              <div className="w-64">
+                                <Input
+                                  id={`editGroupName-${selectedGroup.groupId}`}
+                                  defaultValue={selectedGroup.groupName}
+                                  className="border rounded-xl px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200 w-full"
+                                  aria-label="Edit Group Name"
                                 />
                               </div>
-                              <div className="flex-grow min-w-0">
-                                <p className="font-medium text-[#3b3e88] truncate text-sm">
-                                  {movie.title}
-                                </p>
-                                <p className="text-xs text-[#3b3e88]/80">
-                                  {movie.year} •{" "}
-                                  {movie.genres?.slice(0, 2).join(", ")}
-                                </p>
-                              </div>
+                              <Button
+                                variant="secondary"
+                                onClick={() =>
+                                  handleRenameGroup(
+                                    selectedGroup.groupId,
+                                    `editGroupName-${selectedGroup.groupId}`,
+                                  )}
+                              >
+                                Rename
+                              </Button>
                             </div>
-                          ))}
+                            {selectedGroup &&
+                              selectedGroup.creatorId !== undefined &&
+                              selectedGroup.phase &&
+                              userId && userId.length > 0 &&
+                              selectedGroup.creatorId === parseInt(userId) &&
+                              ["VOTING", "POOLING"].includes(
+                                selectedGroup.phase,
+                              ) && (
+                              <div className="flex justify-end">
+                                <SetTimer
+                                  groupId={selectedGroup.groupId}
+                                  isCreator={true}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )
+                        : null}
+                    </div>
+                  </DialogHeader>
+                  <div className="py-4">
+                    {/* Main dialog content area */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Group Details Section */}
+                      <div>
+                        <h4 className="font-medium text-[#3b3e88] mb-2">
+                          Group Details
+                        </h4>
+                        <div className="bg-indigo-50 rounded-xl p-4 space-y-3">
+                          <div>
+                            <span className="text-[#838bad] text-sm">
+                              Created by:
+                            </span>
+                            <p className="text-[#3b3e88] font-medium">
+                              {selectedGroup.creator?.username ?? "Unknown"}
+                              {" "}
+                              {selectedGroup.creatorId ===
+                                  parseInt(userId || "-1") && "(You)"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-[#838bad] text-sm">
+                              Members ({selectedGroup.members?.length ?? 0}):
+                            </span>
+                            <ul className="text-[#3b3e88] space-y-0.5 max-h-40 overflow-y-auto pr-2 mt-1">
+                              {selectedGroup.members?.map((member) => (
+                                <li
+                                  key={member.userId}
+                                  className="flex items-center justify-between text-sm py-1"
+                                >
+                                  <span>
+                                    {member.username}
+                                    {member.userId ===
+                                        selectedGroup.creatorId &&
+                                      " (Creator)"}
+                                    {member.userId.toString() === userId &&
+                                      " (You)"}
+                                  </span>
+                                  {selectedGroup.creatorId ===
+                                      parseInt(userId || "-1") &&
+                                    member.userId !== selectedGroup.creatorId &&
+                                    (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-rose-400 text-rose-500 hover:bg-rose-50 rounded-lg text-xs h-6 px-2 ml-2"
+                                        onClick={() =>
+                                          handleRemoveMember(
+                                            selectedGroup.groupId,
+                                            member.userId,
+                                          )}
+                                      >
+                                        Remove
+                                      </Button>
+                                    )}
+                                </li>
+                              ))}
+                              {sentInvitations
+                                .filter(
+                                  (inv) =>
+                                    inv.group.groupId ===
+                                      selectedGroup.groupId &&
+                                    !inv.accepted,
+                                )
+                                .map((inv) => (
+                                  <li
+                                    key={inv.invitationId}
+                                    className="italic text-xs leading-none py-0.5"
+                                  >
+                                    {inv.receiver.username} (invited)
+                                  </li>
+                                ))}
+                            </ul>
+
+                            {/* Update the Add Member button with enhanced styling */}
+                            <Button
+                              className="mt-3 w-full bg-[#3b3e88] hover:bg-[#3b3e88]/90 text-white"
+                              onClick={() => {
+                                setSelectedGroupId(selectedGroup.groupId);
+                                setInviteMethod("friends"); // Default to friends tab
+                                setFriendSearchQuery(""); // Clear any previous search
+                                setSelectedFriends([]); // Clear any previous selections
+                                setInviteUsername(""); // Clear any previous search username
+                                setIsInviteDialogOpen(true);
+                              }}
+                            >
+                              Invite Members
+                            </Button>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="bg-indigo-50 rounded-xl p-6 text-center">
-                          <p className="text-[#3b3e88]/90 mb-2">
-                            No movies in pool yet
-                          </p>
-                          <p className="text-[#3b3e88]/80 text-sm mb-4">
-                            Add movies to the pool for your group to vote on
-                          </p>
-                        </div>
-                      )}
-                      {/* Action buttons */}
-                      <div className="flex flex-col gap-3 mt-4">
-                        <Button
-                          variant="secondary"
-                          className="bg-[#7824ec] hover:bg-opacity-90"
-                          onClick={() => {
-                            const phase = selectedGroup.phase;
-                            if (phase === "POOLING") {
-                              navigateToGroupPool(selectedGroup.groupId);
-                            } else if (phase === "VOTING") {
-                              navigateToGroupVoting(selectedGroup.groupId);
-                            } else {
-                              navigateToGroupResults(selectedGroup.groupId);
-                            }
-                          }}
-                        >
-                          {selectedGroup.phase === "POOLING"
-                            ? "View & Edit Movie Pool"
-                            : selectedGroup.phase === "VOTING"
+                      </div>
+                      {/* Movie Pool & Actions Section */}
+                      <div>
+                        <h4 className="font-medium text-[#3b3e88] mb-2">
+                          Movie Pool
+                        </h4>
+                        {selectedGroup.movies &&
+                            selectedGroup.movies.length > 0
+                          ? (
+                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2 bg-indigo-50 rounded-xl p-4">
+                              {selectedGroup.movies.map((movie) => (
+                                <div
+                                  key={movie.movieId}
+                                  className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm"
+                                >
+                                  <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0">
+                                    <img
+                                      src={movie.posterURL &&
+                                          movie.posterURL.startsWith("http")
+                                        ? movie.posterURL
+                                        : movie.posterURL
+                                        ? `https://image.tmdb.org/t/p/w500${movie.posterURL}`
+                                        : "/placeholder.png"}
+                                      alt={movie.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-grow min-w-0">
+                                    <p className="font-medium text-[#3b3e88] truncate text-sm">
+                                      {movie.title}
+                                    </p>
+                                    <p className="text-xs text-[#3b3e88]/80">
+                                      {movie.year} •{" "}
+                                      {movie.genres?.slice(0, 2).join(", ")}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                          : (
+                            <div className="bg-indigo-50 rounded-xl p-6 text-center">
+                              <p className="text-[#3b3e88]/90 mb-2">
+                                No movies in pool yet
+                              </p>
+                              <p className="text-[#3b3e88]/80 text-sm mb-4">
+                                Add movies to the pool for your group to vote on
+                              </p>
+                            </div>
+                          )}
+                        {/* Action buttons */}
+                        <div className="flex flex-col gap-3 mt-4">
+                          <Button
+                            variant="secondary"
+                            className="bg-[#7824ec] hover:bg-opacity-90"
+                            onClick={() => {
+                              const phase = selectedGroup.phase;
+                              if (phase === "POOLING") {
+                                navigateToGroupPool(selectedGroup.groupId);
+                              } else if (phase === "VOTING") {
+                                navigateToGroupVoting(selectedGroup.groupId);
+                              } else {
+                                navigateToGroupResults(selectedGroup.groupId);
+                              }
+                            }}
+                          >
+                            {selectedGroup.phase === "POOLING"
+                              ? "View & Edit Movie Pool"
+                              : selectedGroup.phase === "VOTING"
                               ? "Go to Voting"
                               : "View Results"}
-                        </Button>
-                        {selectedGroup.creatorId === parseInt(userId || "-1") &&
-                          selectedGroup.phase !== "RESULTS" && (
+                          </Button>
+                          {selectedGroup.creatorId ===
+                              parseInt(userId || "-1") &&
+                            selectedGroup.phase !== "RESULTS" && (
                             <Button
                               variant="secondary"
-                              disabled={
-                                selectedGroup.phase === "POOLING" &&
-                                poolCount < 2
-                              }
+                              disabled={selectedGroup.phase === "POOLING" &&
+                                poolCount < 2}
                               onClick={() =>
                                 handleAdvancePhase(
                                   selectedGroup.groupId,
-                                  selectedGroup.phase
-                                )
-                              }
+                                  selectedGroup.phase,
+                                )}
                             >
                               {selectedGroup.phase === "POOLING"
                                 ? "End Pooling & Start Voting"
                                 : "End Voting & Show Results"}
                             </Button>
                           )}
+                        </div>
+                      </div>
+                      {/* Moved Delete/Leave Group button to bottom of dialog */}
+                      <div>
+                        {selectedGroup.creatorId === parseInt(userId || "-1")
+                          ? (
+                            <Button
+                              variant="destructive"
+                              className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
+                              onClick={() =>
+                                handleDeleteGroup(selectedGroup.groupId)}
+                            >
+                              Delete Group
+                            </Button>
+                          )
+                          : (
+                            <Button
+                              variant="destructive"
+                              className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
+                              onClick={() =>
+                                handleLeaveGroup(selectedGroup.groupId)}
+                            >
+                              Leave Group
+                            </Button>
+                          )}
                       </div>
                     </div>
-                    {/* Moved Delete/Leave Group button to bottom of dialog */}
-                    <div>
-                      {selectedGroup.creatorId === parseInt(userId || "-1") ? (
-                        <Button
-                          variant="destructive"
-                          className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
-                          onClick={() => handleDeleteGroup(selectedGroup.groupId)}
-                        >
-                          Delete Group
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="destructive"
-                          className="bg-white text-red-600 border border-red-600 hover:bg-red-50 whitespace-nowrap"
-                          onClick={() => handleLeaveGroup(selectedGroup.groupId)}
-                        >
-                          Leave Group
-                        </Button>
-                      )}
-                    </div>
                   </div>
+                  {/* Error and Success Message Area at the bottom */}
+                  <div className="min-h-[40px] py-2 space-y-2">
+                    {dialogError && (
+                      <ErrorMessage
+                        message={dialogError}
+                        onClose={() => setDialogError(null)}
+                      />
+                    )}
+                    {showActionMessage && actionMessage && !dialogError && (
+                      <ActionMessage
+                        message={actionMessage}
+                        isVisible={showActionMessage}
+                        onHide={() => setShowActionMessage(false)}
+                        className="bg-green-500"
+                      />
+                    )}
+                  </div>
+                </>
+              )
+              : (
+                // Fallback if selectedGroup is null (should ideally not happen if dialog open state is managed correctly)
+                <div className="p-4 text-center text-gray-500">
+                  Loading group details or group not found...
                 </div>
-                {/* Error and Success Message Area at the bottom */}
-                <div className="min-h-[40px] py-2 space-y-2">
-                  {dialogError && (
-                    <ErrorMessage
-                      message={dialogError}
-                      onClose={() => setDialogError(null)}
-                    />
-                  )}
-                  {showActionMessage && actionMessage && !dialogError && (
-                    <ActionMessage
-                      message={actionMessage}
-                      isVisible={showActionMessage}
-                      onHide={() => setShowActionMessage(false)}
-                      className="bg-green-500"
-                    />
-                  )}
-                </div>
-                
-
-              </>
-            ) : (
-              // Fallback if selectedGroup is null (should ideally not happen if dialog open state is managed correctly)
-              <div className="p-4 text-center text-gray-500">
-                Loading group details or group not found...
-              </div>
-            )}
+              )}
           </DialogContent>
         </Dialog>
 

@@ -20,11 +20,11 @@ const SeenList: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, [router]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,8 +70,8 @@ const SeenList: React.FC = () => {
           localStorage.removeItem("userId");
           localStorage.removeItem("token");
           setTimeout(() => {
-          router.push("/login");
-        }, 1500);
+            router.push("/login");
+          }, 1500);
         }
       } finally {
         setLoading(false);

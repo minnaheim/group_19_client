@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"; // Added useEffect
 import { useApi } from "@/app/hooks/useApi";
 import { retry } from "src/utils/retry";
 import { useGroupPhase } from "@/app/hooks/useGroupPhase";
+import { usePhaseCheck } from "@/app/hooks/usePhaseCheck";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ActionMessage from "@/components/ui/action_message";
 import type { ApplicationError } from "@/app/types/error";
@@ -51,14 +52,18 @@ const Results: React.FC = () => {
     loading: phaseLoading,
     error: phaseError,
   } = useGroupPhase(groupId as string);
+
+  // Check for phase changes in the background
+  usePhaseCheck(groupId, phaseFromHook);
+
   const { value: userId } = useLocalStorage<string>("userId", "");
   const router = useRouter();
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, [router]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
   const [rankingResult, setRankingResult] = useState<RankingResultsDTO | null>(
     null,
   );
@@ -120,10 +125,14 @@ const Results: React.FC = () => {
   // Full winning movie details (fetch for posterURL)
   const [fullWinningMovie, setFullWinningMovie] = useState<Movie | null>(null);
   useEffect(() => {
-    if (rankingResult) {
+    // If we have results and a winning movie with an ID, fetch more details
+    if (
+      rankingResult && rankingResult.winningMovie &&
+      rankingResult.winningMovie.movieId
+    ) {
       setWinningMovieLoading(true);
       apiService
-        .get<Movie>(`/movies/${rankingResult?.winningMovie?.movieId}`)
+        .get<Movie>(`/movies/${rankingResult.winningMovie.movieId}`)
         .then((movie) => setFullWinningMovie(movie))
         .catch((err) => {
           console.error("Failed to fetch full movie data:", err);
@@ -132,6 +141,9 @@ const Results: React.FC = () => {
           );
         })
         .finally(() => setWinningMovieLoading(false));
+    } else {
+      // If we have results but no winning movie (e.g., no voters), ensure loading is set to false
+      setWinningMovieLoading(false);
     }
   }, [apiService, rankingResult]);
 
@@ -144,6 +156,9 @@ const Results: React.FC = () => {
 
       setResultsLoading(true);
 
+      // Add a small delay to ensure consistent loading behavior
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       try {
         const response = await retry(() =>
           apiService.get<RankingResultsDTO>(
@@ -151,7 +166,7 @@ const Results: React.FC = () => {
           )
         );
         setRankingResult(response);
-        setDetailedResults(response.detailedResults);
+        setDetailedResults(response.detailedResults || []);
         setActionMessage("Results loaded successfully");
         setShowActionMessage(true);
         setError(""); // Clear error on success
@@ -160,8 +175,32 @@ const Results: React.FC = () => {
         if (err instanceof Error && "status" in err) {
           const appErr = err as ApplicationError;
           if (appErr.status === 404) {
+            // This may be because no one voted - still show results page but with a message
+            // Create a placeholder empty movie object that conforms to the Movie type
+            const emptyMovie: Movie = {
+              movieId: 0,
+              title: "No Movie Selected",
+              posterURL: "",
+              description: "No votes were cast during the voting phase.",
+              genres: [],
+              directors: [],
+              actors: [],
+              trailerURL: "",
+              year: 0,
+              originallanguage: "en",
+            };
+
+            setRankingResult({
+              resultId: 0,
+              groupId: parseInt(groupId as string),
+              calculatedAt: new Date().toISOString(),
+              winningMovie: emptyMovie,
+              numberOfVoters: 0,
+              detailedResults: [],
+            });
+            setDetailedResults([]);
             setError(
-              "Could not find the group or results are not yet available.",
+              "No votes were cast during the voting phase. You might want to restart the movie selection process.",
             );
           } else if (appErr.status === 409) {
             setError("Results can only be viewed after voting has ended.");

@@ -166,11 +166,11 @@ const SearchMovies: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, [router]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -260,11 +260,11 @@ const SearchMovies: React.FC = () => {
           showMessage(
             "Your session has expired. Please log in again to see your watchlist. Redirecting to login page...",
           );
-        localStorage.removeItem("userId");
-        localStorage.removeItem("token");
-        setTimeout(() => {
-        router.push("/login");
-      }, 1500);
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+            router.push("/login");
+          }, 1500);
         } else if (status === 404) {
           showMessage("Could not find the watchlist for this user.");
         } else {
@@ -286,11 +286,11 @@ const SearchMovies: React.FC = () => {
           showMessage(
             "Your session has expired. Please log in again to see your watched list. Redirecting to login page...",
           );
-        localStorage.removeItem("userId");
-        localStorage.removeItem("token");
-        setTimeout(() => {
-        router.push("/login");
-      }, 1500);
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
+            router.push("/login");
+          }, 1500);
         } else if (status === 404) {
           showMessage("Could not find the watched list for this user.");
         } else {
@@ -637,12 +637,14 @@ const SearchMovies: React.FC = () => {
         const appErr = error as ApplicationError;
         switch (appErr.status) {
           case 401:
-            showMessage("Please log in again to add movies to your watchlist. Redirecting to login page...");
+            showMessage(
+              "Please log in again to add movies to your watchlist. Redirecting to login page...",
+            );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
             setTimeout(() => {
-            router.push("/login");
-          }, 1500);
+              router.push("/login");
+            }, 1500);
             break;
           case 403:
             showMessage("You don't have permission to modify this watchlist.");
@@ -673,10 +675,12 @@ const SearchMovies: React.FC = () => {
       const appErr = error as ApplicationError;
       switch (appErr.status) {
         case 401:
-          showMessage("Please log in again to update movie status. Redirecting to login page...");
-            localStorage.removeItem("userId");
-            localStorage.removeItem("token");
-            setTimeout(() => {
+          showMessage(
+            "Please log in again to update movie status. Redirecting to login page...",
+          );
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token");
+          setTimeout(() => {
             router.push("/login");
           }, 1500);
           break;

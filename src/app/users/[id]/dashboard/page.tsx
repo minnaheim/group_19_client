@@ -99,7 +99,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
         // Get friend requests
         try {
           const friendRequests = await apiService.get<FriendRequest[]>(
-            "/friends/friendrequests/received"
+            "/friends/friendrequests/received",
           );
 
           // Process friend requests into notifications with unique IDs
@@ -152,7 +152,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -163,7 +163,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -185,7 +185,7 @@ const Dashboard: React.FC = () => {
         // Get group invitations
         try {
           const groupInvites = await apiService.get<GroupInvitation[]>(
-            "/groups/invitations/received"
+            "/groups/invitations/received",
           );
 
           // Process group invitations into notifications with unique IDs
@@ -195,7 +195,8 @@ const Dashboard: React.FC = () => {
               allNotifications.push({
                 id: startId + index,
                 type: "group_invite",
-                message: `${invite.sender.username} invited you to ${invite.group.groupName}!`,
+                message:
+                  `${invite.sender.username} invited you to ${invite.group.groupName}!`,
                 actionType: "accept_decline",
                 sender: invite.sender.username,
                 invitationId: invite.invitationId,
@@ -213,7 +214,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -224,7 +225,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -233,7 +234,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -269,7 +270,7 @@ const Dashboard: React.FC = () => {
   // Handle notification actions
   const handleAccept = async (
     notification: Notification,
-    e: React.MouseEvent
+    e: React.MouseEvent,
   ) => {
     e.stopPropagation();
     try {
@@ -277,7 +278,7 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/friends/friendrequest/${notification.requestId}/accept`,
-            {} // empty data object
+            {}, // empty data object
           );
           showMessage("Friend request accepted");
         } catch (err: unknown) {
@@ -289,7 +290,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -300,7 +301,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -309,7 +310,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -328,7 +329,7 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/groups/invitations/${notification.invitationId}/accept`,
-            {} // empty data object
+            {}, // empty data object
           );
           showMessage("Group invite accepted");
         } catch (err: unknown) {
@@ -340,7 +341,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -351,7 +352,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -360,7 +361,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -381,7 +382,7 @@ const Dashboard: React.FC = () => {
 
   const handleDecline = async (
     notification: Notification,
-    e: React.MouseEvent
+    e: React.MouseEvent,
   ) => {
     e.stopPropagation();
     try {
@@ -389,7 +390,7 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/friends/friendrequest/${notification.requestId}/reject`,
-            {}
+            {},
           );
           showMessage("Friend request declined");
         } catch (err: unknown) {
@@ -401,7 +402,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -412,7 +413,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -421,7 +422,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -440,7 +441,7 @@ const Dashboard: React.FC = () => {
         try {
           await apiService.post(
             `/groups/invitations/${notification.invitationId}/reject`,
-            {}
+            {},
           );
           showMessage("Group invite declined");
         } catch (err: unknown) {
@@ -452,7 +453,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 403
           ) {
             setError(
-              "You don't have access to this page. Redirecting to your dashboard page..."
+              "You don't have access to this page. Redirecting to your dashboard page...",
             );
             setTimeout(() => {
               router.push(`/users/${userId}/dashboard`);
@@ -463,7 +464,7 @@ const Dashboard: React.FC = () => {
             (err as ApplicationError).status === 401
           ) {
             setError(
-              "Authorize to have access to the page. Redirecting to login..."
+              "Authorize to have access to the page. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -472,7 +473,7 @@ const Dashboard: React.FC = () => {
             }, 1500);
           } else {
             setError(
-              "Failed to load data. Please try again later. Redirecting to login..."
+              "Failed to load data. Please try again later. Redirecting to login...",
             );
             localStorage.removeItem("userId");
             localStorage.removeItem("token");
@@ -510,7 +511,8 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3e88]">
+        </div>
       </div>
     );
   }
@@ -539,8 +541,10 @@ const Dashboard: React.FC = () => {
               className="bg-rose-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
             >
               {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-32 h-32 bg-rose-400/30 rounded-full -mr-8 -mb-8"></div>
-              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-rose-400/30 rounded-full -mr-8 -mb-8">
+              </div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+              </div>
 
               <h2 className="text-white text-lg font-medium relative z-10">
                 Watch List
@@ -553,8 +557,10 @@ const Dashboard: React.FC = () => {
               className="bg-orange-400 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
             >
               {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-32 h-32 bg-orange-300/30 rounded-full -mr-8 -mb-8"></div>
-              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-orange-300/30 rounded-full -mr-8 -mb-8">
+              </div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+              </div>
 
               <h2 className="text-white text-lg font-medium relative z-10">
                 Movie Groups
@@ -567,8 +573,10 @@ const Dashboard: React.FC = () => {
               className="bg-indigo-500 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
             >
               {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-32 h-32 bg-indigo-400/30 rounded-full -mr-8 -mb-8"></div>
-              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-indigo-400/30 rounded-full -mr-8 -mb-8">
+              </div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+              </div>
 
               <h2 className="text-white text-lg font-medium relative z-10">
                 Friends
@@ -581,8 +589,10 @@ const Dashboard: React.FC = () => {
               className="bg-indigo-900 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
             >
               {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-400/20 rounded-full -mr-8 -mb-8"></div>
-              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-400/20 rounded-full -mr-8 -mb-8">
+              </div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+              </div>
 
               <h2 className="text-white text-lg font-medium relative z-10">
                 Search Movies
@@ -595,8 +605,10 @@ const Dashboard: React.FC = () => {
               className="bg-violet-600 rounded-2xl p-4 h-24 relative overflow-hidden cursor-pointer hover:shadow-md"
             >
               {/* Decorative circles */}
-              <div className="absolute right-0 bottom-0 w-32 h-32 bg-violet-500/30 rounded-full -mr-8 -mb-8"></div>
-              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10"></div>
+              <div className="absolute right-0 bottom-0 w-32 h-32 bg-violet-500/30 rounded-full -mr-8 -mb-8">
+              </div>
+              <div className="absolute right-0 bottom-0 w-36 h-36 border border-white/30 rounded-full -mr-10 -mb-10">
+              </div>
 
               <div className="relative z-10">
                 <h2 className="text-white text-lg font-medium">Your Profile</h2>
@@ -622,93 +634,95 @@ const Dashboard: React.FC = () => {
               {/* Scrollable container with optimized size */}
               <div className="overflow-y-auto pr-2 flex-grow">
                 <div className="space-y-3">
-                  {notifications.length > 0 ? (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`rounded-xl p-3 shadow-sm ${
-                          notification.type === "friend_request"
-                            ? "bg-rose-50 border border-rose-100"
-                            : notification.type === "group_invite"
+                  {notifications.length > 0
+                    ? (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`rounded-xl p-3 shadow-sm ${
+                            notification.type === "friend_request"
+                              ? "bg-rose-50 border border-rose-100"
+                              : notification.type === "group_invite"
                               ? "bg-orange-50 border border-orange-100"
                               : notification.type === "group_update"
-                                ? "bg-indigo-50 border border-indigo-100"
-                                : "bg-violet-50 border border-violet-100"
-                        }`}
-                      >
-                        <p
-                          className={`mb-2 text-sm ${
-                            notification.type === "friend_request"
-                              ? "text-rose-800"
-                              : notification.type === "group_invite"
-                                ? "text-orange-800"
-                                : notification.type === "group_update"
-                                  ? "text-indigo-800"
-                                  : "text-violet-800"
+                              ? "bg-indigo-50 border border-indigo-100"
+                              : "bg-violet-50 border border-violet-100"
                           }`}
                         >
-                          {notification.message}
-                        </p>
+                          <p
+                            className={`mb-2 text-sm ${
+                              notification.type === "friend_request"
+                                ? "text-rose-800"
+                                : notification.type === "group_invite"
+                                ? "text-orange-800"
+                                : notification.type === "group_update"
+                                ? "text-indigo-800"
+                                : "text-violet-800"
+                            }`}
+                          >
+                            {notification.message}
+                          </p>
 
-                        {notification.actionType === "accept_decline" && (
-                          <div className="flex justify-end items-center">
-                            <Button
-                              className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
-                                notification.type === "friend_request"
-                                  ? "bg-rose-500 hover:bg-rose-600"
-                                  : notification.type === "group_invite"
+                          {notification.actionType === "accept_decline" && (
+                            <div className="flex justify-end items-center">
+                              <Button
+                                className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                  notification.type === "friend_request"
+                                    ? "bg-rose-500 hover:bg-rose-600"
+                                    : notification.type === "group_invite"
                                     ? "bg-orange-400 hover:bg-orange-500"
                                     : notification.type === "group_update"
-                                      ? "bg-indigo-500 hover:bg-indigo-600"
-                                      : "bg-violet-500 hover:bg-violet-600"
-                              }`}
-                              onClick={(e) => handleAccept(notification, e)}
-                            >
-                              Accept
-                            </Button>
-                            <button
-                              className={`ml-3 underline text-xs ${
-                                notification.type === "friend_request"
-                                  ? "text-rose-700"
-                                  : notification.type === "group_invite"
+                                    ? "bg-indigo-500 hover:bg-indigo-600"
+                                    : "bg-violet-500 hover:bg-violet-600"
+                                }`}
+                                onClick={(e) => handleAccept(notification, e)}
+                              >
+                                Accept
+                              </Button>
+                              <button
+                                className={`ml-3 underline text-xs ${
+                                  notification.type === "friend_request"
+                                    ? "text-rose-700"
+                                    : notification.type === "group_invite"
                                     ? "text-orange-700"
                                     : notification.type === "group_update"
-                                      ? "text-indigo-700"
-                                      : "text-violet-700"
-                              }`}
-                              onClick={(e) => handleDecline(notification, e)}
-                            >
-                              Decline
-                            </button>
-                          </div>
-                        )}
+                                    ? "text-indigo-700"
+                                    : "text-violet-700"
+                                }`}
+                                onClick={(e) => handleDecline(notification, e)}
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
 
-                        {(notification.actionType === "go_to" ||
-                          notification.actionType === "view") && (
-                          <div className="flex justify-end">
-                            <Button
-                              className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
-                                notification.type === "friend_request"
-                                  ? "bg-rose-500 hover:bg-rose-600"
-                                  : notification.type === "group_invite"
+                          {(notification.actionType === "go_to" ||
+                            notification.actionType === "view") && (
+                            <div className="flex justify-end">
+                              <Button
+                                className={`hover:bg-opacity-70 text-white rounded-xl px-3 py-1 h-7 text-xs ${
+                                  notification.type === "friend_request"
+                                    ? "bg-rose-500 hover:bg-rose-600"
+                                    : notification.type === "group_invite"
                                     ? "bg-orange-400 hover:bg-orange-500"
                                     : notification.type === "group_update"
-                                      ? "bg-indigo-500 hover:bg-indigo-600"
-                                      : "bg-violet-500 hover:bg-violet-600"
-                              }`}
-                              onClick={(e) => handleAction(notification, e)}
-                            >
-                              {notification.actionLabel || "View"}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-center py-2 text-sm">
-                      No notifications
-                    </p>
-                  )}
+                                    ? "bg-indigo-500 hover:bg-indigo-600"
+                                    : "bg-violet-500 hover:bg-violet-600"
+                                }`}
+                                onClick={(e) => handleAction(notification, e)}
+                              >
+                                {notification.actionLabel || "View"}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )
+                    : (
+                      <p className="text-gray-500 text-center py-2 text-sm">
+                        No notifications
+                      </p>
+                    )}
                 </div>
               </div>
             </div>

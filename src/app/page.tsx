@@ -63,39 +63,41 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          {isLoggedIn ? (
-            <>
-              <Button
-                variant="ghost"
-                className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
-                onClick={() => router.push(`/users/${userId}/profile`)}
-              >
-                My Profile
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
-                onClick={handleLogin}
-              >
-                Login
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
-                onClick={handleSignUp}
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
+          {isLoggedIn
+            ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={() => router.push(`/users/${userId}/profile`)}
+                >
+                  My Profile
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            )
+            : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-[#3b3e88] hover:bg-[#3b3e88]/10"
+                  onClick={handleLogin}
+                >
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                  onClick={handleSignUp}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
         </div>
       </header>
 
@@ -130,13 +132,16 @@ const LandingPage = () => {
         {/* Visuals */}
         <div className="md:w-1/2 relative">
           <div className="w-full h-64 md:h-96 bg-white rounded-3xl overflow-hidden shadow-xl relative">
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-rose-500 rounded-2xl transform rotate-12 opacity-30 blur-xl"></div>
-            <div className="absolute bottom-8 -left-8 w-32 h-32 bg-orange-500 rounded-full opacity-30 blur-xl"></div>
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-rose-500 rounded-2xl transform rotate-12 opacity-30 blur-xl">
+            </div>
+            <div className="absolute bottom-8 -left-8 w-32 h-32 bg-orange-500 rounded-full opacity-30 blur-xl">
+            </div>
 
             {/* Movie cards floating */}
             <div className="absolute top-1/4 left-1/4 w-32 h-48 bg-white rounded-xl shadow-lg transform -rotate-6">
               <div className="w-full h-2/3 bg-[#3b3e88]/20 rounded-t-xl overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-[#3b3e88]/60 to-[#3b3e88]/80"></div>
+                <div className="w-full h-full bg-gradient-to-br from-[#3b3e88]/60 to-[#3b3e88]/80">
+                </div>
               </div>
               <div className="p-2">
                 <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
@@ -146,7 +151,8 @@ const LandingPage = () => {
 
             <div className="absolute top-1/3 right-1/4 w-32 h-48 bg-white rounded-xl shadow-lg transform rotate-12">
               <div className="w-full h-2/3 bg-rose-400/20 rounded-t-xl overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-rose-500/60 to-rose-500/80"></div>
+                <div className="w-full h-full bg-gradient-to-br from-rose-500/60 to-rose-500/80">
+                </div>
               </div>
               <div className="p-2">
                 <div className="h-3 w-3/4 bg-[#3b3e88] rounded-full mb-2"></div>
@@ -162,7 +168,8 @@ const LandingPage = () => {
               </div>
               <div className="space-y-2">
                 <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
-                <div className="h-6 w-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg"></div>
+                <div className="h-6 w-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg">
+                </div>
                 <div className="h-6 w-full bg-[#3b3e88]/30 rounded-lg"></div>
               </div>
             </div>
@@ -194,7 +201,8 @@ const LandingPage = () => {
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                ></path>
+                >
+                </path>
               </svg>
             </div>
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
@@ -220,7 +228,8 @@ const LandingPage = () => {
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                ></path>
+                >
+                </path>
               </svg>
             </div>
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
@@ -246,7 +255,8 @@ const LandingPage = () => {
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
+                >
+                </path>
               </svg>
             </div>
             <h4 className="text-xl font-semibold mb-2 text-[#3b3e88]">
