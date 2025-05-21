@@ -9,9 +9,12 @@ import React, { useState } from "react";
 import { useApi } from "@/app/hooks/useApi";
 import { Button } from "@/components/ui/button";
 
+import { useGroupPhase, GroupPhase } from "@/app/hooks/useGroupPhase";
+
 interface SetTimerProps {
   groupId: number;
   isCreator: boolean;
+  phase?: GroupPhase | null;
 }
 
 const parseHHMMSS = (value: string): number => {
@@ -28,7 +31,11 @@ const parseHHMMSS = (value: string): number => {
   return 0;
 };
 
-const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
+const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhase }) => {
+  // Use the useGroupPhase hook to get the current phase if not provided via props
+  const { phase: hookPhase } = useGroupPhase(groupId.toString());
+  // Use the phase from props if available, otherwise use the one from the hook
+  const phase = propPhase || hookPhase;
   const [votingInput, setVotingInput] = useState("00:05:00");
   const [poolInput, setPoolInput] = useState("00:05:00");
   const [loading, setLoading] = useState(false);
@@ -118,7 +125,8 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator }) => {
             />
             <Button
               onClick={handleSetPoolTimer}
-              disabled={loading || poolInput === "00:00:00"}
+              disabled={loading || poolInput === "00:00:00" || phase !== "POOLING"}
+              title={phase !== "POOLING" ? `Pool timer can only be set during the POOLING phase (current phase: ${phase || 'unknown'})` : ""}
             >
               Set Pool Time
             </Button>

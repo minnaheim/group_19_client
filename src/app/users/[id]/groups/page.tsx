@@ -24,6 +24,7 @@ import { retry } from "src/utils/retry";
 import type { ApplicationError } from "@/app/types/error";
 import Timer from "@/components/ui/Timer";
 import SetTimer from "@/components/ui/SetTimer";
+import { GroupPhase } from "@/app/hooks/useGroupPhase";
 
 // --- Interfaces ---
 interface Group {
@@ -2167,6 +2168,7 @@ const GroupsManagement: React.FC = () => {
                                 <SetTimer
                                   groupId={selectedGroup.groupId}
                                   isCreator={true}
+                                  phase={selectedGroup.phase as GroupPhase}
                                 />
                               </div>
                             )}
