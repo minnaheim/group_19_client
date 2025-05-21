@@ -283,7 +283,10 @@ const Results: React.FC = () => {
     setIsAddingToWatchedList(true);
     try {
       await retry(() =>
-        apiService.post(`/users/${userId}/watched/${confirmDialogMovie.movieId}?keepInWatchlist=true`, {})
+        apiService.post(
+          `/users/${userId}/watched/${confirmDialogMovie.movieId}?keepInWatchlist=true`,
+          {},
+        )
       );
       setMovieAddedToWatchedList(true);
       setActionMessage(
@@ -307,7 +310,10 @@ const Results: React.FC = () => {
     setIsAddingToWatchedList(true);
     try {
       await retry(() =>
-        apiService.post(`/users/${userId}/watched/${confirmDialogMovie.movieId}?keepInWatchlist=false`, {})
+        apiService.post(
+          `/users/${userId}/watched/${confirmDialogMovie.movieId}?keepInWatchlist=false`,
+          {},
+        )
       );
       // No need to manually delete from watchlist, the API will handle it with keepInWatchlist=false
       setMovieAddedToWatchedList(true);
