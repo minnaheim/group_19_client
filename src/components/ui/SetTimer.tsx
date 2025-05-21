@@ -31,7 +31,11 @@ const parseHHMMSS = (value: string): number => {
   return 0;
 };
 
-const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhase }) => {
+const SetTimer: React.FC<SetTimerProps> = ({
+  groupId,
+  isCreator,
+  phase: propPhase,
+}) => {
   // Use the useGroupPhase hook to get the current phase if not provided via props
   const { phase: hookPhase } = useGroupPhase(groupId.toString());
   // Use the phase from props if available, otherwise use the one from the hook
@@ -47,6 +51,11 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
   if (!isCreator) return null;
 
   const handleSetVotingTimer = async () => {
+    if (phase !== "VOTING") {
+      setError("Voting timer can only be set during the VOTING phase");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
     setError("");
@@ -64,6 +73,11 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
   };
 
   const handleSetPoolTimer = async () => {
+    if (phase !== "POOLING") {
+      setError("Pool timer can only be set during the POOLING phase");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
     setError("");
@@ -72,6 +86,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
       await apiService.post(`/groups/${groupId}/pool-timer`, seconds);
       await apiService.post(`/groups/${groupId}/start-pool-timer`, {});
       setMessage("Pool Timer started!");
+      setOpen(false); // Close the dialog
     } catch {
       setError("Failed to set pool timer.");
     } finally {
@@ -101,9 +116,7 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[#3b3e88]">
-            Set Voting and Pool Timers
-          </DialogTitle>
+          <DialogTitle className="text-[#3b3e88]">Set Phase Timers</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3 w-full">
           <div className="flex items-center gap-2 w-full">
@@ -125,12 +138,21 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
             />
             <Button
               onClick={handleSetPoolTimer}
-              disabled={loading || poolInput === "00:00:00" || phase !== "POOLING"}
-              title={phase !== "POOLING" ? `Pool timer can only be set during the POOLING phase (current phase: ${phase || 'unknown'})` : ""}
+              disabled={loading || poolInput === "00:00:00"}
+              className={
+                phase !== "POOLING" ? "opacity-50 cursor-not-allowed" : ""
+              }
+              title={
+                phase !== "POOLING"
+                  ? "Pool timer can only be set during the POOLING phase"
+                  : ""
+              }
             >
               Set Pool Time
             </Button>
           </div>
+
+          {/* Voting Timer Section */}
           <div className="flex items-center gap-2 w-full">
             <label
               htmlFor="voting-seconds"
@@ -151,6 +173,14 @@ const SetTimer: React.FC<SetTimerProps> = ({ groupId, isCreator, phase: propPhas
             <Button
               onClick={handleSetVotingTimer}
               disabled={loading || votingInput === "00:00:00"}
+              className={
+                phase !== "VOTING" ? "opacity-50 cursor-not-allowed" : ""
+              }
+              title={
+                phase !== "VOTING"
+                  ? "Voting timer can only be set during the VOTING phase"
+                  : ""
+              }
             >
               Set Voting Time
             </Button>
