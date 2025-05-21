@@ -485,9 +485,9 @@ const EditProfile: React.FC = () => {
 
       {/* Main content */}
       <div className="flex-1 p-6 md:p-12">
-        <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
+        {/* <h1 className="font-semibold text-[#3b3e88] text-3xl mb-8">
           edit profile
-        </h1>
+        </h1> */}
 
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
           {/* Profile Header */}
@@ -498,7 +498,7 @@ const EditProfile: React.FC = () => {
               src="/rectangle-45.svg"
             />
             <h2 className="absolute top-10 left-6 font-bold text-white text-3xl">
-              edit your profile
+              Edit Your Profile
             </h2>
           </div>
 
