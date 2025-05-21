@@ -441,20 +441,31 @@ const EditProfile: React.FC = () => {
   // Compute actor and director selectable options
   const actorOptions = useMemo(() => {
     const set = new Set<string>();
+    // Add actors from favorite movie
     if (favoriteMovie?.actors) favoriteMovie.actors.forEach((a) => set.add(a));
+    // Add actors from watchlist
     user?.watchlist.forEach((m) => m.actors.forEach((a) => set.add(a)));
+    // Add actors from watched movies
     user?.watchedMovies.forEach((m) => m.actors.forEach((a) => set.add(a)));
+    // Add custom favorite actors
+    favoriteActors.forEach((a) => set.add(a));
     return Array.from(set);
-  }, [favoriteMovie, user]);
+  }, [favoriteMovie, user, favoriteActors]);
+
   const directorOptions = useMemo(() => {
     const set = new Set<string>();
+    // Add directors from favorite movie
     if (favoriteMovie?.directors) {
       favoriteMovie.directors.forEach((d) => set.add(d));
     }
+    // Add directors from watchlist
     user?.watchlist.forEach((m) => m.directors.forEach((d) => set.add(d)));
+    // Add directors from watched movies
     user?.watchedMovies.forEach((m) => m.directors.forEach((d) => set.add(d)));
+    // Add custom favorite directors
+    favoriteDirectors.forEach((d) => set.add(d));
     return Array.from(set);
-  }, [favoriteMovie, user]);
+  }, [favoriteMovie, user, favoriteDirectors]);
 
   // Loading and error states
   if (loading) {
